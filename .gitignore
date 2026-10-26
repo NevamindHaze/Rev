@@ -1,0 +1,7 @@
+# Files the build creates. They are made fresh on GitHub's Mac each time, so don't store them.
+Rev.xcodeproj/
+Supporting/Info.plist
+build/
+Payload/
+*.ipa
+.DS_Store

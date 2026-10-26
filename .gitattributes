@@ -1,0 +1,3 @@
+# Keep files with Unix line endings in the repo, so edits made on Windows don't show every line as changed.
+* text=auto eol=lf
+*.png binary

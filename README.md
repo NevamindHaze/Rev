@@ -18,8 +18,9 @@ A personal flashcard app for iPhone, built with SwiftUI and SwiftData.
 3. Unzip it to get `Rev.ipa`, put that on your iPhone, and install it with SideStore.
 
 ## Importing from Anki
-In Anki on your computer: **File → Export → Anki Deck Package (.apkg)**, and tick
-**"Support older Anki versions"**. Rev reads that older format. Images and sounds are skipped for now.
+In Anki on your computer: **File → Export → Anki Deck Package (.apkg)**. Rev reads both the
+old and the newest format, including `.colpkg`. Text, images, progress, suspended cards and
+leech tags come across; sounds are skipped.
 
 ## Folder map
 ```
