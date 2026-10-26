@@ -89,18 +89,20 @@ enum BackupService {
             // Cards already in this deck, looked up by their question.
             var existingByFront: [String: [Card]] = [:]
             for card in deck.cards {
-                existingByFront[card.front, default: []].append(card)
+                existingByFront[matchKey(card.front), default: []].append(card)
             }
 
             for cardDTO in dto.cards {
-                if mergeByName, var matches = existingByFront[cardDTO.front], !matches.isEmpty {
+                let key = matchKey(cardDTO.front)
+                if mergeByName, var matches = existingByFront[key], !matches.isEmpty {
                     let existing = matches.removeFirst()
-                    existingByFront[cardDTO.front] = matches
+                    existingByFront[key] = matches
                     // Cards imported before Rev tracked Anki notes learn which note they belong to.
                     if existing.noteID == nil { existing.noteID = cardDTO.noteID }
-                    if existing.back == cardDTO.back {
+                    if existing.front == cardDTO.front && existing.back == cardDTO.back {
                         result.skipped += 1
                     } else {
+                        existing.front = cardDTO.front
                         existing.back = cardDTO.back
                         result.updated += 1
                     }
@@ -115,5 +117,14 @@ enum BackupService {
         }
         try context.save()
         return result
+    }
+
+    /// The question used to recognise the same card again. Image names and line breaks are
+    /// ignored, because older versions of Rev stored them differently ("[image]", other spacing).
+    private static func matchKey(_ front: String) -> String {
+        front.replacingOccurrences(of: #"\[img:[^\]]+\]|\[image\]"#, with: "🖼", options: .regularExpression)
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
     }
 }

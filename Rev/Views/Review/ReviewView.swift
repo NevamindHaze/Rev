@@ -17,12 +17,19 @@ struct ReviewView: View {
     @State private var cardToEdit: Card?
     /// Answers given in this session, newest last, so they can be undone.
     @State private var history: [PastAnswer] = []
+    /// Set when a card has just become a leech, to show the "rewrite or suspend?" question.
+    @State private var newLeech: Card?
 
     private struct PastAnswer {
         let card: Card
         let stateBefore: SchedulingState
+        let wasLeech: Bool
+        let wasSuspended: Bool
         let log: ReviewLog
     }
+
+    /// Like Anki: a card becomes a leech at 8 lapses, and you're reminded again every 4 more.
+    private static let leechThreshold = 8
 
     /// Read fresh each time, so a change in Settings applies straight away.
     private var scheduler: any SchedulingAlgorithm { ActiveScheduler.current }
@@ -67,6 +74,15 @@ struct ReviewView: View {
         .sheet(item: $cardToEdit) { card in
             CardEditorView(mode: .edit(card))
         }
+        .alert("This card is a leech",
+               isPresented: Binding(get: { newLeech != nil }, set: { if !$0 { newLeech = nil } }),
+               presenting: newLeech) { card in
+            Button("Rewrite it") { cardToEdit = card }
+            Button("Suspend it") { suspend(card) }
+            Button("Keep studying", role: .cancel) {}
+        } message: { card in
+            Text("You've forgotten it \(card.lapses) times. Cards like this usually need rewriting: make them shorter, split them up, or add a memory hook. Suspending hides it from reviews until you unsuspend it in its deck.")
+        }
         .onAppear(perform: loadNext)
         .onChange(of: allCards.count) {
             if current == nil { loadNext() }
@@ -90,9 +106,7 @@ struct ReviewView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 sideLabel("QUESTION")
-                Text(card.front)
-                    .font(Theme.body(26, weight: .semibold))
-                    .foregroundStyle(Theme.ink)
+                CardTextView(text: card.front, size: 26, weight: .semibold)
 
                 if showAnswer {
                     Capsule()
@@ -100,9 +114,7 @@ struct ReviewView: View {
                         .frame(height: 3)
                         .padding(.vertical, 8)
                     sideLabel("ANSWER")
-                    Text(card.back)
-                        .font(Theme.body(22))
-                        .foregroundStyle(Theme.ink)
+                    CardTextView(text: card.back, size: 22)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -194,9 +206,25 @@ struct ReviewView: View {
         let log = ReviewLog(cardID: card.id, date: now, rating: rating,
                             wasNew: stateBefore.phase == .new, intervalDays: newState.intervalDays)
         context.insert(log)
+        history.append(PastAnswer(card: card, stateBefore: stateBefore, wasLeech: card.isLeech,
+                                  wasSuspended: card.isSuspended, log: log))
+
+        // Forgot a graduated card for the 8th time (or 12th, 16th...)? It's a leech.
+        let lapses = newState.lapses
+        if rating == .again, stateBefore.phase == .review,
+           lapses >= Self.leechThreshold, (lapses - Self.leechThreshold) % 4 == 0 {
+            card.isLeech = true
+            newLeech = card
+        }
+
         try? context.save()
-        history.append(PastAnswer(card: card, stateBefore: stateBefore, log: log))
         reviewedThisSession += 1
+        withAnimation(.snappy) { loadNext() }
+    }
+
+    private func suspend(_ card: Card) {
+        card.isSuspended = true
+        try? context.save()
         withAnimation(.snappy) { loadNext() }
     }
 
@@ -204,6 +232,8 @@ struct ReviewView: View {
     private func undo() {
         guard let last = history.popLast() else { return }
         last.card.schedulingState = last.stateBefore
+        last.card.isLeech = last.wasLeech
+        last.card.isSuspended = last.wasSuspended
         context.delete(last.log)
         try? context.save()
         reviewedThisSession = max(0, reviewedThisSession - 1)

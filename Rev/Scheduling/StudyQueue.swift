@@ -24,6 +24,7 @@ struct StudyQueue {
         var allNew: [Card] = []
 
         for card in cards {
+            if card.isSuspended { continue }
             if card.phase == .new || card.phase == .review,
                let noteID = card.noteID, buriedNoteIDs.contains(noteID) {
                 continue
@@ -62,9 +63,9 @@ extension Array where Element == Card {
     /// Studied cards that are due by the end of today.
     func dueCount(now: Date = Date()) -> Int {
         let end = now.endOfDay
-        return filter { $0.phase != .new && $0.due < end }.count
+        return filter { !$0.isSuspended && $0.phase != .new && $0.due < end }.count
     }
 
-    /// Cards that have never been studied.
-    var newCount: Int { filter { $0.phase == .new }.count }
+    /// Cards that have never been studied (not counting suspended ones).
+    var newCount: Int { filter { !$0.isSuspended && $0.phase == .new }.count }
 }

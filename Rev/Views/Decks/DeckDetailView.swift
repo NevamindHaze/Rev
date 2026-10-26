@@ -2,11 +2,20 @@ import SwiftUI
 import SwiftData
 
 /// Inside a deck: its numbers, a big Study button, ways to add cards, and the card list.
-/// Tap a card to edit it; long-press it to delete.
+/// Tap a card to edit it; long-press it to suspend or delete it.
 struct DeckDetailView: View {
     let deck: Deck
 
+    /// Which cards the list shows.
+    private enum CardFilter: String, CaseIterable, Identifiable {
+        case all = "All"
+        case leeches = "Leeches"
+        case suspended = "Suspended"
+        var id: String { rawValue }
+    }
+
     @Environment(\.modelContext) private var context
+    @State private var filter: CardFilter = .all
     @State private var search = ""
     @State private var showingAddCard = false
     @State private var showingBulkAdd = false
@@ -15,9 +24,16 @@ struct DeckDetailView: View {
     @State private var isExporting = false
     @State private var errorMessage: String?
 
-    /// Newest cards first, filtered by the search box.
+    /// Newest cards first, filtered by the search box and the All / Leeches / Suspended choice.
     private var visibleCards: [Card] {
         deck.cards
+            .filter { card in
+                switch filter {
+                case .all: return true
+                case .leeches: return card.isLeech
+                case .suspended: return card.isSuspended
+                }
+            }
             .filter { search.isEmpty
                 || $0.front.localizedCaseInsensitiveContains(search)
                 || $0.back.localizedCaseInsensitiveContains(search) }
@@ -57,8 +73,15 @@ struct DeckDetailView: View {
                     .foregroundStyle(Theme.ink)
                     .padding(.top, 8)
 
+                Picker("Show", selection: $filter) {
+                    ForEach(CardFilter.allCases) { option in
+                        Text(option.rawValue).tag(option)
+                    }
+                }
+                .pickerStyle(.segmented)
+
                 if visibleCards.isEmpty {
-                    Text(search.isEmpty ? "No cards yet. Tap “Add card” to start." : "No cards match your search.")
+                    Text(emptyMessage)
                         .font(Theme.body(15))
                         .foregroundStyle(Theme.mutedInk)
                 }
@@ -72,6 +95,18 @@ struct DeckDetailView: View {
                         .contextMenu {
                             Button { cardToEdit = card } label: {
                                 Label("Edit", systemImage: "pencil")
+                            }
+                            Button { toggleSuspended(card) } label: {
+                                if card.isSuspended {
+                                    Label("Unsuspend", systemImage: "play.circle")
+                                } else {
+                                    Label("Suspend", systemImage: "pause.circle")
+                                }
+                            }
+                            if card.isLeech {
+                                Button { clearLeech(card) } label: {
+                                    Label("Not a leech any more", systemImage: "checkmark.circle")
+                                }
                             }
                             Button(role: .destructive) { delete(card) } label: {
                                 Label("Delete", systemImage: "trash")
@@ -118,8 +153,27 @@ struct DeckDetailView: View {
         }
     }
 
+    private var emptyMessage: String {
+        if !search.isEmpty { return "No cards match your search." }
+        switch filter {
+        case .all: return "No cards yet. Tap “Add card” to start."
+        case .leeches: return "No leeches. Leeches are cards you've forgotten 8 or more times."
+        case .suspended: return "No suspended cards."
+        }
+    }
+
     private func delete(_ card: Card) {
         context.delete(card)
+        try? context.save()
+    }
+
+    private func toggleSuspended(_ card: Card) {
+        card.isSuspended.toggle()
+        try? context.save()
+    }
+
+    private func clearLeech(_ card: Card) {
+        card.isLeech = false
         try? context.save()
     }
 
@@ -142,12 +196,18 @@ struct CardRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(card.front)
+            if card.isLeech || card.isSuspended {
+                HStack(spacing: 6) {
+                    if card.isLeech { badge("Leech", color: Theme.coral) }
+                    if card.isSuspended { badge("Suspended", color: Theme.mutedInk) }
+                }
+            }
+            Text(CardText.preview(card.front))
                 .font(Theme.body(17, weight: .semibold))
                 .foregroundStyle(Theme.ink)
                 .lineLimit(2)
             if !card.back.isEmpty {
-                Text(card.back)
+                Text(CardText.preview(card.back))
                     .font(Theme.body(15))
                     .foregroundStyle(Theme.mutedInk)
                     .lineLimit(2)
@@ -157,5 +217,15 @@ struct CardRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(18)
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .opacity(card.isSuspended ? 0.6 : 1)
+    }
+
+    private func badge(_ text: String, color: Color) -> some View {
+        Text(text)
+            .font(Theme.body(12, weight: .bold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(color, in: Capsule())
     }
 }

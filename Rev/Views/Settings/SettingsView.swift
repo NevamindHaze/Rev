@@ -71,7 +71,7 @@ struct SettingsView: View {
             } header: {
                 Text("Backup")
             } footer: {
-                Text("Save a backup to the Files app often. If the app expires or gets deleted, reinstall it and restore your latest backup. Restoring replaces everything in the app.")
+                Text("Save a backup to the Files app often. If the app expires or gets deleted, reinstall it and restore your latest backup. Restoring replaces everything in the app. Images aren't inside the backup file: after restoring, import your Anki decks again to bring them back (your progress is kept).")
             }
 
             Section {
@@ -88,7 +88,7 @@ struct SettingsView: View {
             } header: {
                 Text("Anki")
             } footer: {
-                Text("In Anki on your computer: File › Export › Anki Deck Package, and tick “Support older Anki versions”. Text and study progress are imported; images and sounds are skipped for now.")
+                Text("Works with any .apkg or .colpkg from Anki, old or new. Text, images, study progress, suspended cards and leech tags come across; sounds are skipped. Importing the same deck again updates your cards instead of adding copies.")
             }
 
             Section("About") {
@@ -198,11 +198,12 @@ struct SettingsView: View {
         isWorking = true
         Task {
             do {
-                let importedDecks = try await Task.detached(priority: .userInitiated) {
+                let contents = try await Task.detached(priority: .userInitiated) {
                     try ApkgReader.read(fileAt: url)
                 }.value
-                let result = try BackupService.insert(importedDecks, into: context, mergeByName: true)
-                var text = "Imported \(result.cards) new cards into \(importedDecks.count) decks."
+                let result = try BackupService.insert(contents.decks, into: context, mergeByName: true)
+                var text = "Imported \(result.cards) new cards into \(contents.decks.count) decks."
+                if contents.imagesSaved > 0 { text += " Saved \(contents.imagesSaved) images." }
                 if result.updated > 0 { text += " Updated the text of \(result.updated) cards you already had." }
                 if result.skipped > 0 { text += " Skipped \(result.skipped) unchanged cards." }
                 message = text

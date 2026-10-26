@@ -17,10 +17,24 @@ enum ApkgWriter {
         defer { try? FileManager.default.removeItem(at: workFolder) }
 
         try writeCollection(decks: decks, to: workFolder.appendingPathComponent("collection.anki2"), now: now)
-        try Data("{}".utf8).write(to: workFolder.appendingPathComponent("media"))   // no images yet
+
+        // Images: copied in as "0", "1", ... and listed in the "media" file as {"0": "heart.jpg", ...}.
+        var mediaList: [String: String] = [:]
+        let imageNames = Set(decks.flatMap { $0.cards }.flatMap {
+            CardText.imageNames(in: $0.front) + CardText.imageNames(in: $0.back)
+        })
+        for name in imageNames.sorted() {
+            guard let source = MediaStore.url(for: name) else { continue }
+            let entryName = String(mediaList.count)
+            try FileManager.default.copyItem(at: source, to: workFolder.appendingPathComponent(entryName))
+            mediaList[entryName] = name
+        }
+        let mediaJSON = try JSONSerialization.data(withJSONObject: mediaList)
+        try mediaJSON.write(to: workFolder.appendingPathComponent("media"))
 
         let packageURL = workFolder.appendingPathComponent("export.apkg")
-        try writeZip(files: ["collection.anki2", "media"], in: workFolder, to: packageURL)
+        let files = ["collection.anki2", "media"] + mediaList.keys.sorted { (Int($0) ?? 0) < (Int($1) ?? 0) }
+        try writeZip(files: files, in: workFolder, to: packageURL)
         return try Data(contentsOf: packageURL)
     }
 
@@ -68,15 +82,19 @@ enum ApkgWriter {
             for card in deck.cards {
                 nextID += 1
                 let fields = [AnkiText.html(fromPlain: card.front), AnkiText.html(fromPlain: card.back)]
-                try db.run("INSERT INTO notes VALUES (?, ?, ?, ?, -1, '', ?, ?, ?, 0, '')", [
-                    .int(nextID), .text(guid(for: card.id)), .int(noteTypeID), .int(nowSeconds),
+                // Leeches get Anki's "leech" tag.
+                let tags = card.isLeech == true ? " leech " : ""
+                try db.run("INSERT INTO notes VALUES (?, ?, ?, ?, -1, ?, ?, ?, ?, 0, '')", [
+                    .int(nextID), .text(guid(for: card.id)), .int(noteTypeID), .int(nowSeconds), .text(tags),
                     .text(fields.joined(separator: "\u{1F}")), .text(card.front), .int(checksum(card.front)),
                 ])
 
                 let progress = ankiProgress(for: card, today: today, newPosition: &newPosition)
+                // Anki marks a suspended card with queue = -1.
+                let queue = card.isSuspended == true ? -1 : progress.type
                 try db.run("INSERT INTO cards VALUES (?, ?, ?, 0, ?, -1, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, '')", [
                     .int(nextID), .int(nextID), .int(deckID), .int(nowSeconds),
-                    .int(progress.type), .int(progress.type), .int(progress.due),
+                    .int(progress.type), .int(queue), .int(progress.due),
                     .int(progress.interval), .int(progress.factor),
                     .int(Int64(card.reps)), .int(Int64(card.lapses)),
                 ])

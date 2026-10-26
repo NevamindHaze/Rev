@@ -13,6 +13,10 @@ final class Card {
     /// Cards made from the same Anki note (e.g. c1 and c2 of one cloze) share this.
     /// After you study one of them, the others wait until tomorrow ("burying").
     var noteID: String?
+    /// Suspended cards are never shown in reviews until you unsuspend them.
+    var isSuspended: Bool = false
+    /// A "leech" is a card you keep forgetting (8 lapses). It usually needs rewriting.
+    var isLeech: Bool = false
 
     // MARK: Scheduling information (updated every time you answer the card)
 

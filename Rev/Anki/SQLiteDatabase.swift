@@ -27,6 +27,12 @@ final class SQLiteDatabase {
             guard let chars = sqlite3_column_text(statement, column) else { return "" }
             return String(cString: chars)
         }
+
+        func blob(_ column: Int32) -> Data {
+            let count = Int(sqlite3_column_bytes(statement, column))
+            guard count > 0, let bytes = sqlite3_column_blob(statement, column) else { return Data() }
+            return Data(bytes: bytes, count: count)
+        }
     }
 
     private var handle: OpaquePointer?

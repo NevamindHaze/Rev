@@ -84,7 +84,14 @@ enum AnkiText {
 
         s = replace(#"</?(div|p|tr|table|blockquote|h[1-6])(\s[^>]*)?>"#, in: s) { _ in edge }
         s = replace(#"<hr[^>]*>"#, in: s) { _ in edge }
-        s = replace(#"<img[^>]*>"#, in: s) { _ in "[image]" }
+        // Images become a marker on their own line, e.g. [img:heart.jpg].
+        s = replace(#"<img[^>]*?\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))[^>]*>"#, in: s) { groups in
+            let source = [groups[1], groups[2], groups[3]].first { !$0.isEmpty } ?? ""
+            let decoded = decodeEntities(source.removingPercentEncoding ?? source)
+            guard let name = MediaStore.safeName(decoded) else { return "" }
+            return edge + "[img:\(name)]" + edge
+        }
+        s = replace(#"<img[^>]*>"#, in: s) { _ in "" }
         s = replace(#"\[sound:[^\]]*\]"#, in: s) { _ in "" }
         s = replace(#"<[^>]+>"#, in: s) { _ in "" }
         s = decodeEntities(s)
@@ -123,10 +130,13 @@ enum AnkiText {
     // MARK: Plain text → HTML (for export)
 
     static func html(fromPlain text: String) -> String {
-        text.replacingOccurrences(of: "&", with: "&amp;")
+        let escaped = text.replacingOccurrences(of: "&", with: "&amp;")
             .replacingOccurrences(of: "<", with: "&lt;")
             .replacingOccurrences(of: ">", with: "&gt;")
+            .replacingOccurrences(of: "\"", with: "&quot;")
             .replacingOccurrences(of: "\n", with: "<br>")
+        // Image markers become real images again.
+        return replace(#"\[img:([^\]]+)\]"#, in: escaped) { groups in "<img src=\"\(groups[1])\">" }
     }
 
     // MARK: Helper

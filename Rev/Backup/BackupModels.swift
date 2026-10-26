@@ -36,6 +36,8 @@ struct CardDTO: Codable, Sendable {
     var stability: Double?
     var difficulty: Double?
     var noteID: String?
+    var isSuspended: Bool?
+    var isLeech: Bool?
 }
 
 struct ReviewLogDTO: Codable, Sendable {
@@ -60,7 +62,8 @@ extension CardDTO {
         self.init(id: card.id, front: card.front, back: card.back, createdAt: card.createdAt,
                   phase: card.phaseRaw, due: card.due, intervalDays: card.intervalDays, ease: card.ease,
                   reps: card.reps, lapses: card.lapses, step: card.step, lastReviewed: card.lastReviewed,
-                  stability: card.stability, difficulty: card.difficulty, noteID: card.noteID)
+                  stability: card.stability, difficulty: card.difficulty, noteID: card.noteID,
+                  isSuspended: card.isSuspended, isLeech: card.isLeech)
     }
 
     /// A brand-new, never-studied card.
@@ -96,5 +99,7 @@ extension Card {
         stability = dto.stability
         difficulty = dto.difficulty
         noteID = dto.noteID
+        isSuspended = dto.isSuspended ?? false
+        isLeech = dto.isLeech ?? false
     }
 }

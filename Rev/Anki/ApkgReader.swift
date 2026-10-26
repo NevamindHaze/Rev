@@ -3,31 +3,36 @@ import ZIPFoundation
 
 enum ApkgError: LocalizedError {
     case notAnAnkiFile
-    case newFormatOnly
     case noCards
 
     var errorDescription: String? {
         switch self {
         case .notAnAnkiFile:
-            return "This doesn't look like an Anki .apkg file."
-        case .newFormatOnly:
-            return "This file uses Anki's newest format. In Anki, export the deck again and tick “Support older Anki versions”."
+            return "This doesn't look like an Anki .apkg or .colpkg file."
         case .noCards:
             return "No cards were found in this file."
         }
     }
 }
 
-/// Reads an Anki .apkg file and turns it into Rev decks.
+/// What came out of an Anki file.
+struct ApkgContents: Sendable {
+    var decks: [DeckDTO]
+    var imagesSaved: Int
+}
+
+/// Reads an Anki .apkg (or .colpkg) file and turns it into Rev decks.
 ///
-/// An .apkg is a zip file. Inside is a SQLite database ("collection.anki2" or ".anki21") with:
-/// - `col`:   the deck names and note types (as JSON text)
-/// - `notes`: the note fields, separated by an invisible character (0x1F)
-/// - `cards`: one row per card, saying which note, which template and which deck
-/// We fill each card's template with its note's fields, then strip the HTML to plain text.
-/// Your study progress from Anki is kept. Images and sounds are skipped for now.
+/// The file is a zip. Inside is a SQLite database with the notes and cards, plus the media files.
+/// There are two formats:
+/// - Older ("collection.anki2" / ".anki21"): deck names and note types are JSON text in the `col` table,
+///   and media files are stored as-is.
+/// - Newest ("collection.anki21b"): everything is compressed with zstd, and note types live in
+///   their own tables in protobuf format.
+/// We fill each card's template with its note's fields, then turn the HTML into plain text.
+/// Study progress, images, suspended cards and leech tags come across. Sounds are skipped.
 enum ApkgReader {
-    static func read(fileAt url: URL, now: Date = Date()) throws -> [DeckDTO] {
+    static func read(fileAt url: URL, now: Date = Date()) throws -> ApkgContents {
         let workFolder = try FileHelpers.makeTemporaryFolder()
         defer { try? FileManager.default.removeItem(at: workFolder) }
 
@@ -39,49 +44,100 @@ enum ApkgReader {
         }
 
         let names = Set(archive.map { $0.path })
+        let isNewFormat: Bool
         let collectionName: String
-        if names.contains("collection.anki21") {
+        if names.contains("collection.anki21b") {
+            isNewFormat = true
+            collectionName = "collection.anki21b"
+        } else if names.contains("collection.anki21") {
+            isNewFormat = false
             collectionName = "collection.anki21"
-        } else if names.contains("collection.anki21b") {
-            throw ApkgError.newFormatOnly
         } else if names.contains("collection.anki2") {
+            isNewFormat = false
             collectionName = "collection.anki2"
         } else {
             throw ApkgError.notAnAnkiFile
         }
 
-        guard let entry = archive[collectionName] else { throw ApkgError.notAnAnkiFile }
+        // 1. The database.
+        var collectionData = try entryData(collectionName, in: archive)
+        if isNewFormat { collectionData = try Zstd.decompress(collectionData) }
         let databaseURL = workFolder.appendingPathComponent("collection.sqlite")
-        _ = try archive.extract(entry, to: databaseURL)
+        try collectionData.write(to: databaseURL)
+        collectionData = Data()   // free the memory
 
         let database = try SQLiteDatabase(path: databaseURL.path, readOnly: true)
         let decks = try readCollection(database, now: now)
         if decks.isEmpty { throw ApkgError.noCards }
-        return decks
+
+        // 2. Images (a problem here shouldn't stop the cards from importing).
+        let imagesSaved = (try? saveImages(from: archive, isNewFormat: isNewFormat)) ?? 0
+
+        return ApkgContents(decks: decks, imagesSaved: imagesSaved)
+    }
+
+    private static func entryData(_ name: String, in archive: Archive) throws -> Data {
+        guard let entry = archive[name] else { throw ApkgError.notAnAnkiFile }
+        var data = Data()
+        _ = try archive.extract(entry) { chunk in data.append(chunk) }
+        return data
+    }
+
+    // MARK: - Media
+
+    /// The "media" file lists which zip entry ("0", "1", ...) is which file name.
+    private static func saveImages(from archive: Archive, isNewFormat: Bool) throws -> Int {
+        guard archive["media"] != nil else { return 0 }
+        let listData = try entryData("media", in: archive)
+
+        var namesByEntry: [String: String] = [:]
+        if isNewFormat {
+            // Protobuf: a list of entries, each with the file name in field 1.
+            // The zip entry is its position in the list (or field 255, if set).
+            let list = ProtobufMessage(try Zstd.decompress(listData))
+            for (index, entry) in list.messages(1).enumerated() {
+                guard let name = entry.string(1) else { continue }
+                let entryName = entry.number(255).map { String($0) } ?? String(index)
+                namesByEntry[entryName] = name
+            }
+        } else if let json = try? JSONSerialization.jsonObject(with: listData) as? [String: String] {
+            namesByEntry = json
+        }
+
+        var saved = 0
+        for (entryName, fileName) in namesByEntry where MediaStore.isImage(fileName) {
+            guard archive[entryName] != nil else { continue }
+            var data = try entryData(entryName, in: archive)
+            if isNewFormat { data = try Zstd.decompress(data) }
+            if try MediaStore.save(data, named: fileName) { saved += 1 }
+        }
+        return saved
     }
 
     // MARK: - Reading the database
 
     private static func readCollection(_ db: SQLiteDatabase, now: Date) throws -> [DeckDTO] {
         var collectionCreated: Int64 = 0
-        var decksJSON = "{}"
-        var modelsJSON = "{}"
-        try db.query("SELECT crt, decks, models FROM col LIMIT 1") { row in
+        try db.query("SELECT crt FROM col LIMIT 1") { row in
             collectionCreated = row.int(0)
-            decksJSON = row.text(1)
-            modelsJSON = row.text(2)
         }
-        let deckNames = parseDeckNames(decksJSON)
-        let noteTypes = parseNoteTypes(modelsJSON)
 
-        var notes: [Int64: (noteTypeID: Int64, fields: [String], guid: String)] = [:]
-        try db.query("SELECT id, mid, flds, guid FROM notes") { row in
-            notes[row.int(0)] = (row.int(1), row.text(2).components(separatedBy: "\u{1F}"), row.text(3))
+        var hasNewTables = false
+        try db.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'notetypes'") { _ in
+            hasNewTables = true
+        }
+        let deckNames = try (hasNewTables ? readDeckNamesFromTables(db) : readDeckNamesFromJSON(db))
+        let noteTypes = try (hasNewTables ? readNoteTypesFromTables(db) : readNoteTypesFromJSON(db))
+
+        var notes: [Int64: (noteTypeID: Int64, fields: [String], guid: String, tags: String)] = [:]
+        try db.query("SELECT id, mid, flds, guid, tags FROM notes") { row in
+            notes[row.int(0)] = (row.int(1), row.text(2).components(separatedBy: "\u{1F}"), row.text(3), row.text(4))
         }
 
         var cardsByDeck: [Int64: [CardDTO]] = [:]
         var order = 0
-        try db.query("SELECT nid, did, odid, ord, type, due, ivl, factor, reps, lapses, data FROM cards ORDER BY type, due, id") { row in
+        let sql = "SELECT nid, did, odid, ord, type, due, ivl, factor, reps, lapses, data, queue FROM cards ORDER BY type, due, id"
+        try db.query(sql) { row in
             guard let note = notes[row.int(0)],
                   let noteType = noteTypes[note.noteTypeID],
                   let sides = noteType.render(fields: note.fields, ord: Int(row.int(3))) else { return }
@@ -97,6 +153,8 @@ enum ApkgReader {
                           factor: row.int(7), reps: row.int(8), lapses: row.int(9),
                           collectionCreated: collectionCreated, now: now)
             card.noteID = note.guid.isEmpty ? String(row.int(0)) : note.guid
+            card.isSuspended = row.int(11) == -1
+            card.isLeech = note.tags.lowercased().split(separator: " ").contains("leech")
 
             // If Anki used FSRS, it stored the card's memory as {"s": stability, "d": difficulty}.
             let extra = jsonDictionary(row.text(10))
@@ -112,8 +170,7 @@ enum ApkgReader {
         }
 
         return cardsByDeck.map { deckID, cards in
-            let name = (deckNames[deckID] ?? "Imported").replacingOccurrences(of: "::", with: " › ")
-            return DeckDTO(id: UUID(), name: name, createdAt: now, cards: cards)
+            DeckDTO(id: UUID(), name: deckNames[deckID] ?? "Imported", createdAt: now, cards: cards)
         }
         .sorted { $0.name < $1.name }
     }
@@ -142,25 +199,23 @@ enum ApkgReader {
         }
     }
 
-    // MARK: - Reading the JSON in the `col` table
+    // MARK: - Older format: JSON in the `col` table
 
-    private static func jsonDictionary(_ text: String) -> [String: Any] {
-        guard let data = text.data(using: .utf8),
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [:] }
-        return object
-    }
-
-    private static func parseDeckNames(_ json: String) -> [Int64: String] {
+    private static func readDeckNamesFromJSON(_ db: SQLiteDatabase) throws -> [Int64: String] {
+        var json = "{}"
+        try db.query("SELECT decks FROM col LIMIT 1") { row in json = row.text(0) }
         var names: [Int64: String] = [:]
         for (key, value) in jsonDictionary(json) {
             if let id = Int64(key), let deck = value as? [String: Any], let name = deck["name"] as? String {
-                names[id] = name
+                names[id] = name.replacingOccurrences(of: "::", with: " › ")
             }
         }
         return names
     }
 
-    private static func parseNoteTypes(_ json: String) -> [Int64: AnkiNoteType] {
+    private static func readNoteTypesFromJSON(_ db: SQLiteDatabase) throws -> [Int64: AnkiNoteType] {
+        var json = "{}"
+        try db.query("SELECT models FROM col LIMIT 1") { row in json = row.text(0) }
         var result: [Int64: AnkiNoteType] = [:]
         for (key, value) in jsonDictionary(json) {
             guard let id = Int64(key), let model = value as? [String: Any] else { continue }
@@ -180,6 +235,50 @@ enum ApkgReader {
                                       isCloze: (model["type"] as? Int) == 1)
         }
         return result
+    }
+
+    // MARK: - Newest format: separate tables with protobuf settings
+
+    private static func readDeckNamesFromTables(_ db: SQLiteDatabase) throws -> [Int64: String] {
+        var names: [Int64: String] = [:]
+        try db.query("SELECT id, name FROM decks") { row in
+            // Sub-decks are separated by an invisible character (0x1F).
+            names[row.int(0)] = row.text(1).replacingOccurrences(of: "\u{1F}", with: " › ")
+        }
+        return names
+    }
+
+    private static func readNoteTypesFromTables(_ db: SQLiteDatabase) throws -> [Int64: AnkiNoteType] {
+        var isCloze: [Int64: Bool] = [:]
+        try db.query("SELECT id, config FROM notetypes") { row in
+            // Field 1 of the note type's settings is its kind: 0 = normal, 1 = cloze.
+            isCloze[row.int(0)] = ProtobufMessage(row.blob(1)).number(1) == 1
+        }
+
+        var fields: [Int64: [(ord: Int64, name: String)]] = [:]
+        try db.query("SELECT ntid, ord, name FROM fields") { row in
+            fields[row.int(0), default: []].append((row.int(1), row.text(2)))
+        }
+
+        var templates: [Int64: [Int: (front: String, back: String)]] = [:]
+        try db.query("SELECT ntid, ord, config FROM templates") { row in
+            // Field 1 = question template, field 2 = answer template.
+            let config = ProtobufMessage(row.blob(2))
+            templates[row.int(0), default: [:]][Int(row.int(1))] = (config.string(1) ?? "", config.string(2) ?? "")
+        }
+
+        var result: [Int64: AnkiNoteType] = [:]
+        for (id, cloze) in isCloze {
+            let names = (fields[id] ?? []).sorted { $0.ord < $1.ord }.map { $0.name }
+            result[id] = AnkiNoteType(fieldNames: names, templates: templates[id] ?? [:], isCloze: cloze)
+        }
+        return result
+    }
+
+    private static func jsonDictionary(_ text: String) -> [String: Any] {
+        guard let data = text.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [:] }
+        return object
     }
 }
 

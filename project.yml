@@ -16,6 +16,10 @@ packages:
   ZIPFoundation:
     url: https://github.com/weichsel/ZIPFoundation
     from: "0.9.19"
+  # Facebook's Zstandard compression. Anki's newest file format is compressed with it.
+  zstd:
+    url: https://github.com/facebook/zstd
+    from: "1.5.6"
 
 targets:
   Rev:
@@ -25,6 +29,8 @@ targets:
       - path: Rev
     dependencies:
       - package: ZIPFoundation
+      - package: zstd
+        product: libzstd
     scheme: {}           # makes a shared "Rev" scheme so the build command can find it
     info:
       path: Supporting/Info.plist   # XcodeGen writes this file for us during the build
