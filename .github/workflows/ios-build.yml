@@ -81,11 +81,16 @@ jobs:
           # The previous source file, so earlier versions stay in SideStore's version history.
           curl -fsSL "https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/source.json" -o previous.json \
             || echo '{"apps":[{"versions":[]}]}' > previous.json
+          # Screenshots shown in SideStore: every PNG in docs/screenshots, in name order.
+          SHOTS=$(ls docs/screenshots/*.png 2>/dev/null | sort \
+            | jq -R -s -c --arg base "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/" \
+                'split("\n") | map(select(length > 0)) | map($base + .)')
           jq -n \
             --arg version "$VERSION" --arg build "$BUILD" --arg date "$DATE" --arg url "$URL" \
             --arg icon "$ICON" --arg owner "$GITHUB_REPOSITORY_OWNER" \
             --arg website "https://github.com/${GITHUB_REPOSITORY}" \
             --arg notes "$(cat RELEASE_NOTES.md)" --argjson size "$SIZE" \
+            --argjson screenshots "${SHOTS:-[]}" \
             --slurpfile previous previous.json \
             -f .github/sidestore-source.jq > source.json
           cat source.json

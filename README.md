@@ -1,35 +1,98 @@
-# Rev
+<p align="center">
+  <img src="Rev/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="140" alt="Rev app icon">
+</p>
 
-A personal flashcard app for iPhone, built with SwiftUI and SwiftData.
+<h1 align="center">Rev</h1>
+
+<p align="center">
+  <b>A calm, thumb-friendly spaced-repetition flashcard app for iPhone.</b><br>
+  Built for studying veterinary medicine, with smart FSRS scheduling and two-way sync with Anki.
+</p>
+
+<p align="center">
+  <a href="https://github.com/NevamindHaze/Rev/actions/workflows/ios-build.yml"><img src="https://github.com/NevamindHaze/Rev/actions/workflows/ios-build.yml/badge.svg" alt="Build"></a>
+  <a href="https://github.com/NevamindHaze/Rev/releases/latest"><img src="https://img.shields.io/github/v/release/NevamindHaze/Rev?label=version&color=E96F8A" alt="Latest version"></a>
+  <img src="https://img.shields.io/badge/iOS-17%2B-4A9886" alt="iOS 17+">
+  <img src="https://img.shields.io/badge/SwiftUI-SwiftData-F4B53F" alt="SwiftUI and SwiftData">
+</p>
+
+## Screenshots
+
+<!-- Each screenshot follows GitHub's light/dark theme. -->
+<p align="center">
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/dark/01-decks.png"><img src="docs/screenshots/01-decks.png" width="230" alt="Your decks"></picture>
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/dark/02-review-question.png"><img src="docs/screenshots/02-review-question.png" width="230" alt="Review: question"></picture>
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/dark/03-review-answer.png"><img src="docs/screenshots/03-review-answer.png" width="230" alt="Review: answer"></picture>
+</p>
+<p align="center">
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/dark/04-deck.png"><img src="docs/screenshots/04-deck.png" width="230" alt="Inside a deck"></picture>
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/dark/05-editor.png"><img src="docs/screenshots/05-editor.png" width="230" alt="Card editor"></picture>
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/dark/06-stats.png"><img src="docs/screenshots/06-stats.png" width="230" alt="Stats"></picture>
+</p>
+
+<p align="center"><sub>Your decks · Question · Answer with four big buttons · Inside a deck · Card editor · Stats</sub></p>
 
 ## Features
-- Decks: create, rename (long-press), delete (long-press)
-- Cards: add one at a time ("Save & next"), paste many at once, edit, delete
-- Review: question → tap → answer → Again / Hard / Good / Easy
-- Scheduling: SM-2 style, swappable for FSRS later (`Rev/Scheduling`)
+
+**Studying**
+- Minimal review screen: tap to reveal, then four big buttons (Again · Hard · Good · Easy) that show when you'll see the card next
+- **FSRS** scheduling with an adjustable memory target, or classic **SM-2**
+- Learning steps, overdue credit, interval fuzz, sibling burying and a 4 am day rollover, like Anki
+- Undo, edit-while-reviewing, leech detection with rewrite/suspend suggestions
+
+**Cards**
+- Card types: **Basic**, **Basic + reversed**, **Cloze** (fill in the blank) and **Type the answer**
+- Tags with suggestions, a card browser with filters (due, new, learning, leeches, suspended, tag) and sorting
+- Images with tap-to-zoom, neat bullet and numbered lists, “paste many” for quick bulk entry
+
+**Anki**
+- Import any `.apkg` or `.colpkg` (old or newest format) with text, images, progress, tags and suspended cards
+- Export decks back to Anki
+- **Two-way sync** with Anki on your computer through iCloud Drive and the included [Rev Sync add-on](anki-addon/) — reviews, edits, new cards, tags and deletions in both directions, without touching AnkiWeb's protocol
+
+**Progress and safety**
 - Stats: cards due, reviews today, streak, last 7 days
-- Backup: export/restore everything as JSON through the Files app
-- Anki: import and export `.apkg` decks (text only for now)
+- JSON backup and restore through the Files app
+- Dark mode, warm colours, large rounded type
 
-## How to build
-1. Upload or change files on the `main` branch. The **iOS Build** workflow then starts on its own.
-   You can also start it by hand: **Actions → iOS Build → Run workflow**.
-2. When it finishes (green tick), open the run and download **Rev-ipa** under *Artifacts*.
-3. Unzip it to get `Rev.ipa`, put that on your iPhone, and install it with SideStore.
+## Install (SideStore)
 
-## Importing from Anki
-In Anki on your computer: **File → Export → Anki Deck Package (.apkg)**. Rev reads both the
-old and the newest format, including `.colpkg`. Text, images, progress, suspended cards and
-leech tags come across; sounds are skipped.
+Rev is a personal app distributed as an unsigned build for sideloading.
 
-## Folder map
+1. In **SideStore**, go to **Sources → +** and add:
+   ```
+   https://github.com/NevamindHaze/Rev/releases/latest/download/source.json
+   ```
+2. Open **Rev** in the source and tap **Install**. New versions appear as updates, with release notes.
+
+## Sync with Anki
+
 ```
-Rev/App          app start + tabs
-Rev/Models       Deck, Card, ReviewLog (saved with SwiftData)
-Rev/Scheduling   Rating, SM-2 algorithm, study queue
-Rev/Stats        numbers for the stats screen
-Rev/Backup       JSON backup / restore
-Rev/Anki         .apkg import / export
-Rev/Theme        colours, fonts, shared buttons
+Rev (iPhone)  ⇄  iCloud Drive / "Rev Sync"  ⇄  Rev Sync add-on (Anki on your computer)  ⇄  AnkiWeb
+```
+
+1. Copy [`anki-addon/rev_sync`](anki-addon/rev_sync) into Anki's `addons21` folder and restart Anki. It makes a backup before its first sync.
+2. In Rev, open **Settings → Sync with Anki** and choose the **Rev Sync** folder in iCloud Drive.
+
+Each card is matched by its Anki note and card number. Text and schedule are merged separately — whichever app changed it most recently wins — and review history from both apps is kept.
+
+## How it's built
+
+| | |
+|---|---|
+| UI and storage | SwiftUI, SwiftData (iOS 17+) |
+| Project | Generated by [XcodeGen](https://github.com/yonaskolb/XcodeGen) from [`project.yml`](project.yml) |
+| Builds | GitHub Actions on macOS: every push to `main` builds an unsigned IPA and publishes a release + SideStore source |
+| Libraries | [ZIPFoundation](https://github.com/weichsel/ZIPFoundation), [zstd](https://github.com/facebook/zstd) |
+| Release notes | [`RELEASE_NOTES.md`](RELEASE_NOTES.md) — shown in SideStore and on each GitHub release |
+
+```
+Rev/App          app start, tabs, sync triggers
+Rev/Models       Deck, Card, ReviewLog, card kinds and tags
+Rev/Scheduling   FSRS, SM-2, study queue
+Rev/Sync         two-way Anki sync (file format, merge rules, iCloud access)
+Rev/Anki         .apkg / .colpkg import and export
+Rev/Backup       JSON backup and restore
 Rev/Views        all screens
+anki-addon       the Rev Sync add-on for Anki desktop (+ tests)
 ```
