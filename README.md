@@ -37,7 +37,8 @@ See [`RELEASE_NOTES.md`](RELEASE_NOTES.md) for what's new.
 src/Rev.Core          the "thinking": scheduling, cards, Anki, backup, stats (no screens; tested)
 src/Rev.App           the Windows app: screens, theme, controls
 tests/Rev.Core.Tests  automatic checks for Rev.Core
-tools/                helpers: make-icon.ps1, Rev.Demo (sample data)
+tools/                helpers: make-icon.ps1, Rev.Demo (sample data), Anki test scripts
+docs/                 SYNC-PROPOSAL.md: how Rev for Windows could join the iPhone ↔ Anki sync
 ```
 
 ## Building it yourself
