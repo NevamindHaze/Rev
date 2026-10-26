@@ -21,14 +21,22 @@
                     <TextBlock x:Name="GreetingText" Style="{StaticResource HeadingText}" Text="Hi there 👋" />
                     <TextBlock x:Name="DateText" Style="{StaticResource MutedText}" Margin="0,4,0,0" />
                 </StackPanel>
-                <Button Grid.Column="1" Style="{StaticResource SecondaryPillButton}" MinHeight="48"
-                        VerticalAlignment="Center" Click="NewDeck_Click" ToolTip="New deck (Ctrl+N)"
-                        AutomationProperties.Name="New deck">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Style="{StaticResource IconText}" FontSize="14" Text="&#xE710;" Margin="0,0,8,0" />
-                        <TextBlock Text="New deck" />
-                    </StackPanel>
-                </Button>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource SecondaryPillButton}" MinHeight="48" Click="AllCards_Click"
+                            ToolTip="Search every card (Ctrl+F)" AutomationProperties.Name="All cards">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource IconText}" FontSize="14" Text="&#xE721;" Margin="0,0,8,0" />
+                            <TextBlock Text="All cards" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource SecondaryPillButton}" MinHeight="48" Margin="10,0,0,0"
+                            Click="NewDeck_Click" ToolTip="New deck (Ctrl+N)" AutomationProperties.Name="New deck">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource IconText}" FontSize="14" Text="&#xE710;" Margin="0,0,8,0" />
+                            <TextBlock Text="New deck" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
             </Grid>
 
             <!-- Today's numbers -->

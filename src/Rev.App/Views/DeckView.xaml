@@ -62,7 +62,7 @@
             <TextBlock Style="{StaticResource HeadingText}" Text="Cards" Margin="4,32,0,12" />
             <TextBlock x:Name="EmptyText" Style="{StaticResource MutedText}" Margin="4,0,0,0"
                        Text="No cards yet. Click “Add card” to start." />
-            <StackPanel x:Name="CardList" />
+            <controls:CardBrowser x:Name="Browser" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

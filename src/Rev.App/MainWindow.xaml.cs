@@ -42,7 +42,15 @@ public partial class MainWindow : Window
         if (previous is IScreen screen && previous.IsLoaded) screen.Refresh();
     }
 
-    private void Show(UserControl screen) => Screen.Content = screen;
+    private void Show(UserControl screen)
+    {
+        Screen.Content = screen;
+        // Make sure something on the new screen has the keyboard, so its shortcuts (Esc, Ctrl+N…) work at once.
+        Dispatcher.BeginInvoke(() =>
+        {
+            if (!screen.IsKeyboardFocusWithin) screen.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
+        }, System.Windows.Threading.DispatcherPriority.Input);
+    }
 
     /// <summary>On a small or zoomed-in screen, shrinks the window so all of it is visible.</summary>
     private void FitOnScreen()

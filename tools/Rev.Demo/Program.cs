@@ -101,6 +101,21 @@ for (int d = 0; d < decks.Length; d++)
     }
 }
 
+// Tags, one leech and one suspended card, so the card browser's filters have something to show.
+foreach (var card in db.GetCards())
+{
+    string deckName = db.GetDecks().First(d => d.Id == card.DeckId).Name;
+    card.TagsText = deckName switch
+    {
+        "Pharmacology" => card.Front.Contains("toxicity") || card.Front.Contains("Antidote") ? "pharm toxicology" : "pharm",
+        "Parasitology" => "parasites paper_1",
+        _ => "",
+    };
+    if (card.Front.StartsWith("Why avoid ivermectin")) card.IsLeech = true;
+    if (card.Front.StartsWith("Approach for a bovine")) card.IsSuspended = true;
+    db.UpdateCard(card);
+}
+
 // A few answers given today, so "Done today" isn't zero.
 foreach (var card in db.GetCards().Take(5))
     db.AddReviewLog(new ReviewLog { CardId = card.Id, Date = today.AddHours(2 + random.NextDouble()), Rating = Rating.Good });

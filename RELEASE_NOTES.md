@@ -7,6 +7,8 @@ What's new
 • Four kinds of card: Basic, Basic + reversed (2 cards), Cloze with a “word to hide” helper (one card per number), and Type the answer.
 • Fast card entry: Save & next (Ctrl+Enter) keeps your card kind and tags, tag suggestions are one click away, and Paste many turns “front | back” lines into cards.
 • Bold and italic: select words and press Ctrl+B or Ctrl+I (or click B / I). Cards show real formatting.
+• Card browser, inside each deck and for All cards (Ctrl+F): search questions, answers and tags; show only due, new, learning, review, leech or suspended cards, or one tag; sort by newest, oldest, due soonest, A to Z, most forgotten or hardest.
+• Each card shows badges for its state, kind, leech and suspended. Right-click it (or click ⋯) to edit, add or remove tags, suspend or unsuspend, clear the leech mark, or delete it (always asks first).
 • Studying: a calm review screen with new / learning / review counts, and four big buttons (Again · Hard · Good · Easy) that show when you'll see the card next. Study one deck, or Review all decks.
 • Keyboard first: Space shows the answer, 1–4 rate, Ctrl+Z undoes, E edits the card, Esc goes back. Clicking works everywhere too.
 • Undo puts the card back exactly as it was. Edit a card mid-review without losing your place.

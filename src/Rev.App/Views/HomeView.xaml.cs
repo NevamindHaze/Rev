@@ -16,6 +16,8 @@ public partial class HomeView : UserControl, IScreen
         InitializeComponent();
         // Ctrl+N anywhere on this screen makes a new deck.
         InputBindings.Add(new KeyBinding(new RelayCommand(NewDeck), Key.N, ModifierKeys.Control));
+        // Ctrl+F searches every card.
+        InputBindings.Add(new KeyBinding(new RelayCommand(OpenAllCards), Key.F, ModifierKeys.Control));
         // Two columns of deck tiles on a wide window, one on a narrow one.
         SizeChanged += (_, _) => DeckGrid.Columns = ActualWidth >= 720 ? 2 : 1;
         Loaded += (_, _) => Refresh();
@@ -59,6 +61,10 @@ public partial class HomeView : UserControl, IScreen
     // ---- Actions ----
 
     private void ReviewAll_Click(object sender, RoutedEventArgs e) => MainWindow.Current.Open(new ReviewView(null));
+
+    private void AllCards_Click(object sender, RoutedEventArgs e) => OpenAllCards();
+
+    private void OpenAllCards() => MainWindow.Current.Open(new AllCardsView());
 
     private void NewDeck_Click(object sender, RoutedEventArgs e) => NewDeck();
 

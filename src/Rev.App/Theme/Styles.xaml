@@ -153,6 +153,20 @@
         </Setter>
     </Style>
 
+    <!-- Small pill buttons for the card browser's filters. The "active" one is teal. -->
+    <Style x:Key="ChipButton" TargetType="Button" BasedOn="{StaticResource SecondaryPillButton}">
+        <Setter Property="MinHeight" Value="40" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Padding" Value="16,0" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+    </Style>
+    <Style x:Key="ActiveChipButton" TargetType="Button" BasedOn="{StaticResource TealPillButton}">
+        <Setter Property="MinHeight" Value="40" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Padding" Value="16,0" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+    </Style>
+
     <!-- A round button with just a symbol, e.g. the back arrow or B / I in the editor. -->
     <Style x:Key="RoundIconButton" TargetType="Button" BasedOn="{StaticResource SecondaryPillButton}">
         <Setter Property="Width" Value="46" />
@@ -300,7 +314,10 @@
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="18" ShadowDepth="3" Opacity="0.22" />
                         </Border.Effect>
-                        <StackPanel IsItemsHost="True" />
+                        <!-- Long menus (e.g. many tags) scroll instead of running off the screen. -->
+                        <ScrollViewer MaxHeight="440" VerticalScrollBarVisibility="Auto" Focusable="False">
+                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
+                        </ScrollViewer>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
@@ -318,7 +335,9 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <ContentPresenter ContentSource="Header" RecognizesAccessKey="True" />
+                            <!-- RecognizesAccessKey off: otherwise "_" in a tag like paper_1 would vanish
+                                 (Windows treats it as a shortcut-letter marker). -->
+                            <ContentPresenter ContentSource="Header" RecognizesAccessKey="False" />
                             <TextBlock Grid.Column="1" Margin="24,0,0,0" Text="{TemplateBinding InputGestureText}"
                                        Foreground="{DynamicResource MutedInkBrush}" />
                         </Grid>
