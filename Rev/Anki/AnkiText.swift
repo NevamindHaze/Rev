@@ -50,18 +50,54 @@ enum AnkiText {
 
     // MARK: HTML → plain text
 
+    /// Works like a web browser: line breaks typed in the HTML source don't count,
+    /// <br> is a line break, and the edges of blocks (paragraphs, list items...)
+    /// start a new line, with several edges in a row counting as just one.
     static func plainText(fromHTML html: String) -> String {
+        let edge = "\u{1}"         // temporary marker for "a block starts or ends here"
+        let afterLabel = "\u{2}"   // temporary marker right after "•" or "1."
         var s = html
         s = replace(#"<(style|script)[^>]*>.*?</\1>"#, in: s) { _ in "" }
+        s = replace(#"\s+"#, in: s) { _ in " " }
         s = replace(#"<br\s*/?>"#, in: s) { _ in "\n" }
-        s = replace(#"<hr[^>]*>"#, in: s) { _ in "\n" }
-        s = replace(#"</(div|p|li|tr|h[1-6])>"#, in: s) { _ in "\n" }
-        s = replace(#"<li(\s[^>]*)?>"#, in: s) { _ in "• " }
+
+        // Lists: <ol> items get 1. 2. 3., <ul> items get •. Lists can sit inside lists.
+        var openLists: [(numbered: Bool, count: Int)] = []
+        s = replace(#"<(/?)(ol|ul|li)(\s[^>]*)?>"#, in: s) { groups in
+            switch (groups[2].lowercased(), groups[1] == "/") {
+            case ("ol", false):
+                openLists.append((true, 0))
+            case ("ul", false):
+                openLists.append((false, 0))
+            case ("ol", true), ("ul", true):
+                if !openLists.isEmpty { openLists.removeLast() }
+            case ("li", false):
+                guard !openLists.isEmpty else { return edge + "•" + afterLabel }
+                openLists[openLists.count - 1].count += 1
+                let list = openLists[openLists.count - 1]
+                return edge + (list.numbered ? "\(list.count)." : "•") + afterLabel
+            default:
+                break   // </li>
+            }
+            return edge
+        }
+
+        s = replace(#"</?(div|p|tr|table|blockquote|h[1-6])(\s[^>]*)?>"#, in: s) { _ in edge }
+        s = replace(#"<hr[^>]*>"#, in: s) { _ in edge }
         s = replace(#"<img[^>]*>"#, in: s) { _ in "[image]" }
         s = replace(#"\[sound:[^\]]*\]"#, in: s) { _ in "" }
         s = replace(#"<[^>]+>"#, in: s) { _ in "" }
         s = decodeEntities(s)
+
+        // A list item whose text sits in its own <div> stays on the "•" or "1." line.
+        s = replace(#"\x{02}[ \x{01}]*"#, in: s) { _ in " " }
+        // A run of block edges becomes one line break. If it also holds a <br>
+        // (Anki's way of writing an empty line), keep one blank line.
+        s = replace(#"[ \n]*\x{01}[ \x{01}\n]*"#, in: s) { groups in
+            groups[0].contains("\n") ? "\n\n" : "\n"
+        }
         s = replace(#"[ \t]+\n"#, in: s) { _ in "\n" }
+        s = replace(#"\n[ \t]+"#, in: s) { _ in "\n" }
         s = replace(#"\n{3,}"#, in: s) { _ in "\n\n" }
         return s.trimmingCharacters(in: .whitespacesAndNewlines)
     }
