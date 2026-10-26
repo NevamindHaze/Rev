@@ -142,6 +142,7 @@ struct CardBrowser: View {
                 .textInputAutocapitalization(.never)
             Button("Add") {
                 card.tags = card.tags + Tags.parse(newTagText)
+                card.markEdited()
                 try? context.save()
             }
             Button("Cancel", role: .cancel) {}
@@ -178,6 +179,7 @@ struct CardBrowser: View {
                 ForEach(card.tags, id: \.self) { tag in
                     Button(tag) {
                         card.tags = card.tags.filter { $0 != tag }
+                        card.markEdited()
                         try? context.save()
                     }
                 }
@@ -187,6 +189,7 @@ struct CardBrowser: View {
         }
         Button {
             card.isSuspended.toggle()
+            card.markScheduled()
             try? context.save()
         } label: {
             if card.isSuspended {
@@ -198,6 +201,7 @@ struct CardBrowser: View {
         if card.isLeech {
             Button {
                 card.isLeech = false
+                card.markEdited()
                 try? context.save()
             } label: {
                 Label("Not a leech any more", systemImage: "checkmark.circle")

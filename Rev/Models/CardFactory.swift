@@ -16,8 +16,9 @@ enum CardFactory {
         case .reversed:
             make(front: front, back: back, kind: kind, noteID: noteID, tags: tags, deck: deck,
                  context: context, createdAt: createdAt)
-            make(front: back, back: front, kind: kind, noteID: noteID, tags: tags, deck: deck,
-                 context: context, createdAt: createdAt.addingTimeInterval(0.001))
+            let reverse = make(front: back, back: front, kind: kind, noteID: noteID, tags: tags, deck: deck,
+                               context: context, createdAt: createdAt.addingTimeInterval(0.001))
+            reverse.noteOrd = 1
             return 2
         case .cloze:
             let numbers = clozeNumbers(in: front)
@@ -40,8 +41,8 @@ enum CardFactory {
 
         for sibling in siblings {
             if let number = sibling.clozeNumber, numbers.contains(number) {
-                fillCloze(sibling, source: source, extra: extra, number: number)
                 sibling.tags = tags
+                fillCloze(sibling, source: source, extra: extra, number: number)
             } else {
                 context.delete(sibling)
             }
@@ -87,6 +88,8 @@ enum CardFactory {
         card.clozeSource = source
         card.clozeExtra = extra
         card.clozeNumber = number
+        card.noteOrd = number - 1
+        card.markEdited()
         card.front = AnkiText.cloze(source, number: number, side: .front)
         let answer = AnkiText.cloze(source, number: number, side: .back)
         card.back = extra.isEmpty ? answer : answer + "\n\n" + extra

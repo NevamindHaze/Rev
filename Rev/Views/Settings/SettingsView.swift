@@ -18,7 +18,8 @@ struct SettingsView: View {
     @State private var isExporting = false
 
     // Opening a file
-    private enum ImportKind { case backup, anki }
+    private enum ImportKind { case backup, anki, syncFolder }
+    @ObservedObject private var sync = SyncService.shared
     @State private var importKind: ImportKind = .backup
     @State private var isImporting = false
     @State private var pendingBackup: BackupFile?
@@ -57,6 +58,8 @@ struct SettingsView: View {
             } footer: {
                 Text("FSRS predicts when you're about to forget each card. A higher target means you remember more but review more often; 90% suits most people. Switching algorithms keeps all your cards and progress.")
             }
+
+            syncSection
 
             Section {
                 Button(action: exportBackup) {
@@ -108,7 +111,7 @@ struct SettingsView: View {
             }
         }
         .fileImporter(isPresented: $isImporting,
-                      allowedContentTypes: importKind == .backup ? [.json] : [.apkg, .data]) { result in
+                      allowedContentTypes: allowedImportTypes) { result in
             handlePickedFile(result)
         }
         // The exporter sits on a separate background view so it doesn't clash with the importer.
@@ -131,6 +134,60 @@ struct SettingsView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(message ?? "")
+        }
+    }
+
+    // MARK: Sync with Anki
+
+    private var syncSection: some View {
+        Section {
+            if sync.isSetUp {
+                LabeledContent("Folder", value: sync.folderName ?? "Rev Sync")
+                LabeledContent("Last synced") {
+                    if sync.isSyncing {
+                        ProgressView()
+                    } else {
+                        Text(sync.lastSync.map { $0.formatted(.relative(presentation: .named)) } ?? "Not yet")
+                    }
+                }
+                if !sync.lastMessage.isEmpty {
+                    Text(sync.lastMessage)
+                        .font(Theme.body(14))
+                        .foregroundStyle(Theme.mutedInk)
+                }
+                Button {
+                    Task { await sync.sync(context: context) }
+                } label: {
+                    Label("Sync now", systemImage: "arrow.triangle.2.circlepath")
+                }
+                .disabled(sync.isSyncing)
+                Button(role: .destructive) {
+                    sync.turnOff()
+                } label: {
+                    Label("Stop syncing", systemImage: "xmark.circle")
+                }
+            } else {
+                Button {
+                    importKind = .syncFolder
+                    isImporting = true
+                } label: {
+                    Label("Choose the Rev Sync folder", systemImage: "folder.badge.gearshape")
+                }
+            }
+        } header: {
+            Text("Sync with Anki")
+        } footer: {
+            Text(sync.isSetUp
+                 ? "Rev syncs by itself when you open it and when you leave it. Anki on your computer syncs through the Rev Sync add-on, and then with AnkiWeb as usual."
+                 : "Keeps Rev and Anki on your computer in step, both ways. Tap the button, open iCloud Drive, select the “Rev Sync” folder and tap Open.")
+        }
+    }
+
+    private var allowedImportTypes: [UTType] {
+        switch importKind {
+        case .backup: return [.json]
+        case .anki: return [.apkg, .data]
+        case .syncFolder: return [.folder]
         }
     }
 
@@ -181,12 +238,20 @@ struct SettingsView: View {
             message = error.localizedDescription
         case .success(let url):
             do {
+                if importKind == .syncFolder {
+                    // A folder isn't copied: Rev keeps permission to use it in place.
+                    try sync.setFolder(url)
+                    Task { await sync.sync(context: context) }
+                    return
+                }
                 let localCopy = try FileHelpers.copyToTemporaryFolder(url)
                 switch importKind {
                 case .backup:
                     pendingBackup = try BackupService.decode(Data(contentsOf: localCopy))
                 case .anki:
                     importAnki(from: localCopy)
+                case .syncFolder:
+                    break
                 }
             } catch {
                 message = "Couldn't open that file: \(error.localizedDescription)"

@@ -153,6 +153,7 @@ enum ApkgReader {
                           factor: row.int(7), reps: row.int(8), lapses: row.int(9),
                           collectionCreated: collectionCreated, now: now)
             card.noteID = note.guid.isEmpty ? String(row.int(0)) : note.guid
+            card.noteOrd = Int(row.int(3))   // with noteID, identifies the card when syncing with Anki
             card.isSuspended = row.int(11) == -1
             card.isLeech = note.tags.lowercased().split(separator: " ").contains("leech")
             card.tags = Tags.format(Tags.parse(note.tags).filter { $0.lowercased() != "leech" })

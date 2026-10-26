@@ -281,6 +281,7 @@ struct CardEditorView: View {
             card.front = trimmed(front)
             card.back = trimmed(back)
             card.tags = tags
+            card.markEdited()
         }
         try? context.save()
         dismiss()

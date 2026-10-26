@@ -43,6 +43,10 @@ struct CardDTO: Codable, Sendable {
     var clozeSource: String?
     var clozeNumber: Int?
     var clozeExtra: String?
+    var noteOrd: Int?
+    var editedAt: Date?
+    var schedChangedAt: Date?
+    var fieldsReadOnly: Bool?
 }
 
 struct ReviewLogDTO: Codable, Sendable {
@@ -70,7 +74,8 @@ extension CardDTO {
                   stability: card.stability, difficulty: card.difficulty, noteID: card.noteID,
                   isSuspended: card.isSuspended, isLeech: card.isLeech, tags: card.tagsText,
                   kind: card.kindRaw, clozeSource: card.clozeSource, clozeNumber: card.clozeNumber,
-                  clozeExtra: card.clozeExtra)
+                  clozeExtra: card.clozeExtra, noteOrd: card.noteOrd, editedAt: card.editedAt,
+                  schedChangedAt: card.schedChangedAt, fieldsReadOnly: card.fieldsReadOnly)
     }
 
     /// A brand-new, never-studied card.
@@ -113,5 +118,9 @@ extension Card {
         clozeSource = dto.clozeSource
         clozeNumber = dto.clozeNumber
         clozeExtra = dto.clozeExtra
+        noteOrd = dto.noteOrd
+        editedAt = dto.editedAt
+        schedChangedAt = dto.schedChangedAt
+        fieldsReadOnly = dto.fieldsReadOnly ?? false
     }
 }

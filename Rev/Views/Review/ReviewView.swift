@@ -242,6 +242,7 @@ struct ReviewView: View {
         let stateBefore = card.schedulingState
         let newState = scheduler.next(after: stateBefore, rating: rating, now: now)
         card.schedulingState = newState
+        card.markScheduled()
         let log = ReviewLog(cardID: card.id, date: now, rating: rating,
                             wasNew: stateBefore.phase == .new, intervalDays: newState.intervalDays)
         context.insert(log)
@@ -253,6 +254,7 @@ struct ReviewView: View {
         if rating == .again, stateBefore.phase == .review,
            lapses >= Self.leechThreshold, (lapses - Self.leechThreshold) % 4 == 0 {
             card.isLeech = true
+            card.markEdited()
             newLeech = card
         }
 
@@ -263,6 +265,7 @@ struct ReviewView: View {
 
     private func suspend(_ card: Card) {
         card.isSuspended = true
+        card.markScheduled()
         try? context.save()
         withAnimation(.snappy) { loadNext() }
     }
@@ -273,6 +276,8 @@ struct ReviewView: View {
         last.card.schedulingState = last.stateBefore
         last.card.isLeech = last.wasLeech
         last.card.isSuspended = last.wasSuspended
+        last.card.markScheduled()
+        last.card.markEdited()
         context.delete(last.log)
         try? context.save()
         reviewedThisSession = max(0, reviewedThisSession - 1)

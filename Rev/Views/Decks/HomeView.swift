@@ -161,6 +161,7 @@ struct HomeView: View {
         let name = renameText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { return }
         deck.name = name
+        for card in deck.cards { card.markEdited() }   // so the new deck name syncs to Anki
         try? context.save()
     }
 }

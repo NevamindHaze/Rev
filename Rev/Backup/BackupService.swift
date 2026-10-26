@@ -99,6 +99,7 @@ enum BackupService {
                     existingByFront[key] = matches
                     // Cards imported before Rev tracked Anki notes learn which note they belong to.
                     if existing.noteID == nil { existing.noteID = cardDTO.noteID }
+                    if existing.noteOrd == nil, existing.noteID == cardDTO.noteID { existing.noteOrd = cardDTO.noteOrd }
                     // Bring in Anki's tags, unless you've already tagged the card in Rev.
                     if existing.tagsText.isEmpty, let tags = cardDTO.tags { existing.tagsText = tags }
                     if existing.front == cardDTO.front && existing.back == cardDTO.back {
@@ -123,7 +124,7 @@ enum BackupService {
 
     /// The question used to recognise the same card again. Image names and line breaks are
     /// ignored, because older versions of Rev stored them differently ("[image]", other spacing).
-    private static func matchKey(_ front: String) -> String {
+    static func matchKey(_ front: String) -> String {
         front.replacingOccurrences(of: #"\[img:[^\]]+\]|\[image\]"#, with: "🖼", options: .regularExpression)
             .components(separatedBy: .whitespacesAndNewlines)
             .filter { !$0.isEmpty }

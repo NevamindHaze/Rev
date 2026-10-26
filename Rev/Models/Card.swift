@@ -27,6 +27,18 @@ final class Card {
     var clozeNumber: Int?
     var clozeExtra: String?
 
+    // MARK: Sync with Anki
+
+    /// Which card of its note this is (Anki's "ord"): 0 for the first card, 1 for a reversed card,
+    /// cloze number − 1 for cloze cards. With `noteID` it identifies the card in both apps.
+    var noteOrd: Int?
+    /// When the text, tags or deck last changed.
+    var editedAt: Date?
+    /// When the schedule (or suspended state) last changed.
+    var schedChangedAt: Date?
+    /// True for cards from Anki note types Rev can't rewrite; text edits then stay in Rev.
+    var fieldsReadOnly: Bool = false
+
     // MARK: Scheduling information (updated every time you answer the card)
 
     /// "new", "learning", "review" or "relearning". Use `phase` instead of this directly.
@@ -71,6 +83,12 @@ extension Card {
         set { tagsText = Tags.format(newValue) }
     }
 
+    /// Call after changing text, tags or deck, so sync knows this is the newest version.
+    func markEdited() { editedAt = Date() }
+
+    /// Call after answering, suspending or unsuspending, so sync knows the schedule is newest.
+    func markScheduled() { schedChangedAt = Date() }
+
     /// All the scheduling fields bundled together, so the algorithm
     /// doesn't need to know about SwiftData at all.
     var schedulingState: SchedulingState {
@@ -101,6 +119,10 @@ extension Card {
         let card = Card(front: front, back: back)
         card.createdAt = createdAt
         card.due = createdAt
+        card.editedAt = createdAt
+        card.schedChangedAt = createdAt
+        card.noteID = UUID().uuidString
+        card.noteOrd = 0
         context.insert(card)
         card.deck = deck
         return card
