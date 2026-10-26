@@ -15,6 +15,7 @@ enum SyncMerger {
         var rescheduled = 0
         var deleted = 0
         var reviews = 0
+        var decksRemoved = 0
 
         var summary: String {
             var parts: [String] = []
@@ -23,6 +24,7 @@ enum SyncMerger {
             if rescheduled > 0 { parts.append("\(rescheduled.counted("schedule")) from Anki") }
             if deleted > 0 { parts.append("\(deleted.counted("card")) deleted") }
             if reviews > 0 { parts.append("\(reviews.counted("review")) from Anki") }
+            if decksRemoved > 0 { parts.append("\(decksRemoved.counted("empty deck")) removed") }
             return parts.isEmpty ? "Everything is up to date." : parts.joined(separator: ", ") + "."
         }
     }
@@ -54,9 +56,16 @@ enum SyncMerger {
             return created
         }
 
+        // Decks that lose cards in this sync (deleted, or moved to another deck). One left empty
+        // afterwards was deleted or renamed in another app, so it goes too (see step 2b).
+        var emptied: [PersistentIdentifier: Deck] = [:]
+        var gone = Set<PersistentIdentifier>()
+
         // 1. Cards deleted in Anki (unless changed in Rev afterwards).
         for tombstone in snapshot.deleted {
             guard let card = byKey[tombstone.key], lastChange(card) < tombstone.at else { continue }
+            if let old = card.deck { emptied[old.persistentModelID] = old }
+            gone.insert(card.persistentModelID)
             context.delete(card)
             byKey[tombstone.key] = nil
             report.deleted += 1
@@ -70,6 +79,7 @@ enum SyncMerger {
                 //  so they pick up bold/italic; cards you edited in Rev are newer and stay as they are.)
                 let local = card.editedAt?.epoch ?? 0
                 if remote.editedAt > local + 1 || (refreshText && abs(remote.editedAt - local) <= 1) {
+                    if let old = card.deck { emptied[old.persistentModelID] = old }
                     applyContent(remote, to: card, deck: deck(named: remote.deck))
                     card.editedAt = Date(timeIntervalSince1970: remote.editedAt)
                     report.updated += 1
@@ -92,6 +102,21 @@ enum SyncMerger {
                 byKey[remote.key] = card
                 report.added += 1
             }
+        }
+
+        // 2b. Remove the decks this sync left without cards. Decks you emptied or made empty yourself
+        //     are never in `emptied`, so they stay. A deck that still has sub-decks also stays.
+        let inUse = Set((cards + Array(byKey.values))
+            .filter { !gone.contains($0.persistentModelID) }
+            .compactMap { $0.deck?.persistentModelID })
+        var names = Set(decksByName.keys)
+        // Longest names first, so an emptied sub-deck goes before its parent is checked.
+        for old in emptied.values.sorted(by: { $0.name.count > $1.name.count }) {
+            let hasSubDecks = names.contains { $0.hasPrefix(old.name + " › ") }
+            if hasSubDecks || inUse.contains(old.persistentModelID) { continue }
+            names.remove(old.name)
+            context.delete(old)
+            report.decksRemoved += 1
         }
 
         // 3. Reviews done in Anki.

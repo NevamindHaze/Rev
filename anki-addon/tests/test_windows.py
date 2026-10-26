@@ -233,6 +233,39 @@ def main():
     report = s.sync()
     check(s.note(k["rev"])["Front"] == "iPhone only again", "the iPhone's change is applied %s" % report)
 
+    print("11. A deck a Rev app emptied (deleted or renamed) is removed; other empty decks stay")
+    col = s.col
+
+    def add(deck, front):
+        note = col.new_note(col.models.by_name("Basic"))
+        note["Front"], note["Back"] = front, "A"
+        col.add_note(note, col.decks.id(deck))
+        return "%s:0" % note.guid
+    nem = [add("Nematodes", "Ascaris"), add("Nematodes", "Toxocara")]
+    half = [add("Cestodes", "Taenia"), add("Cestodes", "Echinococcus")]
+    parent, child = add("Parasites", "Parasite?"), add("Parasites::Flukes", "Fasciola")
+    moved = add("Old name", "Moved")
+    col.decks.id("Made empty in Anki")
+    s.sync()
+    now_cards = s.anki_cards()
+    time.sleep(1.1)
+    t9 = time.time()
+    gone = nem + [half[0], parent, child]
+    for key in now_cards:
+        if key not in gone:
+            rev[key] = as_rev(now_cards[key])
+    rev[moved] = as_rev(now_cards[moved], deck="New name", editedAt=t9)
+    s.write("rev.json", "rev", rev.values(), deleted=[{"key": key, "at": t9} for key in gone], reviews=reviews_rev)
+    report = s.sync()
+    names = {d.name for d in col.decks.all_names_and_ids()}
+    check("Nematodes" not in names, "the emptied deck is removed %s" % report)
+    check("Parasites" not in names and "Parasites::Flukes" not in names,
+          "an emptied deck and its emptied sub-deck are removed")
+    check("Old name" not in names and "New name" in names, "a renamed deck doesn't leave the old one behind")
+    check("Cestodes" in names, "a deck that still has cards stays")
+    check("Made empty in Anki" in names and "Default" in names, "decks emptied in Anki itself stay")
+    check(report.get("empty decks removed") == 4, "4 decks removed (%s)" % report.get("empty decks removed"))
+
     s.close()
     print("\n%s" % ("ALL PASSED" if not failures else "%d FAILED" % len(failures)))
     return 1 if failures else 0

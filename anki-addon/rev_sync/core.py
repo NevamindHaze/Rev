@@ -316,6 +316,26 @@ def export_anki(col, state):
 
 # ---------------------------------------------------------------- import (rev.json / windows.json -> Anki)
 
+def remove_emptied_decks(col, deck_ids):
+    """Removes the decks this sync left without cards, and returns how many.
+
+    Decks emptied (or made empty) in Anki itself are never in deck_ids, so they stay. So do
+    Default, filtered decks, and decks that still have sub-decks."""
+    removed = 0
+    decks = [col.decks.get(did, default=False) for did in deck_ids]
+    # Deepest first, so an emptied sub-deck goes before its parent is checked.
+    for deck in sorted((d for d in decks if d), key=lambda d: -d["name"].count("::")):
+        if deck["id"] == 1 or deck.get("dyn"):
+            continue
+        if len(col.decks.deck_and_child_ids(deck["id"])) > 1:
+            continue
+        if col.db.scalar("select count() from cards where did = ? or odid = ?", deck["id"], deck["id"]):
+            continue
+        col.decks.remove([deck["id"]])
+        removed += 1
+    return removed
+
+
 def import_rev(col, rev, state):
     report = {"added": 0, "updated": 0, "rescheduled": 0, "deleted": 0, "reviews": 0}
     today, day_start = day_info(col)
@@ -335,6 +355,9 @@ def import_rev(col, rev, state):
     # 1. Deletions made in Rev: remove a note once all of its cards were deleted there,
     #    unless it was changed (in Anki, or by another Rev app) after the deletion.
     tombstones = {d["key"]: d["at"] for d in rev.get("deleted", [])}
+    # Decks that lose cards in this sync (deleted, or moved to another deck): one left empty
+    # afterwards was deleted or renamed in a Rev app, so it goes too (see remove_emptied_decks).
+    emptied = set()
     doomed = {}
     for key, at in tombstones.items():
         cid = by_key.get(key)
@@ -345,6 +368,10 @@ def import_rev(col, rev, state):
             doomed.setdefault(card.nid, set()).add(cid)
     remove = [nid for nid, cids in doomed.items() if cids == set(cards_of_note.get(nid, []))]
     if remove:
+        for nid in remove:
+            for cid in cards_of_note.get(nid, []):
+                card = col.get_card(cid)
+                emptied.add(card.odid or card.did)
         col.remove_notes(remove)
         report["deleted"] += len(remove)
 
@@ -389,6 +416,7 @@ def import_rev(col, rev, state):
             if not card.odid and rc.get("deck"):
                 did = col.decks.id(rc["deck"])
                 if did != card.did:
+                    emptied.add(card.did)
                     col.set_deck([cid], did)
             applied_content[key] = [col.get_note(note.id).mod, rc["editedAt"]]
             card = col.get_card(cid)
@@ -398,6 +426,8 @@ def import_rev(col, rev, state):
                 col.update_card(card)
                 report["rescheduled"] += 1
                 applied_sched[key] = [col.get_card(cid).mod, rc["schedAt"]]
+
+    report["empty decks removed"] = remove_emptied_decks(col, emptied)
 
     # 3. Notes created in Rev.
     for note_id, rcs in new_notes.items():
