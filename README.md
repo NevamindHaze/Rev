@@ -43,6 +43,10 @@ Rev keeps its data in `%LOCALAPPDATA%\Rev\rev.db`. For testing, two switches kee
 | `REV_DATA_DIR` | use this folder for the database instead |
 | `REV_THEME` | `dark` or `light`, instead of following Windows |
 
+The Anki import tests use small made-up Anki files in `tests/Fixtures`, made with Anki's own Python
+library (`tools/make-anki-fixtures.py`, which explains how to run it). It builds a throw-away collection
+in a temporary folder and never touches a real Anki collection.
+
 To try Rev with sample veterinary decks:
 
 ```

@@ -75,7 +75,9 @@ public sealed class CardTextView : StackPanel
                 bitmap.EndInit();
                 var picture = new WpfImage
                 {
+                    // Big pictures shrink to fit; small ones keep their real size (never blown up and blurry).
                     Source = bitmap, MaxHeight = 380, HorizontalAlignment = HorizontalAlignment.Left,
+                    Stretch = System.Windows.Media.Stretch.Uniform, StretchDirection = StretchDirection.DownOnly,
                     Margin = new Thickness(0, 6, 0, 6), Cursor = System.Windows.Input.Cursors.Hand,
                     ToolTip = "Click to zoom",
                 };

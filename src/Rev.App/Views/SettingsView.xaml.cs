@@ -5,7 +5,9 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Win32;
 using Rev.App.Controls;
+using Rev.Core.Anki;
 using Rev.Core.Backup;
+using Rev.Core.Media;
 using Rev.Core.Data;
 using Rev.Core.Scheduling;
 using Rev.Core.Text;
@@ -97,6 +99,44 @@ public partial class SettingsView : UserControl, IScreen
     {
         RetentionText.Text = $"Target memory: {Math.Round(RetentionSlider.Value)}%";
         RetentionPanel.Visibility = FsrsChoice.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    // ---- Anki ----
+
+    private async void ImportAnki_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Import Anki deck",
+            Filter = "Anki decks (*.apkg; *.colpkg)|*.apkg;*.colpkg",
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+        };
+        if (dialog.ShowDialog(OwnerWindow) != true) return;
+
+        // Reading a big file can take a few seconds, so it happens in the background
+        // while Rev shows a busy cursor. (The file is only read, never changed.)
+        string path = dialog.FileName;
+        string media = MediaStore.Folder;
+        IsEnabled = false;
+        Mouse.OverrideCursor = Cursors.Wait;
+        try
+        {
+            var contents = await Task.Run(() => ApkgReader.Read(path, media));
+            var result = AnkiImporter.Import(App.Database, contents);
+            Mouse.OverrideCursor = null;
+            RevDialog.Tell(OwnerWindow, "Anki deck imported", result.Summary);
+        }
+        catch (Exception error)
+        {
+            Mouse.OverrideCursor = null;
+            RevDialog.Tell(OwnerWindow, "That file couldn't be imported", error.Message);
+        }
+        finally
+        {
+            Mouse.OverrideCursor = null;
+            IsEnabled = true;
+            ImportButton.Focus();
+        }
     }
 
     // ---- Backup ----

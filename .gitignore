@@ -16,3 +16,7 @@ TestResults/
 *.anki2
 *.anki21
 *.anki21b
+
+# ...except the small made-up test files in tests/Fixtures (made by tools/make-anki-fixtures.py).
+!tests/Fixtures/*.apkg
+!tests/Fixtures/*.colpkg

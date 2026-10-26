@@ -17,6 +17,7 @@ What's new
 • Lists keep their bullets and numbers, and images can be clicked to zoom (scroll to zoom in, drag to move).
 • Stats: cards due today, your streak, reviewed today, new and total cards, and a chart of the last 7 days (today in coral).
 • Settings: your name for the greeting, new cards per day, FSRS or SM-2, and FSRS's target memory (80–97%). Changes are saved straight away.
+• Anki import (Settings → Anki): any .apkg or .colpkg, old or newest format. Text keeps its bold, italic and lists; images, tags, study progress (with FSRS memory), suspended cards and leeches come across, and sub-decks keep their names. Importing the same deck again updates your cards instead of adding copies. Your Anki files are only read, never changed.
 • Backup and restore (Settings → Backup): save everything to a .json file, or restore one. Restoring asks first, then replaces everything; your current data is saved in the Backups folder first, just in case. Backups from Rev on iPhone work too.
 • The same scheduling as Rev on iPhone: FSRS-5 with an adjustable memory target, or classic SM-2, with learning steps, overdue credit, interval fuzz, sibling burying, a 4 am day rollover and leech detection.
 • Rev's warm colours, rounded Nunito text and comic icon, in light and dark mode (follows your Windows setting).

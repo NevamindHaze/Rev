@@ -99,6 +99,24 @@
                 </StackPanel>
             </Border>
 
+            <!-- Anki -->
+            <Border Style="{StaticResource Section}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Anki" />
+                    <WrapPanel>
+                        <Button x:Name="ImportButton" Style="{StaticResource TealPillButton}" MinHeight="48" Margin="0,0,10,10"
+                                Click="ImportAnki_Click" AutomationProperties.Name="Import Anki deck">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource IconText}" FontSize="14" Text="&#xE896;" Margin="0,0,10,0" />
+                                <TextBlock Text="Import Anki deck (.apkg / .colpkg)…" />
+                            </StackPanel>
+                        </Button>
+                    </WrapPanel>
+                    <TextBlock Style="{StaticResource Note}" Margin="2,2,0,0"
+                               Text="Works with any .apkg or .colpkg from Anki, old or new. Text, images, study progress (with FSRS memory), tags, suspended cards and leeches come across; sounds are skipped. Importing the same deck again updates your cards instead of adding copies, and keeps your progress in Rev. Your Anki files are only read, never changed." />
+                </StackPanel>
+            </Border>
+
             <!-- Backup -->
             <Border Style="{StaticResource Section}">
                 <StackPanel>

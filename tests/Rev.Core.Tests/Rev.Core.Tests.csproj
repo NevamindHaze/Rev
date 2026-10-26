@@ -21,6 +21,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The Anki test files (made by tools/make-anki-fixtures.py), copied next to the tests. -->
+    <None Include="..\Fixtures\*.apkg;..\Fixtures\*.colpkg" LinkBase="Fixtures" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Rev.Core\Rev.Core.csproj" />
   </ItemGroup>
 
