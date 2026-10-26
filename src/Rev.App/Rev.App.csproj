@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The Windows app itself: all the screens. The "thinking" lives in Rev.Core. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\Rev.Core\Rev.Core.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+
+    <!-- The program is called Rev.exe, with Rev's comic icon. -->
+    <AssemblyName>Rev</AssemblyName>
+    <RootNamespace>Rev.App</RootNamespace>
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
+    <Product>Rev</Product>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Files baked into the program so it never needs to look for them on disk. -->
+    <Resource Include="Assets\AppIcon.ico" />
+    <Resource Include="Assets\Fonts\*.ttf" />
+  </ItemGroup>
+
+</Project>

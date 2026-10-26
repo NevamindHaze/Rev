@@ -1,0 +1,7 @@
+# Text files: git stores them with plain line endings and gives Windows its own on checkout.
+* text=auto
+
+# Pictures and fonts are never text.
+*.png binary
+*.ico binary
+*.ttf binary
