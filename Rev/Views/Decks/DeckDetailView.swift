@@ -59,6 +59,8 @@ struct DeckDetailView: View {
             .padding(Theme.padding)
         }
         .background(Theme.background.ignoresSafeArea())
+        // Pull down to sync with Anki.
+        .refreshable { await SyncService.shared.sync(context: context) }
         .navigationTitle(deck.name)
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $search, prompt: "Search cards or tags")

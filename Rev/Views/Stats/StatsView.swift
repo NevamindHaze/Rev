@@ -42,6 +42,11 @@ struct StatsView: View {
             .padding(Theme.padding)
         }
         .background(Theme.background.ignoresSafeArea())
+        // Pull down to sync with Anki (so Anki's reviews count too) and recalculate.
+        .refreshable {
+            await SyncService.shared.sync(context: context)
+            refresh()
+        }
         .navigationTitle("Stats")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: refresh)

@@ -53,6 +53,11 @@ struct HomeView: View {
             .padding(Theme.padding)
         }
         .background(Theme.background.ignoresSafeArea())
+        // Pull down to sync with Anki and refresh today's numbers.
+        .refreshable {
+            await SyncService.shared.sync(context: context)
+            reviewedToday = StatsCalculator.reviewsToday(in: context)
+        }
         .navigationDestination(for: Deck.self) { deck in
             DeckDetailView(deck: deck)
         }
