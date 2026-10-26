@@ -47,6 +47,14 @@ internal static class SyncCommands
                 db.DeleteCard(ByFront(args[2]).Id);
                 return 0;
 
+            case "--delete-deck":
+                db.DeleteDeck(db.GetDecks().Single(d => d.Name == args[2]).Id);
+                return 0;
+
+            case "--decks":
+                Console.WriteLine(JsonSerializer.Serialize(db.GetDecks().Select(d => d.Name).Order()));
+                return 0;
+
             case "--dump":
                 var decks = db.GetDecks().ToDictionary(d => d.Id, d => d.Name);
                 Console.WriteLine(JsonSerializer.Serialize(db.GetCards().Select(c => new

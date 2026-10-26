@@ -155,6 +155,37 @@ public sealed class SyncTests : IDisposable
     }
 
     [Fact]
+    public void ADeckEmptiedByDeletionsInAnkiIsRemovedButOtherEmptyDecksStay()
+    {
+        var gone = db.AddDeck("Nematodes", Now.AddDays(-3));
+        db.AddNote(gone.Id, CardKind.Basic, "Ascaris host?", "Pig", [], Now.AddDays(-3));
+        var mine = db.AddDeck("New and empty", Now);
+        var half = db.AddDeck("Cestodes", Now.AddDays(-3));
+        db.AddNote(half.Id, CardKind.Basic, "Taenia?", "Tapeworm", [], Now.AddDays(-3));
+        db.AddNote(half.Id, CardKind.Basic, "Echinococcus?", "Hydatid", [], Now.AddDays(-3));
+        var parent = db.AddDeck("Parasites", Now.AddDays(-3));
+        var child = db.AddDeck("Parasites › Flukes", Now.AddDays(-3));
+        db.AddNote(parent.Id, CardKind.Basic, "Parasite?", "Yes", [], Now.AddDays(-3));
+        db.AddNote(child.Id, CardKind.Basic, "Fasciola?", "Liver fluke", [], Now.AddDays(-3));
+        db.AddNote(deck.Id, CardKind.Basic, "Moved", "A", [], Now.AddDays(-3));
+        var keyOf = db.GetCards().ToDictionary(c => c.Front, c => c.SyncKey);
+        var moved = db.GetCards().Single(c => c.Front == "Moved");
+        double at = S(Now.AddMinutes(-5));
+
+        WriteAnki(1000, [AnkiCard(moved.NoteId, 0, "Moved", "A", at, S(moved.SchedChangedAt), deck: "Renamed")], deleted: [
+            new SyncTombstone { Key = keyOf["Ascaris host?"], At = at },
+            new SyncTombstone { Key = keyOf["Taenia?"], At = at },
+            new SyncTombstone { Key = keyOf["Fasciola?"], At = at },
+            new SyncTombstone { Key = keyOf["Parasite?"], At = at },
+        ]);
+        sync.Run(Now);
+
+        var names = db.GetDecks().Select(d => d.Name).Order().ToList();
+        // Nematodes, both Parasites decks and the deck "Moved" left are gone; the others stay.
+        Assert.Equal(["Cestodes", "New and empty", "Renamed"], names);
+    }
+
+    [Fact]
     public void ACardDeletedInRevIsNotBroughtBackAndIsSentAsATombstone()
     {
         var card = AddCard("Q", "A", Now.AddDays(-1));

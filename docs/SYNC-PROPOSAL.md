@@ -1,9 +1,9 @@
 # Proposal: Rev for Windows joins the Rev ↔ Anki sync
 
-Status: **built and tested; the add-on change waits to be merged.** Rev for Windows' side is in
-`src/Rev.Core/Sync` and Settings → Sync with Anki. The add-on change is on the `windows-sync` branch of the
-[Rev](https://github.com/NevamindHaze/Rev) repository, not yet merged. One thing was learned while building it
-and added below (section 3, point 6). This describes how Rev for Windows takes part in the sync that already
+Status: **built, tested and merged** (add-on: Rev pull request #1). Rev for Windows' side is in
+`src/Rev.Core/Sync` and Settings → Sync with Anki. The add-on change is in the
+[Rev](https://github.com/NevamindHaze/Rev) repository's `anki-addon/rev_sync`. Two things were learned while building
+and using it, added below (section 3, point 6, and section 8, point 5). This describes how Rev for Windows takes part in the sync that already
 works between Rev on iPhone and Anki, **without changing Rev on iPhone at all** and without any risk to
 the iPhone ↔ Anki sync you use today.
 
@@ -155,7 +155,11 @@ The add-on keeps everything it does now, plus:
 
 1. ~~In this repository: imported cards keep Anki's change times (section 4), with tests.~~ Done.
 2. ~~In the Rev repository (`anki-addon/rev_sync`): read `windows.json` and merge-then-apply (section 3),
-   with the three-app tests.~~ Done on the `windows-sync` branch (`tests/test_windows.py`, 23 checks); to be merged.
+   with the three-app tests.~~ Done and merged (`tests/test_windows.py`).
 3. ~~In this repository: the sync port, the Settings screen, the first-sync backup and preview.~~ Done
-   (`tests/Rev.Core.Tests/SyncTests.cs`; `tools/check-sync.py` runs all three apps together, 26 checks).
+   (`tests/Rev.Core.Tests/SyncTests.cs`; `tools/check-sync.py` runs all three apps together).
 4. A trial on copies, then your real folder.
+5. (Found in use) **Decks emptied by a sync are removed.** Decks aren't synced as objects, only each card's
+   deck name, so a deck deleted in one app used to stay behind, empty, in the others. Now each app removes a
+   deck when a sync deleted or moved away its last cards. Decks you emptied or made yourself, Anki's Default
+   deck, filtered decks and decks that still have sub-decks stay. Built in all three apps.

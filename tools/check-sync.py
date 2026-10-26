@@ -190,7 +190,28 @@ anki_sync()
 report = windows_sync()
 check(report["Reviews"] == 1 and windows_cards()[d_]["reviews"] == reviews_before + 1, "Windows has the iPhone's review, once (%s)" % report)
 
-print("8. Syncing again and again changes nothing anywhere (no echoes)")
+print("8. A deck deleted in one app is gone everywhere, not left behind empty")
+windows("--delete-deck", "Vet › Surgery")
+windows_sync()
+report = anki_sync()
+check(not any(d.name == "Vet::Surgery" for d in col.decks.all_names_and_ids()),
+      "the deck deleted on Windows is gone from Anki %s" % report)
+check(any(d.name == "Vet::Pharmacology" for d in col.decks.all_names_and_ids()), "the other decks stay")
+parasitology = col.decks.id_for_name("Vet::Parasitology")
+col.remove_notes(list({col.get_card(cid).nid for cid in col.decks.cids(parasitology)}))
+col.decks.remove([parasitology])
+anki_sync()
+report = windows_sync()
+decks = json.loads(windows("--decks"))
+check("Vet › Parasitology" not in decks and report["Deleted"] == 2,
+      "the deck deleted in Anki is gone from Windows (%s)" % report)
+check("Vet › Pharmacology" in decks, "...and Windows keeps the others (%s)" % decks)
+for key in [k for k, c in iphone.items() if c["deck"] == "Vet::Parasitology"]:
+    del iphone[key]   # the iPhone deletes them too once it reads anki.json
+iphone_write()
+check(zero(anki_sync()), "the iPhone catching up changes nothing in Anki")
+
+print("9. Syncing again and again changes nothing anywhere (no echoes)")
 quiet = True
 for _ in range(3):
     r1, r2 = anki_sync(), windows_sync()
@@ -203,7 +224,7 @@ time.sleep(1.1)
 windows_sync()
 check(os.path.getmtime(windows_file) == before, "windows.json isn't rewritten when nothing changed")
 
-print("9. Taking Windows out of the sync leaves iPhone <-> Anki working")
+print("10. Taking Windows out of the sync leaves iPhone <-> Anki working")
 os.remove(windows_file)
 time.sleep(1.2)
 iphone[a] = dict(iphone[a], fields={"Front": "iPhone only again", "Back": "Answer"}, editedAt=time.time())

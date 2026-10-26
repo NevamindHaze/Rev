@@ -39,10 +39,15 @@ public static class SyncMerger
                 return deck;
             }
 
+            // Decks that lose cards in this sync (deleted, or moved to another deck). Any of them left
+            // empty afterwards was deleted or renamed in another app, so it goes too (see RemoveEmptiedDecks).
+            var emptiedDecks = new HashSet<Guid>();
+
             // 1. Cards deleted in Anki (unless changed in Rev afterwards).
             foreach (var tombstone in anki.Deleted)
             {
                 if (!byKey.TryGetValue(tombstone.Key, out var card) || LastChange(card) >= tombstone.At) continue;
+                emptiedDecks.Add(card.DeckId);
                 db.DeleteCard(card.Id);
                 byKey.Remove(tombstone.Key);
                 deleted += 1;
@@ -58,6 +63,7 @@ public static class SyncMerger
                     bool changed = false;
                     if (remote.EditedAt > Seconds(card.EditedAt) + 1)
                     {
+                        emptiedDecks.Add(card.DeckId);
                         ApplyContent(remote, card, DeckNamed(remote.Deck));
                         card.EditedAt = FromSeconds(remote.EditedAt);
                         updated += 1;
@@ -90,6 +96,8 @@ public static class SyncMerger
                 }
             }
 
+            RemoveEmptiedDecks(db, emptiedDecks);
+
             // 3. Reviews done in Anki (and in Rev on iPhone, through Anki).
             var cutoff = now.AddDays(-ReviewDays);
             var seen = db.GetReviewLogs(cutoff).Select(l => (l.CardId, RevDatabase.ToMs(l.Date))).ToHashSet();
@@ -106,6 +114,23 @@ public static class SyncMerger
             }
         });
         return new SyncReport(added, updated, rescheduled, deleted, reviews);
+    }
+
+    /// <summary>
+    /// Removes the decks that this sync left without cards. Decks the user emptied or made empty themselves
+    /// are never in <paramref name="deckIds"/>, so they stay. A deck that still has sub-decks also stays.
+    /// </summary>
+    private static void RemoveEmptiedDecks(RevDatabase db, HashSet<Guid> deckIds)
+    {
+        var decks = db.GetDecks();
+        // Longest names first, so an emptied sub-deck goes before its parent is checked.
+        foreach (var deck in decks.Where(d => deckIds.Contains(d.Id)).OrderByDescending(d => d.Name.Length).ToList())
+        {
+            bool hasSubDecks = decks.Any(d => d.Name.StartsWith(deck.Name + " › ", StringComparison.Ordinal));
+            if (hasSubDecks || db.CountCards(deck.Id) > 0) continue;
+            db.DeleteDeck(deck.Id);
+            decks.Remove(deck);
+        }
     }
 
     private static void ApplyContent(SyncCard remote, Card card, Deck deck)

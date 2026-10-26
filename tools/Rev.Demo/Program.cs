@@ -25,7 +25,7 @@ using Rev.Core.Scheduling;
 //   --delete <front>                  delete a card
 //   --dump                            print every card as JSON
 
-if (args.Length >= 2 && args[1] is "--sync" or "--edit" or "--study" or "--add" or "--delete" or "--dump")
+if (args.Length >= 2 && args[1] is "--sync" or "--edit" or "--study" or "--add" or "--delete" or "--delete-deck" or "--decks" or "--dump")
     return SyncCommands.Run(args);
 
 if (args.Length is < 1 or > 2 || (args.Length == 2 && args[1] is not ("--review-test" or "--export")))

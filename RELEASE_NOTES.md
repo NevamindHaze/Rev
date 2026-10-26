@@ -1,9 +1,8 @@
 What's new
 
-• Sync with Anki (Settings → Sync with Anki): Rev for Windows joins the sync Rev on iPhone already has, through the same "Rev Sync" folder in iCloud Drive and the Rev Sync add-on in Anki. Anki passes your changes between Windows and your iPhone. Each card's text and schedule go to whichever app changed them last, and review history from every app is kept.
-• Sync runs when Rev opens, when it closes, every 10 minutes (never in the middle of a review), and when you click Sync now. The first time, Rev saves a backup and shows what it will change before it starts.
-• Cards imported from Anki keep Anki's own change times, so a sync never mistakes an import for an edit.
+• Deleting a deck now syncs properly: when you delete a deck on Windows, it disappears from Anki and from Rev on iPhone too, instead of staying behind as an empty deck. The same works the other way round, and a deck renamed in another app no longer leaves its old, empty name behind.
+• Only decks that a sync emptied are removed. A deck you emptied yourself, a new deck you haven't filled yet, and a deck that still has sub-decks always stay.
 
-Note: sync needs the Rev Sync add-on with Windows support. Copy the new anki-addon/rev_sync folder from the Rev repository into Anki's addons21 folder and restart Anki.
+Note: for decks to disappear in Anki and on your iPhone as well, Anki needs the updated Rev Sync add-on and your iPhone needs the latest Rev (both from the Rev repository).
 
 Rev isn't signed with a paid certificate, so the first time you open the installer Windows may say "Windows protected your PC". Click More info → Run anyway. Rev installs just for you (no administrator needed), and uninstalling it from Settings → Apps keeps your decks.
