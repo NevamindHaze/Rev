@@ -85,13 +85,16 @@ struct HomeView: View {
             Button("Save") { rename(deck) }
             Button("Cancel", role: .cancel) {}
         }
-        .confirmationDialog("Delete this deck and all its cards?",
-                            isPresented: Binding(get: { deckToDelete != nil }, set: { if !$0 { deckToDelete = nil } }),
-                            titleVisibility: .visible,
-                            presenting: deckToDelete) { deck in
-            Button("Delete \(deck.name)", role: .destructive) {
-                deck.deleteWithCards(in: context)
+        // A centred alert (not a pop-over bubble) so it looks the same on every iOS version.
+        .alert("Delete “\(deckToDelete?.name ?? "deck")”?",
+               isPresented: Binding(get: { deckToDelete != nil }, set: { if !$0 { deckToDelete = nil } }),
+               presenting: deckToDelete) { deck in
+            Button("Delete", role: .destructive) {
+                withAnimation(.snappy) { deck.deleteWithCards(in: context) }
             }
+            Button("Cancel", role: .cancel) {}
+        } message: { deck in
+            Text("This permanently deletes the deck and its \(deck.cards.count.counted("card")), including their study progress. This can't be undone.")
         }
         .onAppear {
             reviewedToday = StatsCalculator.reviewsToday(in: context)

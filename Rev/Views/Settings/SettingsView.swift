@@ -119,13 +119,13 @@ struct SettingsView: View {
                     if case .failure(let error) = result { message = error.localizedDescription }
                 }
         }
-        .confirmationDialog("Replace everything with this backup?",
-                            isPresented: Binding(get: { pendingBackup != nil }, set: { if !$0 { pendingBackup = nil } }),
-                            titleVisibility: .visible,
-                            presenting: pendingBackup) { backup in
+        .alert("Replace everything with this backup?",
+               isPresented: Binding(get: { pendingBackup != nil }, set: { if !$0 { pendingBackup = nil } }),
+               presenting: pendingBackup) { backup in
             Button("Replace everything", role: .destructive) { restore(backup) }
+            Button("Cancel", role: .cancel) {}
         } message: { backup in
-            Text("Backup from \(backup.exportedAt.formatted(date: .abbreviated, time: .shortened)): \(backup.decks.count) decks, \(backup.decks.reduce(0) { $0 + $1.cards.count }) cards.")
+            Text("Backup from \(backup.exportedAt.formatted(date: .abbreviated, time: .shortened)): \(backup.decks.count.counted("deck")), \(backup.decks.reduce(0) { $0 + $1.cards.count }.counted("card")). Everything currently in Rev will be replaced.")
         }
         .alert("Rev", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
             Button("OK", role: .cancel) {}
@@ -202,9 +202,9 @@ struct SettingsView: View {
                     try ApkgReader.read(fileAt: url)
                 }.value
                 let result = try BackupService.insert(contents.decks, into: context, mergeByName: true)
-                var text = "Imported \(result.cards) new cards into \(contents.decks.count) decks."
-                if contents.imagesSaved > 0 { text += " Saved \(contents.imagesSaved) images." }
-                if result.updated > 0 { text += " Updated the text of \(result.updated) cards you already had." }
+                var text = "Imported \(result.cards.counted("new card")) into \(contents.decks.count.counted("deck"))."
+                if contents.imagesSaved > 0 { text += " Saved \(contents.imagesSaved.counted("image"))." }
+                if result.updated > 0 { text += " Updated \(result.updated.counted("card")) you already had." }
                 if result.skipped > 0 { text += " Skipped \(result.skipped) unchanged cards." }
                 message = text
             } catch {

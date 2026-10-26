@@ -56,7 +56,7 @@ struct CardEditorView: View {
                             .buttonStyle(PillButtonStyle(background: Theme.teal, foreground: .white, height: 64))
                             .disabled(!canSave)
                         if addedCount > 0 {
-                            Text("\(addedCount) cards added so far")
+                            Text("\(addedCount.counted("card")) added so far")
                                 .font(Theme.body(15, weight: .medium))
                                 .foregroundStyle(Theme.mutedInk)
                                 .frame(maxWidth: .infinity)

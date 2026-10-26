@@ -30,7 +30,7 @@ struct BulkAddView: View {
                     .padding(12)
                     .background(Theme.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
 
-                Button("Add \(parsed.count) cards", action: add)
+                Button("Add \(parsed.count.counted("card"))", action: add)
                     .buttonStyle(PillButtonStyle(background: Theme.teal, foreground: .white, height: 64))
                     .disabled(parsed.isEmpty)
             }

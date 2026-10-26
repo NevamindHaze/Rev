@@ -18,7 +18,7 @@ struct DeckTile: View {
                     .background(palette.foreground.opacity(0.15), in: Circle())
             }
             HStack(spacing: 8) {
-                chip("\(deck.cards.count) cards")
+                chip(deck.cards.count.counted("card"))
                 chip("\(deck.cards.dueCount()) due")
                 chip("\(deck.cards.newCount) new")
             }

@@ -211,7 +211,7 @@ struct ReviewView: View {
     private var finishedMessage: String {
         if cards.isEmpty { return "Add some cards to a deck, then come back here." }
         var lines: [String] = []
-        if reviewedThisSession > 0 { lines.append("You reviewed \(reviewedThisSession) cards this session.") }
+        if reviewedThisSession > 0 { lines.append("You reviewed \(reviewedThisSession.counted("card")) this session.") }
         if queue.laterToday > 0 {
             lines.append("\(queue.laterToday) learning cards come back later today.")
         } else {
