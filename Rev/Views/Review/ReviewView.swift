@@ -14,6 +14,7 @@ struct ReviewView: View {
     @State private var current: Card?
     @State private var showAnswer = false
     @State private var reviewedThisSession = 0
+    @State private var cardToEdit: Card?
 
     private let scheduler = ActiveScheduler.current
 
@@ -38,6 +39,19 @@ struct ReviewView: View {
         .background(Theme.background.ignoresSafeArea())
         .navigationTitle(deck?.name ?? "Review")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            // Fix a typo or improve the card you're looking at, without leaving the review.
+            if let card = current {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { cardToEdit = card } label: {
+                        Label("Edit card", systemImage: "pencil")
+                    }
+                }
+            }
+        }
+        .sheet(item: $cardToEdit) { card in
+            CardEditorView(mode: .edit(card))
+        }
         .onAppear(perform: loadNext)
         .onChange(of: allCards.count) {
             if current == nil { loadNext() }
