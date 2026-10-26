@@ -7,6 +7,8 @@ import Foundation
 /// - Graduated cards come back after a number of days. "Good" multiplies the interval
 ///   by the card's ease (starts at 2.5). "Hard" grows it a little and lowers the ease.
 ///   "Easy" grows it more and raises the ease.
+/// - If you review a card late and still remember it, you get credit for the extra days.
+/// - Intervals are spread a little (fuzz) so cards don't bunch up on one day.
 /// - "Again" on a graduated card counts as a lapse: the ease drops, the interval is halved,
 ///   and the card goes back to a short relearning step (10 min).
 struct SM2Scheduler: SchedulingAlgorithm {
@@ -33,7 +35,7 @@ struct SM2Scheduler: SchedulingAlgorithm {
             answerStep(&s, rating, steps: relearningSteps, now: now,
                        graduateDays: s.intervalDays, easyDays: s.intervalDays + 1)
         case .review:
-            answerReview(&s, rating, now: now)
+            answerReview(&s, old: old, rating, now: now)
         }
         return s
     }
@@ -46,59 +48,47 @@ struct SM2Scheduler: SchedulingAlgorithm {
             s.step = 0
             s.due = now.addingTimeInterval(steps[0])
         case .hard:
-            s.due = now.addingTimeInterval(hardDelay(steps: steps, step: s.step))
+            s.due = now.addingTimeInterval(IntervalHelpers.hardDelay(steps: steps, step: s.step))
         case .good:
             s.step += 1
             if s.step >= steps.count {
-                graduate(&s, days: graduateDays, now: now)
+                IntervalHelpers.graduate(&s, days: graduateDays, now: now, maximum: maximumDays)
             } else {
                 s.due = now.addingTimeInterval(steps[s.step])
             }
         case .easy:
-            graduate(&s, days: easyDays, now: now)
+            IntervalHelpers.graduate(&s, days: easyDays, now: now, maximum: maximumDays)
         }
     }
 
     /// Answering a graduated card.
-    private func answerReview(_ s: inout SchedulingState, _ rating: Rating, now: Date) {
-        let current = max(1, s.intervalDays)
-        // Work out the three "remembered" intervals so that Hard < Good < Easy always holds.
-        let hardDays = max(current + 1, current * 1.2)
-        let goodDays = max(hardDays + 1, current * s.ease)
-        let easyDays = max(goodDays + 1, current * s.ease * 1.3)
+    private func answerReview(_ s: inout SchedulingState, old: SchedulingState, _ rating: Rating, now: Date) {
+        let current = max(1, old.intervalDays)
+        // Days past the due date. Remembering a card after a delay earns a longer interval.
+        let daysLate = Double(max(0, old.due.studyDays(to: now)))
+        let options = IntervalHelpers.reviewIntervals(
+            hard: max(current + 1, current * 1.2),
+            good: (current + daysLate / 2) * old.ease,
+            easy: (current + daysLate) * old.ease * 1.3,
+            fraction: IntervalHelpers.fuzzFraction(seed: old.fuzzSeed),
+            maximum: maximumDays)
 
         switch rating {
         case .again:
             s.lapses += 1
-            s.ease = max(minimumEase, s.ease - 0.2)
+            s.ease = max(minimumEase, old.ease - 0.2)
             s.intervalDays = max(1, (current * 0.5).rounded())
             s.phase = .relearning
             s.step = 0
             s.due = now.addingTimeInterval(relearningSteps[0])
         case .hard:
-            s.ease = max(minimumEase, s.ease - 0.15)
-            graduate(&s, days: hardDays, now: now)
+            s.ease = max(minimumEase, old.ease - 0.15)
+            IntervalHelpers.graduate(&s, days: options.hard, now: now, maximum: maximumDays)
         case .good:
-            graduate(&s, days: goodDays, now: now)
+            IntervalHelpers.graduate(&s, days: options.good, now: now, maximum: maximumDays)
         case .easy:
-            s.ease += 0.15
-            graduate(&s, days: easyDays, now: now)
+            s.ease = old.ease + 0.15
+            IntervalHelpers.graduate(&s, days: options.easy, now: now, maximum: maximumDays)
         }
-    }
-
-    /// Moves a card to the "review" phase, due in a whole number of days.
-    private func graduate(_ s: inout SchedulingState, days: Double, now: Date) {
-        let whole = min(maximumDays, max(1, days.rounded()))
-        s.phase = .review
-        s.step = 0
-        s.intervalDays = whole
-        s.due = Calendar.current.date(byAdding: .day, value: Int(whole), to: now.startOfDay) ?? now
-    }
-
-    /// "Hard" on a learning step: a bit longer than Again, never longer than Good.
-    private func hardDelay(steps: [TimeInterval], step: Int) -> TimeInterval {
-        if steps.count == 1 { return steps[0] * 1.5 }
-        if step == 0 { return (steps[0] + steps[1]) / 2 }
-        return steps[min(step, steps.count - 1)]
     }
 }

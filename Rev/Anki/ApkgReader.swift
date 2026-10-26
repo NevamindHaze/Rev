@@ -74,14 +74,14 @@ enum ApkgReader {
         let deckNames = parseDeckNames(decksJSON)
         let noteTypes = parseNoteTypes(modelsJSON)
 
-        var notes: [Int64: (noteTypeID: Int64, fields: [String])] = [:]
-        try db.query("SELECT id, mid, flds FROM notes") { row in
-            notes[row.int(0)] = (row.int(1), row.text(2).components(separatedBy: "\u{1F}"))
+        var notes: [Int64: (noteTypeID: Int64, fields: [String], guid: String)] = [:]
+        try db.query("SELECT id, mid, flds, guid FROM notes") { row in
+            notes[row.int(0)] = (row.int(1), row.text(2).components(separatedBy: "\u{1F}"), row.text(3))
         }
 
         var cardsByDeck: [Int64: [CardDTO]] = [:]
         var order = 0
-        try db.query("SELECT nid, did, odid, ord, type, due, ivl, factor, reps, lapses FROM cards ORDER BY type, due, id") { row in
+        try db.query("SELECT nid, did, odid, ord, type, due, ivl, factor, reps, lapses, data FROM cards ORDER BY type, due, id") { row in
             guard let note = notes[row.int(0)],
                   let noteType = noteTypes[note.noteTypeID],
                   let sides = noteType.render(fields: note.fields, ord: Int(row.int(3))) else { return }
@@ -96,6 +96,15 @@ enum ApkgReader {
             applyProgress(to: &card, type: row.int(4), due: row.int(5), interval: row.int(6),
                           factor: row.int(7), reps: row.int(8), lapses: row.int(9),
                           collectionCreated: collectionCreated, now: now)
+            card.noteID = note.guid.isEmpty ? String(row.int(0)) : note.guid
+
+            // If Anki used FSRS, it stored the card's memory as {"s": stability, "d": difficulty}.
+            let extra = jsonDictionary(row.text(10))
+            if let stability = (extra["s"] as? NSNumber)?.doubleValue,
+               let difficulty = (extra["d"] as? NSNumber)?.doubleValue {
+                card.stability = stability
+                card.difficulty = difficulty
+            }
 
             // Cards sitting in a temporary "filtered deck" belong to their original deck (odid).
             let deckID = row.int(2) != 0 ? row.int(2) : row.int(1)

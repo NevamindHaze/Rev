@@ -15,8 +15,17 @@ struct ReviewView: View {
     @State private var showAnswer = false
     @State private var reviewedThisSession = 0
     @State private var cardToEdit: Card?
+    /// Answers given in this session, newest last, so they can be undone.
+    @State private var history: [PastAnswer] = []
 
-    private let scheduler = ActiveScheduler.current
+    private struct PastAnswer {
+        let card: Card
+        let stateBefore: SchedulingState
+        let log: ReviewLog
+    }
+
+    /// Read fresh each time, so a change in Settings applies straight away.
+    private var scheduler: any SchedulingAlgorithm { ActiveScheduler.current }
 
     /// The cards this screen is allowed to show.
     private var cards: [Card] {
@@ -40,9 +49,15 @@ struct ReviewView: View {
         .navigationTitle(deck?.name ?? "Review")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            // Fix a typo or improve the card you're looking at, without leaving the review.
-            if let card = current {
-                ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                // Take back the last answer (e.g. you tapped the wrong button).
+                Button(action: undo) {
+                    Label("Undo", systemImage: "arrow.uturn.backward")
+                }
+                .disabled(history.isEmpty)
+
+                // Fix a typo or improve the card you're looking at, without leaving the review.
+                if let card = current {
                     Button { cardToEdit = card } label: {
                         Label("Edit card", systemImage: "pencil")
                     }
@@ -173,21 +188,44 @@ struct ReviewView: View {
 
     private func rate(_ card: Card, _ rating: Rating) {
         let now = Date()
-        let wasNew = card.phase == .new
-        let newState = scheduler.next(after: card.schedulingState, rating: rating, now: now)
+        let stateBefore = card.schedulingState
+        let newState = scheduler.next(after: stateBefore, rating: rating, now: now)
         card.schedulingState = newState
-        context.insert(ReviewLog(cardID: card.id, date: now, rating: rating,
-                                 wasNew: wasNew, intervalDays: newState.intervalDays))
+        let log = ReviewLog(cardID: card.id, date: now, rating: rating,
+                            wasNew: stateBefore.phase == .new, intervalDays: newState.intervalDays)
+        context.insert(log)
         try? context.save()
+        history.append(PastAnswer(card: card, stateBefore: stateBefore, log: log))
         reviewedThisSession += 1
         withAnimation(.snappy) { loadNext() }
     }
 
+    /// Puts the last answered card back exactly as it was and shows its question again.
+    private func undo() {
+        guard let last = history.popLast() else { return }
+        last.card.schedulingState = last.stateBefore
+        context.delete(last.log)
+        try? context.save()
+        reviewedThisSession = max(0, reviewedThisSession - 1)
+        withAnimation(.snappy) {
+            rebuildQueue()
+            current = last.card
+            showAnswer = false
+        }
+    }
+
     /// Rebuilds the queue and picks the next card.
     private func loadNext() {
-        let newLeft = max(0, newCardsPerDay - StatsCalculator.newCardsStudiedToday(in: context))
-        queue = StudyQueue(cards: cards, newCardsAllowed: newLeft, now: Date())
+        rebuildQueue()
         current = queue.nextCard
         showAnswer = false
+    }
+
+    private func rebuildQueue() {
+        let newLeft = max(0, newCardsPerDay - StatsCalculator.newCardsStudiedToday(in: context))
+        // Notes you already studied a card from today: their sibling cards wait until tomorrow.
+        let studiedToday = StatsCalculator.cardIDsReviewedToday(in: context)
+        let buriedNotes = Set(allCards.filter { studiedToday.contains($0.id) }.compactMap { $0.noteID })
+        queue = StudyQueue(cards: cards, newCardsAllowed: newLeft, now: Date(), buriedNoteIDs: buriedNotes)
     }
 }

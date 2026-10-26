@@ -17,11 +17,17 @@ struct StudyQueue {
 
     init() {}
 
-    init(cards: [Card], newCardsAllowed: Int, now: Date) {
+    /// `buriedNoteIDs`: notes you already studied a card from today. Their other new and
+    /// review cards wait until tomorrow, so one cloze doesn't give away its sibling's answer.
+    init(cards: [Card], newCardsAllowed: Int, now: Date, buriedNoteIDs: Set<String> = []) {
         let endOfToday = now.endOfDay
         var allNew: [Card] = []
 
         for card in cards {
+            if card.phase == .new || card.phase == .review,
+               let noteID = card.noteID, buriedNoteIDs.contains(noteID) {
+                continue
+            }
             switch card.phase {
             case .new:
                 allNew.append(card)

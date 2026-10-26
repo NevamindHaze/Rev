@@ -18,18 +18,47 @@ struct SchedulingState: Equatable {
     var lapses: Int
     var step: Int
     var lastReviewed: Date?
+    /// FSRS memory: how many days until recall drops to 90%.
+    var stability: Double?
+    /// FSRS memory: how hard the card is, from 1 (easy) to 10 (hard).
+    var difficulty: Double?
+    /// A per-card number used to spread intervals out a little ("fuzz").
+    var fuzzSeed: Int = 0
 }
 
-/// The "plug" every scheduling algorithm must fit.
-/// SM-2 fits it today. To switch to FSRS later: write `FSRSScheduler`
-/// that follows this protocol, then change one line in `ActiveScheduler`.
+/// The "plug" every scheduling algorithm must fit. SM-2 and FSRS both fit it.
 protocol SchedulingAlgorithm {
     func next(after state: SchedulingState, rating: Rating, now: Date) -> SchedulingState
 }
 
-/// The algorithm the app uses right now.
+/// The two algorithms you can choose in Settings.
+enum SchedulerKind: String, CaseIterable, Identifiable {
+    case fsrs
+    case sm2
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .fsrs: "FSRS (recommended)"
+        case .sm2: "SM-2 (classic)"
+        }
+    }
+}
+
+/// The algorithm the app uses right now, based on Settings.
 enum ActiveScheduler {
-    static var current: any SchedulingAlgorithm { SM2Scheduler() }
+    static var current: any SchedulingAlgorithm {
+        let defaults = UserDefaults.standard
+        let kind = SchedulerKind(rawValue: defaults.string(forKey: "scheduler") ?? "") ?? .fsrs
+        switch kind {
+        case .sm2:
+            return SM2Scheduler()
+        case .fsrs:
+            let retention = defaults.object(forKey: "desiredRetention") as? Double ?? 0.9
+            return FSRSScheduler(desiredRetention: retention)
+        }
+    }
 }
 
 extension SchedulingState {

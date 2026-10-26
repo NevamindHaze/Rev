@@ -35,6 +35,7 @@ struct CardDTO: Codable, Sendable {
     var lastReviewed: Date?
     var stability: Double?
     var difficulty: Double?
+    var noteID: String?
 }
 
 struct ReviewLogDTO: Codable, Sendable {
@@ -59,7 +60,7 @@ extension CardDTO {
         self.init(id: card.id, front: card.front, back: card.back, createdAt: card.createdAt,
                   phase: card.phaseRaw, due: card.due, intervalDays: card.intervalDays, ease: card.ease,
                   reps: card.reps, lapses: card.lapses, step: card.step, lastReviewed: card.lastReviewed,
-                  stability: card.stability, difficulty: card.difficulty)
+                  stability: card.stability, difficulty: card.difficulty, noteID: card.noteID)
     }
 
     /// A brand-new, never-studied card.
@@ -94,5 +95,6 @@ extension Card {
         lastReviewed = dto.lastReviewed
         stability = dto.stability
         difficulty = dto.difficulty
+        noteID = dto.noteID
     }
 }

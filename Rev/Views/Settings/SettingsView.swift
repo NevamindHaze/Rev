@@ -8,6 +8,8 @@ struct SettingsView: View {
     @Query(sort: \Deck.createdAt) private var decks: [Deck]
     @AppStorage("userName") private var userName = ""
     @AppStorage("newCardsPerDay") private var newCardsPerDay = 20
+    @AppStorage("scheduler") private var scheduler = SchedulerKind.fsrs.rawValue
+    @AppStorage("desiredRetention") private var desiredRetention = 0.9
 
     // Saving a file
     @State private var exportDocument: ExportFile?
@@ -36,6 +38,24 @@ struct SettingsView: View {
                 Text("Study")
             } footer: {
                 Text("How many never-seen cards to introduce each day.")
+            }
+
+            Section {
+                Picker("Algorithm", selection: $scheduler) {
+                    ForEach(SchedulerKind.allCases) { kind in
+                        Text(kind.title).tag(kind.rawValue)
+                    }
+                }
+                if scheduler == SchedulerKind.fsrs.rawValue {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Target memory: \(Int((desiredRetention * 100).rounded()))%")
+                        Slider(value: $desiredRetention, in: 0.80...0.97, step: 0.01)
+                    }
+                }
+            } header: {
+                Text("Scheduling")
+            } footer: {
+                Text("FSRS predicts when you're about to forget each card. A higher target means you remember more but review more often; 90% suits most people. Switching algorithms keeps all your cards and progress.")
             }
 
             Section {

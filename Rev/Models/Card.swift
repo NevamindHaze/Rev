@@ -10,6 +10,9 @@ final class Card {
     var back: String = ""
     var createdAt: Date = Date()
     var deck: Deck?
+    /// Cards made from the same Anki note (e.g. c1 and c2 of one cloze) share this.
+    /// After you study one of them, the others wait until tomorrow ("burying").
+    var noteID: String?
 
     // MARK: Scheduling information (updated every time you answer the card)
 
@@ -29,7 +32,7 @@ final class Card {
     var step: Int = 0
     var lastReviewed: Date?
 
-    // Reserved for the FSRS algorithm later. Not used by SM-2.
+    // Used by the FSRS algorithm. Not used by SM-2.
     var stability: Double?
     var difficulty: Double?
 
@@ -50,7 +53,9 @@ extension Card {
     var schedulingState: SchedulingState {
         get {
             SchedulingState(phase: phase, due: due, intervalDays: intervalDays, ease: ease,
-                            reps: reps, lapses: lapses, step: step, lastReviewed: lastReviewed)
+                            reps: reps, lapses: lapses, step: step, lastReviewed: lastReviewed,
+                            stability: stability, difficulty: difficulty,
+                            fuzzSeed: id.hashValue &+ reps)
         }
         set {
             phase = newValue.phase
@@ -61,6 +66,8 @@ extension Card {
             lapses = newValue.lapses
             step = newValue.step
             lastReviewed = newValue.lastReviewed
+            stability = newValue.stability
+            difficulty = newValue.difficulty
         }
     }
 

@@ -96,6 +96,8 @@ enum BackupService {
                 if mergeByName, var matches = existingByFront[cardDTO.front], !matches.isEmpty {
                     let existing = matches.removeFirst()
                     existingByFront[cardDTO.front] = matches
+                    // Cards imported before Rev tracked Anki notes learn which note they belong to.
+                    if existing.noteID == nil { existing.noteID = cardDTO.noteID }
                     if existing.back == cardDTO.back {
                         result.skipped += 1
                     } else {

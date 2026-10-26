@@ -27,6 +27,14 @@ enum StatsCalculator {
         return (try? context.fetchCount(descriptor)) ?? 0
     }
 
+    /// IDs of every card you answered today.
+    static func cardIDsReviewedToday(in context: ModelContext, now: Date = Date()) -> Set<UUID> {
+        let start = now.startOfDay
+        let descriptor = FetchDescriptor<ReviewLog>(predicate: #Predicate<ReviewLog> { $0.date >= start })
+        let logs = (try? context.fetch(descriptor)) ?? []
+        return Set(logs.map { $0.cardID })
+    }
+
     /// Number of reviews per day (keyed by midnight) since a given date.
     static func reviewCountsByDay(in context: ModelContext, since: Date) -> [Date: Int] {
         let descriptor = FetchDescriptor<ReviewLog>(predicate: #Predicate<ReviewLog> { $0.date >= since })
