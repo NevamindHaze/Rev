@@ -1,0 +1,73 @@
+# Builds Rev for Windows on GitHub's computers.
+#
+# - Every push to main (and every pull request): runs the automatic checks, then builds the portable
+#   Rev.exe and the installer, kept for 30 days under the run's "Artifacts".
+# - Pushing a version tag such as v1.0.0: does the same, then publishes a GitHub Release with both files,
+#   using RELEASE_NOTES.md as the text. The tag must match <Version> in src/Rev.App/Rev.App.csproj.
+
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to publish releases
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Run the automatic checks
+        run: dotnet test -c Release
+
+      - name: Find the version
+        id: version
+        shell: pwsh
+        run: |
+          $version = (Select-Xml -Path src/Rev.App/Rev.App.csproj -XPath "//Version").Node.InnerText
+          "version=$version" >> $env:GITHUB_OUTPUT
+          if ("${{ github.ref_type }}" -eq "tag" -and "${{ github.ref_name }}" -ne "v$version") {
+            throw "The tag ${{ github.ref_name }} doesn't match the version $version in Rev.App.csproj."
+          }
+
+      - name: Build the portable Rev.exe (one file, nothing else to install)
+        run: >
+          dotnet publish src/Rev.App/Rev.App.csproj -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true -o publish
+
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup --yes --no-progress }
+          & $iscc /Qp "/DAppVersion=${{ steps.version.outputs.version }}" installer\Rev.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed" }
+          Copy-Item publish\Rev.exe "dist\Rev-${{ steps.version.outputs.version }}-portable.exe"
+          Get-ChildItem dist | Format-Table Name, Length
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rev-${{ steps.version.outputs.version }}
+          path: dist/*
+          retention-days: 30
+
+      - name: Publish the release
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "${{ github.ref_name }}" (Get-ChildItem dist).FullName
+          --title "Rev for Windows ${{ steps.version.outputs.version }}"
+          --notes-file RELEASE_NOTES.md
