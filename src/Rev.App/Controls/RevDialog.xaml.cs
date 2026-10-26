@@ -39,6 +39,36 @@ public partial class RevDialog : Window
         return dialog.ShowDialog() == true;
     }
 
+    /// <summary>
+    /// Offers several choices, e.g. the leech question. The first choice is the safe one (Esc picks it);
+    /// the last is shown as the main button. Returns the number of the chosen button (0 = first).
+    /// </summary>
+    public static int Choose(Window? owner, string title, string message, params string[] choices)
+    {
+        var dialog = new RevDialog(owner, title, message, "");
+        // More than two buttons need more room, so none of them gets cut off.
+        if (choices.Length > 2) dialog.Width = 720;
+        int chosen = 0;
+        dialog.ButtonRow.Children.Clear();
+        for (int i = 0; i < choices.Length; i++)
+        {
+            int number = i;
+            bool main = i == choices.Length - 1;
+            var button = new Button
+            {
+                Content = choices[i], MinHeight = 50,
+                Margin = new Thickness(i == 0 ? 0 : 12, 0, 0, 0),
+                Style = (Style)dialog.FindResource(main ? "TealPillButton" : "SecondaryPillButton"),
+                IsCancel = i == 0,
+            };
+            button.Click += (_, _) => { chosen = number; dialog.DialogResult = true; };
+            dialog.ButtonRow.Children.Add(button);
+        }
+        dialog.Loaded += (_, _) => ((Button)dialog.ButtonRow.Children[0]).Focus();
+        dialog.ShowDialog();
+        return chosen;
+    }
+
     /// <summary>Asks for a line of text. Returns it (trimmed), or null if you cancelled.</summary>
     public static string? Prompt(Window? owner, string title, string? message, string initialText,
                                  string confirmText, string hint)

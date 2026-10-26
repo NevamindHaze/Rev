@@ -10,9 +10,12 @@ using Rev.Core.Data;
 using Rev.Core.Models;
 using Rev.Core.Scheduling;
 
-if (args.Length != 1)
+//   --review-test  makes a small "Review test" deck instead, with one card of each special case
+//                  (an almost-leech, a list with bold text, an image, a type-in card and a plain card).
+
+if (args.Length is < 1 or > 2 || (args.Length == 2 && args[1] != "--review-test"))
 {
-    Console.WriteLine("Usage: Rev.Demo <empty folder>");
+    Console.WriteLine("Usage: Rev.Demo <empty folder> [--review-test]");
     return 1;
 }
 
@@ -28,6 +31,28 @@ var now = DateTime.Now;
 var today = now.StartOfStudyDay();
 var random = new Random(7);
 db.SaveSettings(new AppSettings { UserName = "Sam" });
+
+if (args.Length == 2)
+{
+    var test = db.AddDeck("Review test", now.AddDays(-10));
+    // A graduated card forgotten 7 times already: one more "Again" makes it a leech.
+    var leech = new Card { DeckId = test.Id, Front = "Leech test card", Back = "Forgotten again", CreatedAt = now.AddDays(-9) };
+    leech.SchedulingState = new SchedulingState
+    {
+        Phase = CardPhase.Review, IntervalDays = 2, Ease = 1.3, Reps = 20, Lapses = 7, Stability = 2, Difficulty = 9,
+        Due = today, LastReviewed = today.AddDays(-2),
+    };
+    db.AddCard(leech);
+    // New cards, in this order.
+    db.AddNote(test.Id, CardKind.Basic, "Signs of **canine parvovirus**?",
+        "• vomiting\n• bloody diarrhoea\n• lethargy that goes on for long enough to wrap onto a second line of the answer\n\nIt's *highly* contagious.",
+        [], now.AddDays(-8));
+    db.AddNote(test.Id, CardKind.Basic, "What does this picture show?", "[img:heart.png]\nRev's icon", [], now.AddDays(-7));
+    db.AddNote(test.Id, CardKind.TypeIn, "Reversal agent for medetomidine?", "Atipamezole.", [], now.AddDays(-6));
+    db.AddNote(test.Id, CardKind.Basic, "Q4", "A4", [], now.AddDays(-5));
+    Console.WriteLine($"Made {path} with the Review test deck ({db.GetCards().Count} cards).");
+    return 0;
+}
 
 // (deck name, questions and answers, how many are already studied)
 var decks = new (string Name, (string Q, string A)[] Cards, int Studied)[]

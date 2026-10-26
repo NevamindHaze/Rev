@@ -122,6 +122,37 @@
         <Setter Property="Foreground" Value="{DynamicResource OnMustardBrush}" />
     </Style>
 
+    <!-- The four answer buttons on the review screen: big rounded tiles (the colour is set per button). -->
+    <Style x:Key="RatingButton" TargetType="Button" BasedOn="{StaticResource PillButton}">
+        <Setter Property="MinHeight" Value="80" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Tile" Background="{TemplateBinding Background}" CornerRadius="24"
+                            BorderBrush="{DynamicResource InkBrush}" BorderThickness="0" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Tile" Property="Opacity" Value="0.9" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Tile" Property="BorderThickness" Value="3" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="RenderTransform">
+                                <Setter.Value>
+                                    <ScaleTransform ScaleX="0.96" ScaleY="0.96" />
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- A round button with just a symbol, e.g. the back arrow or B / I in the editor. -->
     <Style x:Key="RoundIconButton" TargetType="Button" BasedOn="{StaticResource SecondaryPillButton}">
         <Setter Property="Width" Value="46" />

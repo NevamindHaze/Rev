@@ -20,7 +20,7 @@
             <TextBox x:Name="InputBox" Style="{StaticResource RevTextBox}" Margin="0,18,0,0" Visibility="Collapsed"
                      TextChanged="InputBox_TextChanged" />
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
+            <StackPanel x:Name="ButtonRow" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
                 <Button x:Name="CancelButton" Style="{StaticResource SecondaryPillButton}" MinHeight="50"
                         Content="Cancel" IsCancel="True" Click="Cancel_Click" />
                 <Button x:Name="ConfirmButton" Style="{StaticResource PillButton}" MinHeight="50" Margin="12,0,0,0"

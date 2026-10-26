@@ -1,0 +1,31 @@
+<!--
+    A card image, full screen. Scroll the mouse wheel (or + / −) to zoom, drag to move,
+    double-click to reset, Esc or ✕ to close.
+-->
+<Window x:Class="Rev.App.Views.ImageZoomWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Style="{StaticResource RevWindow}"
+        Background="#FF0E0D0B" WindowStyle="None" WindowState="Maximized" ResizeMode="NoResize"
+        ShowInTaskbar="False" Title="Image">
+    <Grid>
+        <Grid x:Name="Stage" ClipToBounds="True" Background="Transparent" Cursor="SizeAll"
+              MouseWheel="Stage_MouseWheel" MouseLeftButtonDown="Stage_MouseDown"
+              MouseMove="Stage_MouseMove" MouseLeftButtonUp="Stage_MouseUp">
+            <Image x:Name="Picture" Margin="40" RenderTransformOrigin="0,0">
+                <Image.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform x:Name="Zoom" />
+                        <TranslateTransform x:Name="Move" />
+                    </TransformGroup>
+                </Image.RenderTransform>
+            </Image>
+        </Grid>
+        <Button Style="{StaticResource RoundIconButton}" HorizontalAlignment="Right" VerticalAlignment="Top"
+                Margin="24" Click="Close_Click" ToolTip="Close (Esc)" AutomationProperties.Name="Close image">
+            <TextBlock Style="{StaticResource IconText}" Text="&#xE711;" />
+        </Button>
+        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,20" FontSize="14"
+                   Foreground="#B3FFFFFF" Text="Scroll to zoom · drag to move · double-click to reset · Esc to close" />
+    </Grid>
+</Window>

@@ -58,6 +58,8 @@ public partial class HomeView : UserControl, IScreen
 
     // ---- Actions ----
 
+    private void ReviewAll_Click(object sender, RoutedEventArgs e) => MainWindow.Current.Open(new ReviewView(null));
+
     private void NewDeck_Click(object sender, RoutedEventArgs e) => NewDeck();
 
     private void NewDeck()

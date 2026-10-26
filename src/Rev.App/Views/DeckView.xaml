@@ -34,8 +34,7 @@
                                    Glyph="&#xE734;" Tint="{DynamicResource CoralBrush}" />
             </UniformGrid>
 
-            <!-- Reviewing arrives in step 5 of the plan; until then the button is greyed out. -->
-            <Button Style="{StaticResource PillButton}" Margin="0,14,0,0" MinHeight="64" IsEnabled="False"
+            <Button Style="{StaticResource PillButton}" Margin="0,14,0,0" MinHeight="64" Click="Study_Click"
                     AutomationProperties.Name="Study now">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Style="{StaticResource IconText}" FontSize="16" Text="&#xE768;" Margin="0,0,10,0" />

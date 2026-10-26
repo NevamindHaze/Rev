@@ -73,8 +73,19 @@ public sealed class CardTextView : StackPanel
                 bitmap.CacheOption = BitmapCacheOption.OnLoad;   // read now, so the file isn't kept locked
                 bitmap.UriSource = new Uri(path);
                 bitmap.EndInit();
-                return new WpfImage { Source = bitmap, MaxHeight = 380, HorizontalAlignment = HorizontalAlignment.Left,
-                                      Margin = new Thickness(0, 6, 0, 6) };
+                var picture = new WpfImage
+                {
+                    Source = bitmap, MaxHeight = 380, HorizontalAlignment = HorizontalAlignment.Left,
+                    Margin = new Thickness(0, 6, 0, 6), Cursor = System.Windows.Input.Cursors.Hand,
+                    ToolTip = "Click to zoom",
+                };
+                // Click an image to see it full screen.
+                picture.MouseLeftButtonUp += (_, e) =>
+                {
+                    e.Handled = true;
+                    new Views.ImageZoomWindow(bitmap) { Owner = Window.GetWindow(this) }.ShowDialog();
+                };
+                return picture;
             }
             catch (Exception) { /* a damaged image file: fall through to the message */ }
         }
@@ -92,11 +103,12 @@ public static class RichText
         block.Inlines.Clear();
         foreach (var span in CardText.Spans(text))
         {
-            block.Inlines.Add(new Run(span.Value)
-            {
-                FontWeight = span.Bold ? FontWeights.Bold : FontWeights.Normal,
-                FontStyle = span.Italic ? FontStyles.Italic : FontStyles.Normal,
-            });
+            // Only bold/italic pieces get a style, so plain text keeps the weight of its surroundings
+            // (e.g. the semi-bold question on the review screen).
+            var run = new Run(span.Value);
+            if (span.Bold) run.FontWeight = FontWeights.ExtraBold;
+            if (span.Italic) run.FontStyle = FontStyles.Italic;
+            block.Inlines.Add(run);
         }
     }
 }

@@ -80,6 +80,8 @@ public partial class DeckView : UserControl, IScreen
 
     private void Back_Click(object sender, RoutedEventArgs e) => MainWindow.Current.GoBack();
 
+    private void Study_Click(object sender, RoutedEventArgs e) => MainWindow.Current.Open(new ReviewView(deck));
+
     private void AddCard_Click(object sender, RoutedEventArgs e) => AddCard();
 
     private void AddCard()
