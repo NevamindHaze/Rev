@@ -3,6 +3,8 @@
 #
 # It runs automatically every time you change files on the "main" branch,
 # and you can also start it by hand: Actions tab → "iOS Build" → "Run workflow".
+# It also runs for every pull request, but then it only checks that the app builds:
+# nothing is published, so SideStore doesn't see an update until the pull request is merged.
 #
 # Before each change, update RELEASE_NOTES.md: it becomes the "What's new" text in SideStore
 # and on the GitHub release.
@@ -15,6 +17,7 @@ name: iOS Build
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 # Allows this workflow to create Releases in your repo.
@@ -73,6 +76,7 @@ jobs:
 
       # The "What's new" text SideStore shows comes from RELEASE_NOTES.md.
       - name: Write the SideStore source file
+        if: github.event_name != 'pull_request'
         run: |
           SIZE=$(stat -f%z Rev.ipa)
           DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -96,6 +100,7 @@ jobs:
           cat source.json
 
       - name: Publish the release
+        if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
