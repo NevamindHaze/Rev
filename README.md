@@ -24,7 +24,7 @@
 src/Rev.Core          the "thinking": scheduling, cards, Anki, backup, stats (no screens; tested)
 src/Rev.App           the Windows app: screens, theme, controls
 tests/Rev.Core.Tests  automatic checks for Rev.Core
-tools/                small helper scripts (e.g. make-icon.ps1)
+tools/                helpers: make-icon.ps1, Rev.Demo (sample data)
 ```
 
 ## Building it yourself
@@ -34,4 +34,18 @@ Install the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0), then
 ```
 dotnet test              # runs the automatic checks
 dotnet run --project src/Rev.App
+```
+
+Rev keeps its data in `%LOCALAPPDATA%\Rev\rev.db`. For testing, two switches keep your real data out of the way:
+
+| | |
+|---|---|
+| `REV_DATA_DIR` | use this folder for the database instead |
+| `REV_THEME` | `dark` or `light`, instead of following Windows |
+
+To try Rev with sample veterinary decks:
+
+```
+dotnet run --project tools/Rev.Demo -- C:\Temp\rev-demo
+$env:REV_DATA_DIR = "C:\Temp\rev-demo"; dotnet run --project src/Rev.App
 ```

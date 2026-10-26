@@ -9,8 +9,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         FitOnScreen();
-        // e.g. "Monday 26 October", in your computer's language.
-        DateText.Text = DateTime.Now.ToString("dddd d MMMM");
+        // Coming back to Rev (e.g. the next morning) refreshes today's numbers.
+        Activated += (_, _) => { if (Home.IsLoaded) Home.Refresh(); };
     }
 
     /// <summary>On a small or zoomed-in screen, shrinks the window so all of it is visible.</summary>
