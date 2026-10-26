@@ -22,6 +22,26 @@ uninstalling Rev never touches them (make a backup in Settings now and then anyw
 
 See [`RELEASE_NOTES.md`](RELEASE_NOTES.md) for what's new.
 
+## Sync with Anki (and Rev on iPhone)
+
+```
+Rev (iPhone)   ──rev.json──▶                    ──anki.json──▶  Rev (iPhone)
+                              Rev Sync add-on
+Rev (Windows)  ──windows.json──▶  (Anki)        ──anki.json──▶  Rev (Windows)
+```
+
+1. Install the **Rev Sync add-on with Windows support** in Anki (the `anki-addon/rev_sync` folder of the
+   [Rev](https://github.com/NevamindHaze/Rev) repository) and set it to your "Rev Sync" folder in iCloud Drive,
+   as for the iPhone.
+2. In Rev for Windows, open **Settings → Sync with Anki → Choose folder…** and pick the same folder
+   (usually `C:\Users\<you>\iCloudDrive\Rev Sync`). Rev saves a backup, shows what the first sync will do,
+   and starts when you agree.
+
+Anki is the hub: Rev for Windows reads `anki.json` and writes its own `windows.json`, and the add-on passes
+changes on to the iPhone and back. Each card's text and schedule go to whichever app changed them last.
+The design is in [`docs/SYNC-PROPOSAL.md`](docs/SYNC-PROPOSAL.md); `tools/check-sync.py` tests all three
+apps together on throw-away data.
+
 ## How it's built
 
 | | |

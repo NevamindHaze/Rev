@@ -27,7 +27,15 @@ public partial class MainWindow : Window
         };
         // Alt+Left goes back, like in a web browser.
         InputBindings.Add(new KeyBinding(new RelayCommand(GoBack), Key.Left, ModifierKeys.Alt));
+
+        // Sync with Anki (if it's set up): soon after opening, every few minutes, and when closing.
+        Loaded += (_, _) => SyncRunner.Start();
+        SyncRunner.Synced += (_, _) => { if (Screen.Content is IScreen screen && !IsReviewing) screen.Refresh(); };
+        Closing += (_, _) => SyncRunner.RunQuietly();
     }
+
+    /// <summary>True while the review screen is open (automatic syncs wait until you leave it).</summary>
+    public bool IsReviewing => Screen.Content is ReviewView;
 
     /// <summary>The main window of the app, so any screen can open another one.</summary>
     public static MainWindow Current => (MainWindow)Application.Current.MainWindow;

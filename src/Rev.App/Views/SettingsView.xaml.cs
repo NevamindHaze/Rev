@@ -36,10 +36,67 @@ public partial class SettingsView : UserControl, IScreen
         var version = typeof(App).Assembly.GetName().Version;
         VersionText.Text = $"Rev for Windows {version?.ToString(3)}";
         FolderText.Text = $"Your decks and progress are kept in {RevDatabase.DefaultFolder}";
+        UpdateSyncStatus();
         loading = false;
     }
 
-    public void Refresh() { }
+    public void Refresh() => UpdateSyncStatus();
+
+    // ---- Sync with Anki ----
+
+    private void UpdateSyncStatus()
+    {
+        string? folder = SyncRunner.Folder;
+        SyncStatus.Text = folder is null ? "Not set up yet. Choose the Rev Sync folder to start."
+            : SyncRunner.IsOn ? $"Syncing through {folder}"
+            : $"Folder chosen ({folder}), but not syncing yet. Click Sync now to start.";
+        SyncLast.Text = SyncRunner.LastTime is { } time
+            ? $"Last synced {time:d MMMM, HH:mm}: {SyncRunner.LastMessage}"
+            : SyncRunner.LastMessage ?? "";
+        SyncLast.Visibility = SyncLast.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+        SyncNowButton.IsEnabled = folder is not null;
+        SyncOffButton.Visibility = folder is null ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void ChooseSyncFolder_Click(object sender, RoutedEventArgs e)
+    {
+        string suggested = SyncRunner.SuggestedFolder;
+        var dialog = new OpenFolderDialog
+        {
+            Title = "Choose the Rev Sync folder (the one the Rev Sync add-on in Anki uses)",
+            InitialDirectory = Directory.Exists(suggested) ? suggested : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+        };
+        if (dialog.ShowDialog(OwnerWindow) != true) return;
+        SyncRunner.SetUp(OwnerWindow, dialog.FolderName);
+        UpdateSyncStatus();
+    }
+
+    private void SyncNow_Click(object sender, RoutedEventArgs e)
+    {
+        if (SyncRunner.Folder is not { } folder) return;
+        if (!SyncRunner.IsOn)
+        {
+            SyncRunner.SetUp(OwnerWindow, folder);   // the first sync: backup, preview, then sync
+        }
+        else
+        {
+            Mouse.OverrideCursor = Cursors.Wait;
+            bool ok = SyncRunner.Run(out string message);
+            Mouse.OverrideCursor = null;
+            RevDialog.Tell(OwnerWindow, ok ? "Synced with Anki" : "Sync didn't finish", message);
+        }
+        UpdateSyncStatus();
+    }
+
+    private void SyncOff_Click(object sender, RoutedEventArgs e)
+    {
+        if (!RevDialog.Confirm(OwnerWindow, "Turn off sync with Anki?",
+                "Rev for Windows will stop syncing. Your cards stay as they are, here and in Anki. " +
+                "(To take Rev for Windows out of the sync completely, also delete windows.json from the Rev Sync folder.)",
+                "Turn off", destructive: true)) return;
+        SyncRunner.TurnOff();
+        UpdateSyncStatus();
+    }
 
     /// <summary>Saves the settings with one change made.</summary>
     private void Save(Func<AppSettings, AppSettings> change)

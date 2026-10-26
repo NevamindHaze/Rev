@@ -16,6 +16,18 @@ using Rev.Core.Scheduling;
 //   --export       also adds a card with a picture and writes the decks to <folder>\export.apkg
 //                  (used to check that Anki accepts Rev's export: see tools/check-anki-export.py).
 
+//
+// Commands for testing sync on an existing (test) data folder, used by tools/check-sync.py:
+//   --sync <shared folder>            one sync, as the app does it (prints the summary)
+//   --edit <front> <new back>         edit a card's answer
+//   --study <front>                   answer a card "Good" as a graduated card, with a review in the history
+//   --add <deck> <front> <back>       add a basic card
+//   --delete <front>                  delete a card
+//   --dump                            print every card as JSON
+
+if (args.Length >= 2 && args[1] is "--sync" or "--edit" or "--study" or "--add" or "--delete" or "--dump")
+    return SyncCommands.Run(args);
+
 if (args.Length is < 1 or > 2 || (args.Length == 2 && args[1] is not ("--review-test" or "--export")))
 {
     Console.WriteLine("Usage: Rev.Demo <empty folder> [--review-test | --export]");

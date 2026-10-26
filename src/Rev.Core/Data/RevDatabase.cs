@@ -168,13 +168,33 @@ public sealed partial class RevDatabase : IDisposable
         }
     }
 
+    /// <summary>
+    /// Runs changes and then undoes them all, returning what <paramref name="work"/> worked out
+    /// (e.g. "what would this sync change?" without changing anything).
+    /// </summary>
+    public T DryRun<T>(Func<T> work)
+    {
+        if (inTransaction) throw new InvalidOperationException("A dry run can't start inside another change.");
+        using var transaction = connection.BeginTransaction();
+        inTransaction = true;
+        try
+        {
+            return work();
+        }
+        finally
+        {
+            inTransaction = false;
+            transaction.Rollback();
+        }
+    }
+
     // ---- Converting times ----
 
     /// <summary>A local time → milliseconds since 1970.</summary>
-    internal static long ToMs(DateTime time) => new DateTimeOffset(time).ToUnixTimeMilliseconds();
+    public static long ToMs(DateTime time) => new DateTimeOffset(time).ToUnixTimeMilliseconds();
 
     /// <summary>Milliseconds since 1970 → a local time.</summary>
-    internal static DateTime FromMs(long ms) => DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime;
+    public static DateTime FromMs(long ms) => DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime;
 
     private static long? ToMs(DateTime? time) => time is { } t ? ToMs(t) : null;
 

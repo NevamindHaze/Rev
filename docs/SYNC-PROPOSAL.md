@@ -1,7 +1,9 @@
 # Proposal: Rev for Windows joins the Rev ↔ Anki sync
 
-Status: **proposal only.** Nothing here is built yet, and nothing in the [Rev](https://github.com/NevamindHaze/Rev)
-repository has been changed. This describes how Rev for Windows could take part in the sync that already
+Status: **built and tested; the add-on change waits to be merged.** Rev for Windows' side is in
+`src/Rev.Core/Sync` and Settings → Sync with Anki. The add-on change is on the `windows-sync` branch of the
+[Rev](https://github.com/NevamindHaze/Rev) repository, not yet merged. One thing was learned while building it
+and added below (section 3, point 6). This describes how Rev for Windows takes part in the sync that already
 works between Rev on iPhone and Anki, **without changing Rev on iPhone at all** and without any risk to
 the iPhone ↔ Anki sync you use today.
 
@@ -77,7 +79,12 @@ The add-on keeps everything it does now, plus:
 4. **Reviews from both apps** go into Anki's review log, as now (duplicates skipped by their millisecond id).
 5. **New notes** from either app are created as now (the "Rev Basic / Reversed / Cloze / Type-in" note
    types). If both apps somehow sent the same new note id, it's created once.
-6. **The echo memory stays one per card** (`appliedContent`, `appliedSched`): it records the timestamp of
+6. **(Found while testing) Compare with when a card really changed, and don't re-create fresh deletions.**
+   Applying a change stamps the note with the time of the sync, so the add-on compares new changes with the
+   Rev app's own time it already remembers (`changed_at`). And because both apps' files are read on every
+   sync, an app that hasn't yet heard about a deletion would bring the card back; the add-on now skips cards
+   deleted in the last 60 days unless the app changed them after the deletion.
+7. **The echo memory stays one per card** (`appliedContent`, `appliedSched`): it records the timestamp of
    whichever app's change was applied last, so `anki.json` reports that time and neither app re-applies
    its own change. Nothing else in `export_anki` changes, so the iPhone sees exactly the same kind of file
    as today.
@@ -147,7 +154,8 @@ The add-on keeps everything it does now, plus:
 ## 8. Suggested order of work
 
 1. ~~In this repository: imported cards keep Anki's change times (section 4), with tests.~~ Done.
-2. In the Rev repository (`anki-addon/rev_sync`): read `windows.json` and merge-then-apply (section 3),
-   with the three-app tests. Release it as a new add-on version.
-3. In this repository: the sync port, the Settings screen, the first-sync backup and preview.
+2. ~~In the Rev repository (`anki-addon/rev_sync`): read `windows.json` and merge-then-apply (section 3),
+   with the three-app tests.~~ Done on the `windows-sync` branch (`tests/test_windows.py`, 23 checks); to be merged.
+3. ~~In this repository: the sync port, the Settings screen, the first-sync backup and preview.~~ Done
+   (`tests/Rev.Core.Tests/SyncTests.cs`; `tools/check-sync.py` runs all three apps together, 26 checks).
 4. A trial on copies, then your real folder.
