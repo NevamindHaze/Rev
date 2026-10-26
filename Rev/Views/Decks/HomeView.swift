@@ -121,11 +121,16 @@ struct HomeView: View {
 
     private var overview: some View {
         VStack(spacing: 14) {
-            HStack(spacing: 12) {
-                StatTile(value: "\(allCards.dueCount())", label: "Due today", icon: "clock.fill", tint: Theme.teal)
-                StatTile(value: "\(allCards.newCount)", label: "New", icon: "sparkles", tint: Theme.coral)
-                StatTile(value: "\(reviewedToday)", label: "Done today", icon: "checkmark", tint: Theme.mustard)
+            // Re-checked every 30 seconds, so cards that come back show up by themselves.
+            TimelineView(.periodic(from: .now, by: 30)) { context in
+                HStack(spacing: 12) {
+                    StatTile(value: "\(allCards.toReviewCount(now: context.date))", label: "To review",
+                             icon: "clock.fill", tint: Theme.teal)
+                    StatTile(value: "\(allCards.newCount)", label: "New", icon: "sparkles", tint: Theme.coral)
+                    StatTile(value: "\(reviewedToday)", label: "Done today", icon: "checkmark", tint: Theme.mustard)
+                }
             }
+            ComingBackLabel(cards: allCards)
             NavigationLink {
                 ReviewView(deck: nil)
             } label: {

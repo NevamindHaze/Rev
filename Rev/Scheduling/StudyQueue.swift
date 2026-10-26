@@ -60,10 +60,34 @@ struct StudyQueue {
 }
 
 extension Array where Element == Card {
-    /// Studied cards that are due by the end of today.
-    func dueCount(now: Date = Date()) -> Int {
+    /// Cards waiting for you right now: review cards due today, plus learning cards whose
+    /// wait is over. Answering a card takes it off this count straight away.
+    func toReviewCount(now: Date = Date()) -> Int {
         let end = now.endOfDay
-        return filter { !$0.isSuspended && $0.phase != .new && $0.due < end }.count
+        return filter { card in
+            guard !card.isSuspended else { return false }
+            switch card.phase {
+            case .new: return false
+            case .review: return card.due < end
+            case .learning, .relearning: return card.due <= now
+            }
+        }.count
+    }
+
+    /// Cards you pressed "Again" (or are still learning) that come back later today.
+    func comingBack(now: Date = Date()) -> [Card] {
+        let end = now.endOfDay
+        return filter { !$0.isSuspended && ($0.phase == .learning || $0.phase == .relearning)
+            && $0.due > now && $0.due < end }
+    }
+
+    /// E.g. "3 coming back · next in 8 min", or nil when none are waiting.
+    func comingBackText(now: Date = Date()) -> String? {
+        let waiting = comingBack(now: now)
+        guard let next = waiting.map(\.due).min() else { return nil }
+        let minutes = Swift.max(1, Int((next.timeIntervalSince(now) / 60).rounded(.up)))
+        let wait = minutes < 60 ? "\(minutes) min" : "\(minutes / 60) h \(minutes % 60) min"
+        return "\(waiting.count) coming back · next in \(wait)"
     }
 
     /// Cards that have never been studied (not counting suspended ones).

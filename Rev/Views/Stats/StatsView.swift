@@ -19,13 +19,21 @@ struct StatsView: View {
                     .foregroundStyle(Theme.ink)
 
                 HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("\(cards.dueCount())")
-                            .font(.system(size: 84, weight: .bold, design: .rounded))
-                            .foregroundStyle(Theme.ink)
-                        Text("cards due today")
-                            .font(Theme.body(17, weight: .medium))
-                            .foregroundStyle(Theme.mutedInk)
+                    TimelineView(.periodic(from: .now, by: 30)) { context in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(cards.toReviewCount(now: context.date))")
+                                .font(.system(size: 84, weight: .bold, design: .rounded))
+                                .foregroundStyle(Theme.ink)
+                            Text("cards to review")
+                                .font(Theme.body(17, weight: .medium))
+                                .foregroundStyle(Theme.mutedInk)
+                            let later = cards.comingBack(now: context.date).count
+                            if later > 0 {
+                                Text("+ \(later) coming back later today")
+                                    .font(Theme.body(14, weight: .medium))
+                                    .foregroundStyle(Theme.mutedInk)
+                            }
+                        }
                     }
                     Spacer()
                     streakBadge

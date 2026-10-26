@@ -8,19 +8,28 @@ struct DeckTile: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top) {
-                Text(deck.name)
-                    .font(Theme.title(24))
-                    .multilineTextAlignment(.leading)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(deck.name)
+                        .font(Theme.title(24))
+                        .multilineTextAlignment(.leading)
+                    Text(deck.cards.count.counted("card"))
+                        .font(Theme.body(14, weight: .medium))
+                        .opacity(0.8)
+                }
                 Spacer()
                 Image(systemName: "arrow.up.right")
                     .font(.system(size: 16, weight: .bold))
                     .frame(width: 42, height: 42)
                     .background(palette.foreground.opacity(0.15), in: Circle())
             }
-            HStack(spacing: 8) {
-                chip(deck.cards.count.counted("card"))
-                chip("\(deck.cards.dueCount()) due")
-                chip("\(deck.cards.newCount) new")
+            // Re-checked every 30 seconds, so cards coming back move between the chips by themselves.
+            TimelineView(.periodic(from: .now, by: 30)) { context in
+                HStack(spacing: 8) {
+                    chip("\(deck.cards.toReviewCount(now: context.date)) to review")
+                    let later = deck.cards.comingBack(now: context.date).count
+                    if later > 0 { chip("↻ \(later) later") }
+                    chip("\(deck.cards.newCount) new")
+                }
             }
         }
         .foregroundStyle(palette.foreground)

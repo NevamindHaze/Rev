@@ -18,11 +18,15 @@ struct DeckDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                HStack(spacing: 12) {
-                    StatTile(value: "\(deck.cards.count)", label: "Cards", icon: "square.stack.fill", tint: Theme.mustard)
-                    StatTile(value: "\(deck.cards.dueCount())", label: "Due today", icon: "clock.fill", tint: Theme.teal)
-                    StatTile(value: "\(deck.cards.newCount)", label: "New", icon: "sparkles", tint: Theme.coral)
+                TimelineView(.periodic(from: .now, by: 30)) { context in
+                    HStack(spacing: 12) {
+                        StatTile(value: "\(deck.cards.count)", label: "Cards", icon: "square.stack.fill", tint: Theme.mustard)
+                        StatTile(value: "\(deck.cards.toReviewCount(now: context.date))", label: "To review",
+                                 icon: "clock.fill", tint: Theme.teal)
+                        StatTile(value: "\(deck.cards.newCount)", label: "New", icon: "sparkles", tint: Theme.coral)
+                    }
                 }
+                ComingBackLabel(cards: deck.cards)
 
                 NavigationLink {
                     ReviewView(deck: deck)

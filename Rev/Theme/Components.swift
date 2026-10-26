@@ -71,6 +71,23 @@ struct StatTile: View {
     }
 }
 
+/// "3 coming back · next in 8 min": cards you pressed Again that return later today.
+/// Shows nothing when there are none, and updates itself every 30 seconds.
+struct ComingBackLabel: View {
+    let cards: [Card]
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 30)) { context in
+            if let text = cards.comingBackText(now: context.date) {
+                Label(text, systemImage: "arrow.uturn.backward.circle.fill")
+                    .font(Theme.body(14, weight: .semibold))
+                    .foregroundStyle(Theme.mutedInk)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+    }
+}
+
 /// A coloured dot with a count, used at the top of the review screen.
 struct CountPill: View {
     let label: String

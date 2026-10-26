@@ -1,9 +1,5 @@
 What's new
 
-• Bold and italic: while editing a card, select words and tap B or I above the keyboard. Formatting shows on the card, in the card list, and syncs with Anki both ways.
-• Bold and italic text from Anki now shows in Rev. Cards synced from Anki are refreshed once to pick it up (cards you edited in Rev keep your version).
-
-Improvements
-• The card editor's text boxes now let you select text precisely.
-
-Note: Rev now needs iOS 18 or later.
+• Clearer counts: “Due today” is now “To review” — the cards waiting for you right now. It goes down with every card you answer.
+• Cards you press Again on are shown separately as “coming back”, with when the next one returns (e.g. “3 coming back · next in 8 min”). When their wait is over they move back into “To review” by themselves.
+• Deck tiles show “to review”, “later” and “new”, with the total number of cards under the deck name.
