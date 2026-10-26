@@ -95,11 +95,14 @@ The add-on keeps everything it does now, plus:
   (Anki's guid and ord for imported cards, a UUID for new notes), `editedAt` and `schedChangedAt` updated
   wherever those change, review logs in milliseconds, `FieldsReadOnly` for note types Rev can't rewrite,
   deck names with " › " ↔ "::", and the same cloze/reversed field layout as the iPhone.
-- **One small fix first:** cards imported from an Anki file currently get *import time* as their
-  `editedAt` / `schedChangedAt`. On the first sync that would make Windows' copy look newer than Anki's and
-  push Rev's simplified text back into Anki's fields (losing, say, colours in your Anki HTML). Rev on
-  iPhone avoids this by treating imported cards as "changed long ago". Windows should do the same before
-  sync is switched on (cards you edit or study in Rev then become newer, as they should).
+- **Done: imported cards carry Anki's own change times.** If cards imported from an Anki file had the
+  *import time* as their `editedAt` / `schedChangedAt`, the first sync would see Windows' copy as newer and
+  push Rev's simplified text back into Anki's fields (losing, say, colours in your Anki HTML). Rev on iPhone
+  avoids this by treating imported cards as "changed long ago". Rev for Windows goes one step further:
+  `editedAt` is the note's last change in Anki and `schedChangedAt` the card's, which are exactly the times
+  the add-on writes in `anki.json`. So on a first sync neither side looks newer and nothing is overwritten;
+  a card you then edit or study in Rev becomes newer, as it should. (A missing time counts as "long ago".)
+  A re-import that brings Anki's text back also puts Anki's time back.
 
 ## 5. Keeping the existing sync safe
 
@@ -143,7 +146,7 @@ The add-on keeps everything it does now, plus:
 
 ## 8. Suggested order of work
 
-1. In this repository: treat Anki imports as "changed long ago" (section 4), with tests.
+1. ~~In this repository: imported cards keep Anki's change times (section 4), with tests.~~ Done.
 2. In the Rev repository (`anki-addon/rev_sync`): read `windows.json` and merge-then-apply (section 3),
    with the three-app tests. Release it as a new add-on version.
 3. In this repository: the sync port, the Settings screen, the first-sync backup and preview.

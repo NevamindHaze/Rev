@@ -133,9 +133,9 @@ public static class ApkgReader
         var deckNames = newTables ? DeckNamesFromTables(db) : DeckNamesFromJson(db);
         var noteTypes = newTables ? NoteTypesFromTables(db) : NoteTypesFromJson(db);
 
-        var notes = new Dictionary<long, (long NoteType, string[] Fields, string Guid, string Tags)>();
-        Query(db, "SELECT id, mid, flds, guid, tags FROM notes", r =>
-            notes[r.GetInt64(0)] = (r.GetInt64(1), r.GetString(2).Split('\u001f'), r.GetString(3), r.GetString(4)));
+        var notes = new Dictionary<long, (long NoteType, string[] Fields, string Guid, string Tags, long Modified)>();
+        Query(db, "SELECT id, mid, flds, guid, tags, mod FROM notes", r =>
+            notes[r.GetInt64(0)] = (r.GetInt64(1), r.GetString(2).Split('\u001f'), r.GetString(3), r.GetString(4), r.GetInt64(5)));
 
         // When each card was last reviewed (review ids are times in milliseconds).
         var lastReview = new Dictionary<long, long>();
@@ -144,7 +144,7 @@ public static class ApkgReader
 
         var cardsByDeck = new Dictionary<long, List<Card>>();
         int order = 0;
-        Query(db, "SELECT id, nid, did, odid, ord, type, due, odue, ivl, factor, reps, lapses, data, queue " +
+        Query(db, "SELECT id, nid, did, odid, ord, type, due, odue, ivl, factor, reps, lapses, data, queue, mod " +
                   "FROM cards ORDER BY type, due, id", r =>
         {
             if (!notes.TryGetValue(r.GetInt64(1), out var note) || !noteTypes.TryGetValue(note.NoteType, out var type)) return;
@@ -154,7 +154,13 @@ public static class ApkgReader
 
             // Tiny time steps keep Anki's order for new cards.
             order += 1;
-            card.CreatedAt = card.Due = card.EditedAt = card.SchedChangedAt = now.AddMilliseconds(order);
+            card.CreatedAt = card.Due = now.AddMilliseconds(order);
+            // The card was last changed in Anki, not in Rev: it keeps Anki's own times (the note's for the
+            // text, the card's for the schedule). These are the same times the Rev Sync add-on reports, so a
+            // later sync sees nothing new on either side and never pushes Rev's simpler copy of the text
+            // back over Anki's. Editing or studying the card in Rev then makes Rev's copy the newer one.
+            card.EditedAt = AnkiTime(note.Modified);
+            card.SchedChangedAt = AnkiTime(r.GetInt64(14));
             long deckId = r.GetInt64(3) != 0 ? r.GetInt64(3) : r.GetInt64(2);   // a card in a filtered deck belongs to its original deck
             long due = r.GetInt64(3) != 0 && r.GetInt64(7) != 0 ? r.GetInt64(7) : r.GetInt64(6);
             ApplyProgress(card, type: r.GetInt64(5), due, interval: r.GetInt64(8), factor: r.GetInt64(9),
@@ -181,6 +187,13 @@ public static class ApkgReader
             .OrderBy(d => d.Name, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
     }
+
+    /// <summary>
+    /// An Anki change time (seconds since 1970) as a local time. A missing time (0) means "long ago",
+    /// like Rev on iPhone treats imported cards, so anything changed in Anki or Rev later counts as newer.
+    /// </summary>
+    public static DateTime AnkiTime(long seconds) =>
+        DateTimeOffset.FromUnixTimeSeconds(Math.Max(0, seconds)).LocalDateTime;
 
     /// <summary>
     /// Copies Anki's study progress onto the card. Anki card types: 0 = new, 1 = learning, 2 = review, 3 = relearning.

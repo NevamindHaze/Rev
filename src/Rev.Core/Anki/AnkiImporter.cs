@@ -68,7 +68,7 @@ public static partial class AnkiImporter
 
                     if (existing is not null && matched.Add(existing.Id))
                     {
-                        if (UpdateText(existing, card, at)) { db.UpdateCard(existing); updated += 1; }
+                        if (UpdateText(existing, card)) { db.UpdateCard(existing); updated += 1; }
                         else unchanged += 1;
                         continue;
                     }
@@ -88,8 +88,10 @@ public static partial class AnkiImporter
     /// <summary>
     /// Brings Anki's text into a card already in Rev (its study progress stays as it is in Rev).
     /// Anki's tags are taken only if you haven't tagged the card in Rev. Returns true if anything changed.
+    /// The card then carries Anki's change time, not "now": the text came from Anki, so it isn't a change
+    /// made in Rev (and a later sync won't send it back to Anki as one).
     /// </summary>
-    private static bool UpdateText(Card existing, Card fromAnki, DateTime now)
+    private static bool UpdateText(Card existing, Card fromAnki)
     {
         bool changed = false;
         if (existing.Front != fromAnki.Front || existing.Back != fromAnki.Back)
@@ -104,7 +106,7 @@ public static partial class AnkiImporter
             existing.TagsText = fromAnki.TagsText;
             changed = true;
         }
-        if (changed) existing.MarkEdited(now);
+        if (changed) existing.EditedAt = fromAnki.EditedAt;
         return changed;
     }
 

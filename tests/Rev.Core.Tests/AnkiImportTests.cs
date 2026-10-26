@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using Rev.Core.Anki;
 using Rev.Core.Data;
 using Rev.Core.Models;
@@ -121,6 +122,74 @@ public sealed class AnkiImportTests : IDisposable
         Assert.Equal(cards.Count, cards.Select(c => c.SyncKey).Distinct().Count());
         Assert.All(cards, c => Assert.False(Guid.TryParse(c.NoteId, out _)));   // Anki's guid, not a new UUID
     }
+
+    /// <summary>
+    /// Anki's own change times for every card, read straight from the database inside the legacy test file
+    /// (not through Rev's reader): (note's time, card's time) by "guid:ord". All four test files hold the
+    /// same collection, so these are right for each of them.
+    /// </summary>
+    private Dictionary<string, (DateTime Note, DateTime Card)> AnkiChangeTimes()
+    {
+        Directory.CreateDirectory(folder);
+        string database = Path.Combine(folder, "anki21.sqlite");
+        using (var zip = ZipFile.OpenRead(Fixture("vet-legacy.apkg")))
+            zip.GetEntry("collection.anki21")!.ExtractToFile(database, overwrite: true);
+        var times = new Dictionary<string, (DateTime, DateTime)>();
+        using var connection = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={database};Pooling=False");
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT n.guid, c.ord, n.mod, c.mod FROM cards c JOIN notes n ON c.nid = n.id";
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+            times[$"{reader.GetString(0)}:{reader.GetInt32(1)}"] =
+                (DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(2)).LocalDateTime,
+                 DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(3)).LocalDateTime);
+        return times;
+    }
+
+    [Theory, MemberData(nameof(Files))]
+    public void ImportedCardsKeepAnkisOwnChangeTimes(string file)
+    {
+        var times = AnkiChangeTimes();
+        var cards = Read(file).Decks.SelectMany(d => d.Cards).ToList();
+        Assert.Equal(10, cards.Count);
+        Assert.All(cards, c =>
+        {
+            // The text's time is the note's last change in Anki, the schedule's time the card's: never the import time.
+            Assert.Equal(times[c.SyncKey].Note, c.EditedAt);
+            Assert.Equal(times[c.SyncKey].Card, c.SchedChangedAt);
+            Assert.NotEqual(c.CreatedAt, c.EditedAt);
+        });
+    }
+
+    [Fact]
+    public void AReimportPutsBackAnkisTimeButKeepsRevsNewerStudy()
+    {
+        AnkiImporter.Import(db, Read("vet-new.apkg"), Now);
+        var times = AnkiChangeTimes();
+        var edited = db.GetCards().Single(c => c.Front == "Signs of NSAID toxicity?");
+        db.SaveEdit(edited, edited.Front, "changed in Rev", []);
+        Assert.True(db.GetCard(edited.Id)!.EditedAt > times[edited.SyncKey].Note);
+        var studied = db.GetCards().Single(c => c.Front == "Atipamezole");
+        studied.SchedulingState = ReviewState();
+        studied.MarkScheduled(DateTime.Now);
+        db.UpdateCard(studied);
+
+        AnkiImporter.Import(db, Read("vet-new.apkg"), Now);
+
+        // Anki's text came back, so the card carries Anki's time again (not "now")...
+        var restored = db.GetCard(edited.Id)!;
+        Assert.Equal("• vomiting\n• GI ulcers\n• kidney injury", restored.Back);
+        Assert.Equal(times[edited.SyncKey].Note, restored.EditedAt);
+        // ...while the card studied in Rev keeps Rev's (newer) schedule and its time.
+        var stillStudied = db.GetCard(studied.Id)!;
+        Assert.Equal(CardPhase.Review, stillStudied.Phase);
+        Assert.True(stillStudied.SchedChangedAt > times[studied.SyncKey].Card);
+    }
+
+    [Fact]
+    public void AMissingAnkiTimeMeansLongAgo() =>
+        Assert.Equal(DateTimeOffset.UnixEpoch.LocalDateTime, ApkgReader.AnkiTime(0));
 
     [Fact]
     public void ImportingTheSameDeckAgainUpdatesInsteadOfDuplicating()
