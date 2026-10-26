@@ -218,6 +218,29 @@ def main():
     dialog.enabled.setChecked(False)
     dialog._toggled(False)
 
+    print("9. A file Rev for Windows writes is picked up within seconds, but not during a review")
+    addon._on_profile_open()
+    addon._on_watch()
+    before = json.load(open(addon.STATE_PATH, encoding="utf-8")).get("lastWindowsWrittenAt")
+    check(before is None, "nothing from Windows yet")
+    with open(os.path.join(folder, "windows.json"), "w", encoding="utf-8") as f:
+        f.write(json.dumps({"format": 1, "writer": "windows", "writtenAt": 1234.5, "cards": [], "deleted": [], "reviews": []}))
+    mw.state = "review"
+    addon._on_watch()
+    check(json.load(open(addon.STATE_PATH, encoding="utf-8")).get("lastWindowsWrittenAt") is None, "during a review: waits")
+    mw.state = "deckBrowser"
+    addon._on_watch()
+    check(json.load(open(addon.STATE_PATH, encoding="utf-8")).get("lastWindowsWrittenAt") == 1234.5, "after the review: synced")
+    syncs = []
+    original = addon.run_sync
+    addon.run_sync = lambda *args, **kwargs: syncs.append(args)
+    addon._on_watch()
+    addon._on_watch()
+    addon.run_sync = original
+    check(syncs == [], "no change: no extra syncs")
+    addon._on_profile_close()
+    check(addon._watch_timer is None, "the check stops with the profile")
+
 
 try:
     main()

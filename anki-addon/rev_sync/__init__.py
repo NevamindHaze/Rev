@@ -3,6 +3,7 @@
 When it runs:
   - a few seconds after your profile opens
   - every few minutes while Anki is open (not while you're reviewing)
+  - a few seconds after Rev for Windows (or iCloud, for the iPhone) writes its file into the folder
   - just before and just after Anki syncs with AnkiWeb
   - when you close your profile
   - Tools > Rev Sync now
@@ -28,6 +29,8 @@ STATE_PATH = os.path.join(USER_FILES, "state.json")
 WIFI_PATH = os.path.join(USER_FILES, "wifi.json")          # Wi-Fi on/off and the pairing code
 WIFI_REV_PATH = os.path.join(USER_FILES, "rev-wifi.json")  # the newest file Rev on iPhone sent over Wi-Fi
 _timer = None
+_watch_timer = None
+_seen_files = {}
 _running = False
 _server = None
 _server_error = ""
@@ -274,6 +277,30 @@ def _on_timer():
         run_sync("timer")
 
 
+def _peer_files():
+    """When each Rev app's file in the folder last changed (None if it isn't there)."""
+    times = {}
+    for name, _ in core.PEERS:
+        try:
+            times[name] = os.stat(os.path.join(_folder(), name)).st_mtime_ns
+        except OSError:
+            times[name] = None
+    return times
+
+
+def _on_watch():
+    """Every few seconds: did a Rev app's file just change? Then sync now instead of at the next timer.
+    (Only the files' times are looked at, which costs next to nothing.) A change during a review waits
+    until the review is over."""
+    global _seen_files
+    if not mw.col or _running or mw.state == "review":
+        return
+    now = _peer_files()
+    if now != _seen_files:
+        _seen_files = now
+        run_sync("file changed")
+
+
 def _on_profile_open():
     global _timer
     QTimer.singleShot(3000, lambda: run_sync("open"))
@@ -281,12 +308,20 @@ def _on_profile_open():
     _timer = QTimer(mw)
     _timer.timeout.connect(_on_timer)
     _timer.start(minutes * 60 * 1000)
+    global _watch_timer, _seen_files
+    _seen_files = _peer_files()   # the sync a few seconds after opening covers what's there now
+    _watch_timer = QTimer(mw)
+    _watch_timer.timeout.connect(_on_watch)
+    _watch_timer.start(3000)
     _start_server()
 
 
 def _on_profile_close():
-    global _timer
+    global _timer, _watch_timer
     _stop_server()
+    if _watch_timer:
+        _watch_timer.stop()
+        _watch_timer = None
     if _timer:
         _timer.stop()
         _timer = None
