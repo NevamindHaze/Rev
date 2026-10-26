@@ -92,6 +92,9 @@ enum AnkiText {
             return edge + "[img:\(name)]" + edge
         }
         s = replace(#"<img[^>]*>"#, in: s) { _ in "" }
+        // Bold and italic become Rev's **bold** and *italic* markers.
+        s = replace(#"</?(b|strong)(\s[^>]*)?>"#, in: s) { _ in "**" }
+        s = replace(#"</?(i|em)(\s[^>]*)?>"#, in: s) { _ in "*" }
         s = replace(#"\[sound:[^\]]*\]"#, in: s) { _ in "" }
         s = replace(#"<[^>]+>"#, in: s) { _ in "" }
         s = decodeEntities(s)
@@ -106,6 +109,8 @@ enum AnkiText {
         s = replace(#"[ \t]+\n"#, in: s) { _ in "\n" }
         s = replace(#"\n[ \t]+"#, in: s) { _ in "\n" }
         s = replace(#"\n{3,}"#, in: s) { _ in "\n\n" }
+        // Two bold runs side by side ("</b><b>") leave an empty pair; remove it.
+        s = s.replacingOccurrences(of: "****", with: "")
         return s.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
@@ -135,8 +140,11 @@ enum AnkiText {
             .replacingOccurrences(of: ">", with: "&gt;")
             .replacingOccurrences(of: "\"", with: "&quot;")
             .replacingOccurrences(of: "\n", with: "<br>")
-        // Image markers become real images again.
-        return replace(#"\[img:([^\]]+)\]"#, in: escaped) { groups in "<img src=\"\(groups[1])\">" }
+        // Image markers become real images again, and **bold** / *italic* become HTML.
+        var s = replace(#"\[img:([^\]]+)\]"#, in: escaped) { groups in "<img src=\"\(groups[1])\">" }
+        s = replace(#"\*\*(.+?)\*\*"#, in: s) { groups in "<b>\(groups[1])</b>" }
+        s = replace(#"(?<![*\w])\*(?=\S)(.+?)(?<=\S)\*(?![*\w])"#, in: s) { groups in "<i>\(groups[1])</i>" }
+        return s
     }
 
     // MARK: Helper

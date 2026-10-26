@@ -13,11 +13,11 @@ struct CardTextView: View {
             ForEach(Array(CardText.lines(text).enumerated()), id: \.offset) { _, line in
                 switch line {
                 case .text(let string):
-                    Text(string)
+                    Text(Self.styled(string))
                 case .listItem(let marker, let string):
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text(marker).monospacedDigit()
-                        Text(string)
+                        Text(Self.styled(string))
                     }
                 case .image(let name):
                     CardImageView(name: name)
@@ -29,6 +29,14 @@ struct CardTextView: View {
         .font(Theme.body(size, weight: weight))
         .foregroundStyle(Theme.ink)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+extension CardTextView {
+    /// Shows **bold** and *italic* markers as real bold and italic text.
+    static func styled(_ string: String) -> AttributedString {
+        let options = AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+        return (try? AttributedString(markdown: string, options: options)) ?? AttributedString(string)
     }
 }
 

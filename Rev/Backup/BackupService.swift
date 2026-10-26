@@ -126,6 +126,7 @@ enum BackupService {
     /// ignored, because older versions of Rev stored them differently ("[image]", other spacing).
     static func matchKey(_ front: String) -> String {
         front.replacingOccurrences(of: #"\[img:[^\]]+\]|\[image\]"#, with: "🖼", options: .regularExpression)
+            .replacingOccurrences(of: "*", with: "")
             .components(separatedBy: .whitespacesAndNewlines)
             .filter { !$0.isEmpty }
             .joined(separator: " ")

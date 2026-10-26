@@ -35,7 +35,7 @@
             localizedDescription: $notes,
             downloadURL: $url,
             size: $size,
-            minOSVersion: "17.0"
+            minOSVersion: "18.0"
           }
         ]
         + (($previous[0].apps[0].versions // [])

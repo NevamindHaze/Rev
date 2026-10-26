@@ -34,6 +34,8 @@ enum SyncMerger {
 
     static func apply(_ snapshot: SyncSnapshot, context: ModelContext, state: inout SyncState) throws -> Report {
         var report = Report()
+        let refreshText = (state.contentFormat ?? 1) < 2
+        defer { state.contentFormat = 2 }
         let cards = try context.fetch(FetchDescriptor<Card>())
         link(cards, remote: snapshot.cards)
 
@@ -64,7 +66,10 @@ enum SyncMerger {
         let exported = Set(state.exportedKeys)
         for remote in snapshot.cards {
             if let card = byKey[remote.key] {
-                if remote.editedAt > (card.editedAt?.epoch ?? 0) + 1 {
+                // (A one-time refresh also re-reads cards whose text came from Anki unchanged,
+                //  so they pick up bold/italic; cards you edited in Rev are newer and stay as they are.)
+                let local = card.editedAt?.epoch ?? 0
+                if remote.editedAt > local + 1 || (refreshText && abs(remote.editedAt - local) <= 1) {
                     applyContent(remote, to: card, deck: deck(named: remote.deck))
                     card.editedAt = Date(timeIntervalSince1970: remote.editedAt)
                     report.updated += 1

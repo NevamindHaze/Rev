@@ -7,7 +7,7 @@ name: Rev
 options:
   bundleIdPrefix: com.personal
   deploymentTarget:
-    iOS: "17.0"          # SwiftData needs iOS 17 or newer. Runs fine on iOS 27.
+    iOS: "18.0"          # iOS 18 is needed for text selection in the editor (bold/italic). Runs fine on iOS 27.
   createIntermediateGroups: true
 
 packages:

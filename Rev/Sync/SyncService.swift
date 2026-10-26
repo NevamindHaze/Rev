@@ -69,7 +69,8 @@ final class SyncService: ObservableObject {
             let ankiData = try await Task.detached { try SyncFiles.read(ankiURL) }.value
             if let ankiData {
                 let snapshot = try JSONDecoder().decode(SyncSnapshot.self, from: ankiData)
-                if snapshot.format == 1, snapshot.writtenAt != state.lastAnkiWrittenAt {
+                let needsTextRefresh = (state.contentFormat ?? 1) < 2
+                if snapshot.format == 1, snapshot.writtenAt != state.lastAnkiWrittenAt || needsTextRefresh {
                     report = try SyncMerger.apply(snapshot, context: context, state: &state)
                     try context.save()
                     let images = Set(snapshot.cards.flatMap {

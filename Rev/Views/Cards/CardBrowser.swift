@@ -236,12 +236,12 @@ struct CardRow: View {
                         .lineLimit(1)
                 }
             }
-            Text(CardText.preview(card.front))
+            Text(CardTextView.styled(CardText.preview(card.front)))
                 .font(Theme.body(17, weight: .semibold))
                 .foregroundStyle(Theme.ink)
                 .lineLimit(2)
             if !card.back.isEmpty {
-                Text(CardText.preview(card.back))
+                Text(CardTextView.styled(CardText.preview(card.back)))
                     .font(Theme.body(15))
                     .foregroundStyle(Theme.mutedInk)
                     .lineLimit(2)

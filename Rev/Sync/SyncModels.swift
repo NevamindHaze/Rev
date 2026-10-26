@@ -67,6 +67,8 @@ struct SyncState: Codable {
     var tombstones: [String: Double] = [:]
     var lastAnkiWrittenAt: Double?
     var lastExportDigest: String?
+    /// 2 = cards from Anki keep bold/italic. Older syncs (nil) get one refresh of their text.
+    var contentFormat: Int?
 
     private static var url: URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]

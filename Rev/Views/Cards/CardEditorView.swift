@@ -22,6 +22,8 @@ struct CardEditorView: View {
     @State private var back = ""
     @State private var tagsText = ""
     @State private var wordToHide = ""
+    @State private var frontSelection: TextSelection?
+    @State private var backSelection: TextSelection?
     @State private var addedCount = 0
     @FocusState private var focusedField: Field?
 
@@ -45,9 +47,14 @@ struct CardEditorView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     kindSection
 
-                    textBox(kind == .cloze ? "Text" : "Front", text: $front, field: .front)
+                    textBox(kind == .cloze ? "Text" : "Front", text: $front, selection: $frontSelection,
+                            field: .front, minHeight: 90)
                     if kind == .cloze { clozeTools }
-                    textBox(kind == .cloze ? "Extra (optional, shown on the back)" : "Back", text: $back, field: .back)
+                    textBox(kind == .cloze ? "Extra (optional, shown on the back)" : "Back", text: $back,
+                            selection: $backSelection, field: .back, minHeight: 150)
+                    Text("Select words, then tap **B** or *I* above the keyboard for bold or italic.")
+                        .font(Theme.body(13))
+                        .foregroundStyle(Theme.mutedInk)
 
                     tagsSection
 
@@ -82,6 +89,16 @@ struct CardEditorView: View {
                     }
                 }
                 ToolbarItemGroup(placement: .keyboard) {
+                    if focusedField == .front || focusedField == .back {
+                        Button { applyFormat("**") } label: {
+                            Image(systemName: "bold")
+                        }
+                        .accessibilityLabel("Bold")
+                        Button { applyFormat("*") } label: {
+                            Image(systemName: "italic")
+                        }
+                        .accessibilityLabel("Italic")
+                    }
                     Spacer()
                     if focusedField == .front {
                         Button("Next") { focusedField = .back }
@@ -182,19 +199,64 @@ struct CardEditorView: View {
         }
     }
 
-    private func textBox(_ title: String, text: Binding<String>, field: Field) -> some View {
+    private func textBox(_ title: String, text: Binding<String>, selection: Binding<TextSelection?>,
+                         field: Field, minHeight: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(Theme.body(15, weight: .semibold))
                 .foregroundStyle(Theme.mutedInk)
-            TextField(title, text: text, axis: .vertical)
-                .lineLimit(3...12)
+            TextEditor(text: text, selection: selection)
                 .focused($focusedField, equals: field)
                 .font(Theme.body(19))
                 .foregroundStyle(Theme.ink)
-                .padding(16)
+                .scrollContentBackground(.hidden)
+                .frame(minHeight: minHeight)
+                .padding(10)
                 .background(Theme.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
+    }
+
+    // MARK: - Bold and italic
+
+    /// Bold or italic for the selected words in whichever box you're typing in.
+    private func applyFormat(_ marker: String) {
+        switch focusedField {
+        case .front: Self.toggle(marker, text: &front, selection: &frontSelection)
+        case .back: Self.toggle(marker, text: &back, selection: &backSelection)
+        default: break
+        }
+    }
+
+    /// Wraps the selected words in a marker (** for bold, * for italic),
+    /// or removes the marker if the words already have it. Cards show the markers as real formatting.
+    static func toggle(_ marker: String, text: inout String, selection: inout TextSelection?) {
+        guard let current = selection, case .selection(let range) = current.indices else { return }
+        var characters = Array(text)
+        let lower = text.distance(from: text.startIndex, to: range.lowerBound)
+        let upper = text.distance(from: text.startIndex, to: range.upperBound)
+        let size = marker.count
+        let markerCharacters = Array(marker)
+
+        let markedBefore = lower >= size && Array(characters[(lower - size)..<lower]) == markerCharacters
+        let markedAfter = upper + size <= characters.count && Array(characters[upper..<(upper + size)]) == markerCharacters
+
+        let newLower: Int
+        let newUpper: Int
+        if markedBefore && markedAfter {
+            characters.removeSubrange(upper..<(upper + size))
+            characters.removeSubrange((lower - size)..<lower)
+            newLower = lower - size
+            newUpper = upper - size
+        } else {
+            characters.insert(contentsOf: markerCharacters, at: upper)
+            characters.insert(contentsOf: markerCharacters, at: lower)
+            newLower = lower + size
+            newUpper = upper + size
+        }
+        text = String(characters)
+        let start = text.index(text.startIndex, offsetBy: newLower)
+        let end = text.index(text.startIndex, offsetBy: newUpper)
+        selection = TextSelection(range: start..<end)
     }
 
     private var saveTitle: String {

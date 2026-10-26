@@ -159,7 +159,7 @@ struct ReviewView: View {
 
     /// Ignores capitals, extra spaces and a final full stop when comparing typed answers.
     private static func normalized(_ text: String) -> String {
-        text.lowercased()
+        text.lowercased().replacingOccurrences(of: "*", with: "")
             .components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.joined(separator: " ")
             .trimmingCharacters(in: CharacterSet(charactersIn: ". "))
     }
