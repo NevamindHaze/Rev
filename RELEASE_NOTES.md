@@ -22,3 +22,5 @@ What's new
 • Backup and restore (Settings → Backup): save everything to a .json file, or restore one. Restoring asks first, then replaces everything; your current data is saved in the Backups folder first, just in case. Backups from Rev on iPhone work too.
 • The same scheduling as Rev on iPhone: FSRS-5 with an adjustable memory target, or classic SM-2, with learning steps, overdue credit, interval fuzz, sibling burying, a 4 am day rollover and leech detection.
 • Rev's warm colours, rounded Nunito text and comic icon, in light and dark mode (follows your Windows setting).
+
+Note: Rev isn't signed with a paid certificate, so the first time you open the installer Windows may say "Windows protected your PC". Click More info → Run anyway. Rev installs just for you (no administrator needed), and uninstalling it from Settings → Apps keeps your decks.
