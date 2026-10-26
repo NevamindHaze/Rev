@@ -47,6 +47,21 @@ internal static class SyncCommands
                 db.DeleteCard(ByFront(args[2]).Id);
                 return 0;
 
+            case "--watch":
+                // Like the app: sync whenever Anki rewrites anki.json, for the given number of seconds.
+                var watched = new SyncService(db, args[2], Path.Combine(dataFolder, "sync-state.json"), Path.Combine(dataFolder, "Media"));
+                using (var watcher = new AnkiFileWatcher(args[2]))
+                using (var changed = new AutoResetEvent(false))
+                {
+                    watcher.AnkiFileChanged += (_, _) => changed.Set();
+                    Console.WriteLine("watching");
+                    var end = DateTime.Now.AddSeconds(double.Parse(args[3], System.Globalization.CultureInfo.InvariantCulture));
+                    while (DateTime.Now < end)
+                        if (changed.WaitOne(200))
+                            Console.WriteLine("synced " + JsonSerializer.Serialize(watched.Run(DateTime.Now)));
+                }
+                return 0;
+
             case "--delete-deck":
                 db.DeleteDeck(db.GetDecks().Single(d => d.Name == args[2]).Id);
                 return 0;

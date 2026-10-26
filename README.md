@@ -42,6 +42,12 @@ changes on to the iPhone and back. Each card's text and schedule go to whichever
 The design is in [`docs/SYNC-PROPOSAL.md`](docs/SYNC-PROPOSAL.md); `tools/check-sync.py` tests all three
 apps together on throw-away data.
 
+**Fast at home.** Anki runs on the same PC, so Rev for Windows notices within seconds when Anki rewrites
+`anki.json` and syncs (if you're in the middle of a review, right after it), and the add-on likewise picks up
+`windows.json` within seconds. Rev on iPhone can sync with Anki directly over your home Wi-Fi instead of
+waiting for iCloud: in Anki, **Tools → Rev Sync Wi-Fi…**; on the iPhone, **Settings → Sync over Wi-Fi**.
+So a change on the iPhone reaches Rev for Windows in seconds when you're at home with Anki open.
+
 ## How it's built
 
 | | |

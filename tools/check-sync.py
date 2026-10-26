@@ -211,6 +211,22 @@ for key in [k for k, c in iphone.items() if c["deck"] == "Vet::Parasitology"]:
 iphone_write()
 check(zero(anki_sync()), "the iPhone catching up changes nothing in Anki")
 
+print("8b. Rev for Windows notices within seconds when Anki rewrites its file")
+watch = subprocess.Popen([DEMO, windows_data, "--watch", folder, "30"], stdout=subprocess.PIPE, text=True, encoding="utf-8")
+check(watch.stdout.readline().strip() == "watching", "Windows is watching the folder")
+time.sleep(1.2)
+iphone[a] = dict(iphone[a], fields={"Front": "Edited on iPhone, watched", "Back": "Answer"}, editedAt=time.time())
+iphone_write()
+anki_sync()   # (over Wi-Fi this happens the moment the iPhone syncs)
+started = time.time()
+line = watch.stdout.readline().strip()
+took = time.time() - started
+watch.kill()
+watch.wait()
+check(line.startswith("synced") and json.loads(line[7:])["Updated"] == 1, "Windows synced by itself: %s" % line[:90])
+check(took < 10, "...%.1f seconds after Anki wrote anki.json" % took)
+check(windows_cards()[a]["front"] == "Edited on iPhone, watched", "and has the iPhone's edit")
+
 print("9. Syncing again and again changes nothing anywhere (no echoes)")
 quiet = True
 for _ in range(3):

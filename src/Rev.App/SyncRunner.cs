@@ -13,7 +13,8 @@ namespace Rev.App;
 /// <summary>
 /// When and how Rev for Windows syncs with Anki (through the Rev Sync add-on and the shared folder).
 /// Sync stays off until you choose the folder and agree to the first sync in Settings. After that it runs
-/// when Rev opens, when it closes, and every 10 minutes (never in the middle of a review).
+/// when Rev opens, when it closes, every 10 minutes, and a couple of seconds after Anki rewrites anki.json
+/// (never in the middle of a review: then it waits until the review is over).
 /// </summary>
 public static class SyncRunner
 {
@@ -23,6 +24,8 @@ public static class SyncRunner
     private const string LastMessageKey = "syncLastMessage";
 
     private static DispatcherTimer? timer;
+    private static DispatcherTimer? retry;
+    private static AnkiFileWatcher? watcher;
     private static bool running;
 
     /// <summary>The shared folder, or null when sync isn't set up.</summary>
@@ -52,6 +55,42 @@ public static class SyncRunner
         var first = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
         first.Tick += (_, _) => { first.Stop(); RunQuietly(); };
         first.Start();
+        retry = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+        retry.Tick += (_, _) => { retry.Stop(); SyncAfterAnkiChanged(); };
+        Watch();
+    }
+
+    /// <summary>
+    /// Watches anki.json in the shared folder while sync is on, so a change from Anki (or from the iPhone,
+    /// through Anki) arrives within seconds. If the folder can't be watched, the 10-minute timer still syncs.
+    /// </summary>
+    private static void Watch()
+    {
+        watcher?.Dispose();
+        watcher = null;
+        if (!IsOn || Folder is not { } folder) return;
+        try
+        {
+            watcher = new AnkiFileWatcher(folder);
+            // The watcher's event comes on a background thread; the sync runs on the window's thread.
+            watcher.AnkiFileChanged += (_, _) => Application.Current?.Dispatcher.BeginInvoke(SyncAfterAnkiChanged);
+        }
+        catch (Exception)
+        {
+            watcher = null;
+        }
+    }
+
+    private static void SyncAfterAnkiChanged()
+    {
+        if (running || Application.Current.MainWindow is MainWindow { IsReviewing: true })
+        {
+            // Not now: look again in 30 seconds, so the change still arrives soon after the review.
+            retry?.Stop();
+            retry?.Start();
+            return;
+        }
+        RunQuietly();
     }
 
     /// <summary>An automatic sync: does nothing unless sync is on, never during a review, and never shows errors
@@ -138,9 +177,11 @@ public static class SyncRunner
         if (!go)
         {
             App.Database.SetPreference(ReadyKey, "no");
+            Watch();
             return false;
         }
         App.Database.SetPreference(ReadyKey, "yes");
+        Watch();
         bool ok = Run(out string message);
         RevDialog.Tell(owner, ok ? "Synced with Anki" : "Sync didn't finish", message);
         return ok;
@@ -152,6 +193,7 @@ public static class SyncRunner
         App.Database.SetPreference(FolderKey, "");
         App.Database.SetPreference(ReadyKey, "no");
         App.Database.SetPreference(LastMessageKey, "");
+        Watch();
     }
 
     /// <summary>The folder to suggest: the one the Rev Sync add-on uses, or iCloud Drive's usual place.</summary>

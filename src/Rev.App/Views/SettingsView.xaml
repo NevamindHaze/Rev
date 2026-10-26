@@ -124,7 +124,7 @@
                                 Click="SyncOff_Click" Content="Turn off" AutomationProperties.Name="Turn off sync" />
                     </WrapPanel>
                     <TextBlock Style="{StaticResource Note}" Margin="2,2,0,0"
-                               Text="Rev for Windows syncs with Anki through the same &quot;Rev Sync&quot; folder in iCloud Drive as Rev on iPhone, using the Rev Sync add-on in Anki (it needs the version with Windows support). Anki passes your changes on to your iPhone and back. Each card's text and schedule go to whichever app changed them last; review history from every app is kept. Rev syncs when it opens, when it closes, every 10 minutes, and when you click Sync now." />
+                               Text="Rev for Windows syncs with Anki through the same &quot;Rev Sync&quot; folder in iCloud Drive as Rev on iPhone, using the Rev Sync add-on in Anki (it needs the version with Windows support). Anki passes your changes on to your iPhone and back. Each card's text and schedule go to whichever app changed them last; review history from every app is kept. Rev syncs when it opens, when it closes, every 10 minutes, within seconds of a change in Anki, and when you click Sync now." />
                 </StackPanel>
             </Border>
 
