@@ -1,0 +1,56 @@
+# Recipe for the Xcode project.
+# GitHub's Mac runs a tool called XcodeGen, which reads this file and creates "Rev.xcodeproj".
+# That way you never have to touch an Xcode project file yourself.
+
+name: Rev
+
+options:
+  bundleIdPrefix: com.personal
+  deploymentTarget:
+    iOS: "17.0"          # SwiftData needs iOS 17 or newer. Runs fine on iOS 27.
+  createIntermediateGroups: true
+
+packages:
+  # A small, well-known library for reading and writing .zip files.
+  # Anki's .apkg files are zip files, so we need this for import/export.
+  ZIPFoundation:
+    url: https://github.com/weichsel/ZIPFoundation
+    from: "0.9.19"
+
+targets:
+  Rev:
+    type: application
+    platform: iOS
+    sources:
+      - path: Rev
+    dependencies:
+      - package: ZIPFoundation
+    scheme: {}           # makes a shared "Rev" scheme so the build command can find it
+    info:
+      path: Supporting/Info.plist   # XcodeGen writes this file for us during the build
+      properties:
+        CFBundleDisplayName: Rev
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        ITSAppUsesNonExemptEncryption: false
+        # Tells iOS what an ".apkg" file is, so the Files picker can offer them.
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: net.ankiweb.apkg
+            UTTypeDescription: Anki Deck Package
+            UTTypeConformsTo:
+              - public.data
+            UTTypeTagSpecification:
+              public.filename-extension:
+                - apkg
+    settings:
+      base:
+        # Never change this ID. If it changes, iOS treats it as a different app and your cards disappear.
+        PRODUCT_BUNDLE_IDENTIFIER: com.personal.rev
+        PRODUCT_NAME: Rev
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"   # iPhone only
