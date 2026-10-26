@@ -1,14 +1,14 @@
 ﻿<!--
-    The main window. It shows one screen at a time (for now, the Home screen).
+    The main window. It shows one screen at a time: Home first, then e.g. a deck.
+    Going back (← button, Esc or Alt+Left) returns to the screen before.
 -->
 <Window x:Class="Rev.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:views="clr-namespace:Rev.App.Views"
         Style="{StaticResource RevWindow}"
         Icon="pack://application:,,,/Assets/AppIcon.ico"
         Title="Rev" Width="1040" Height="760" MinWidth="640" MinHeight="520"
         WindowStartupLocation="CenterScreen">
 
-    <views:HomeView x:Name="Home" />
+    <ContentControl x:Name="Screen" Focusable="False" />
 </Window>

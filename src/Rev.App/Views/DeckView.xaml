@@ -1,0 +1,69 @@
+<!--
+    Inside a deck: its numbers, a big Study button, ways to add cards, and the card list.
+    Keys: Ctrl+N adds a card, Esc (or Alt+Left) goes back. Click a card to edit it.
+-->
+<UserControl x:Class="Rev.App.Views.DeckView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:Rev.App.Controls">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+        <StackPanel MaxWidth="900" Margin="{StaticResource PagePadding}">
+
+            <!-- ← and the deck's name -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Button Style="{StaticResource RoundIconButton}" Click="Back_Click" ToolTip="Back (Esc)"
+                        AutomationProperties.Name="Back" VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource IconText}" Text="&#xE72B;" />
+                </Button>
+                <TextBlock x:Name="DeckName" Grid.Column="1" Style="{StaticResource TitleText}" Margin="16,0,0,0"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            </Grid>
+
+            <!-- The deck's numbers -->
+            <UniformGrid Columns="3" Margin="0,24,0,0">
+                <controls:StatTile x:Name="CardsTile" Margin="0,0,8,0" Label="Cards"
+                                   Glyph="&#xE7C3;" Tint="{DynamicResource MustardBrush}" />
+                <controls:StatTile x:Name="DueTile" Margin="4,0,4,0" Label="Due today"
+                                   Glyph="&#xE823;" Tint="{DynamicResource TealBrush}" />
+                <controls:StatTile x:Name="NewTile" Margin="8,0,0,0" Label="New"
+                                   Glyph="&#xE734;" Tint="{DynamicResource CoralBrush}" />
+            </UniformGrid>
+
+            <!-- Reviewing arrives in step 5 of the plan; until then the button is greyed out. -->
+            <Button Style="{StaticResource PillButton}" Margin="0,14,0,0" MinHeight="64" IsEnabled="False"
+                    AutomationProperties.Name="Study now">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource IconText}" FontSize="16" Text="&#xE768;" Margin="0,0,10,0" />
+                    <TextBlock Text="Study now" />
+                </StackPanel>
+            </Button>
+
+            <UniformGrid Columns="2" Margin="0,12,0,0">
+                <Button x:Name="AddCardButton" Style="{StaticResource TealPillButton}" Margin="0,0,6,0"
+                        Click="AddCard_Click" ToolTip="Add card (Ctrl+N)" AutomationProperties.Name="Add card">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource IconText}" FontSize="15" Text="&#xE710;" Margin="0,0,10,0" />
+                        <TextBlock Text="Add card" />
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource MustardPillButton}" Margin="6,0,0,0" Click="PasteMany_Click"
+                        AutomationProperties.Name="Paste many">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource IconText}" FontSize="15" Text="&#xE77F;" Margin="0,0,10,0" />
+                        <TextBlock Text="Paste many" />
+                    </StackPanel>
+                </Button>
+            </UniformGrid>
+
+            <TextBlock Style="{StaticResource HeadingText}" Text="Cards" Margin="4,32,0,12" />
+            <TextBlock x:Name="EmptyText" Style="{StaticResource MutedText}" Margin="4,0,0,0"
+                       Text="No cards yet. Click “Add card” to start." />
+            <StackPanel x:Name="CardList" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

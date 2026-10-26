@@ -9,7 +9,7 @@ using Rev.Core.Text;
 namespace Rev.App.Views;
 
 /// <summary>The Home screen. <see cref="Refresh"/> reloads everything from the database.</summary>
-public partial class HomeView : UserControl
+public partial class HomeView : UserControl, IScreen
 {
     public HomeView()
     {
@@ -50,7 +50,7 @@ public partial class HomeView : UserControl
             };
             tile.RenameRequested += (_, _) => RenameDeck(tile.Deck);
             tile.DeleteRequested += (_, _) => DeleteDeck(tile.Deck);
-            // Opening a deck arrives with the deck screen (step 4 of the plan).
+            tile.OpenRequested += (_, _) => MainWindow.Current.Open(new DeckView(tile.Deck));
             DeckGrid.Children.Add(tile);
         }
         EmptyState.Visibility = decks.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
