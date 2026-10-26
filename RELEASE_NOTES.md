@@ -15,5 +15,7 @@ What's new
 • Leeches: forget a card for the 8th time and Rev offers to help you rewrite or suspend it.
 • Type the answer cards check what you typed (capitals, extra spaces and a final full stop don't matter).
 • Lists keep their bullets and numbers, and images can be clicked to zoom (scroll to zoom in, drag to move).
+• Stats: cards due today, your streak, reviewed today, new and total cards, and a chart of the last 7 days (today in coral).
+• Settings: your name for the greeting, new cards per day, FSRS or SM-2, and FSRS's target memory (80–97%). Changes are saved straight away.
 • The same scheduling as Rev on iPhone: FSRS-5 with an adjustable memory target, or classic SM-2, with learning steps, overdue credit, interval fuzz, sibling burying, a 4 am day rollover and leech detection.
 • Rev's warm colours, rounded Nunito text and comic icon, in light and dark mode (follows your Windows setting).

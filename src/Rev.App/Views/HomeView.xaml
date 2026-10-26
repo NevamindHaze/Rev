@@ -36,6 +36,14 @@
                             <TextBlock Text="New deck" />
                         </StackPanel>
                     </Button>
+                    <Button Style="{StaticResource RoundIconButton}" Width="48" Height="48" Margin="10,0,0,0"
+                            Click="Stats_Click" ToolTip="Stats" AutomationProperties.Name="Stats">
+                        <TextBlock Style="{StaticResource IconText}" Text="&#xE9D2;" />
+                    </Button>
+                    <Button Style="{StaticResource RoundIconButton}" Width="48" Height="48" Margin="10,0,0,0"
+                            Click="Settings_Click" ToolTip="Settings (Ctrl+,)" AutomationProperties.Name="Settings">
+                        <TextBlock Style="{StaticResource IconText}" Text="&#xE713;" />
+                    </Button>
                 </StackPanel>
             </Grid>
 

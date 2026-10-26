@@ -18,6 +18,8 @@ public partial class HomeView : UserControl, IScreen
         InputBindings.Add(new KeyBinding(new RelayCommand(NewDeck), Key.N, ModifierKeys.Control));
         // Ctrl+F searches every card.
         InputBindings.Add(new KeyBinding(new RelayCommand(OpenAllCards), Key.F, ModifierKeys.Control));
+        // Ctrl+, opens Settings.
+        InputBindings.Add(new KeyBinding(new RelayCommand(OpenSettings), Key.OemComma, ModifierKeys.Control));
         // Two columns of deck tiles on a wide window, one on a narrow one.
         SizeChanged += (_, _) => DeckGrid.Columns = ActualWidth >= 720 ? 2 : 1;
         Loaded += (_, _) => Refresh();
@@ -65,6 +67,12 @@ public partial class HomeView : UserControl, IScreen
     private void AllCards_Click(object sender, RoutedEventArgs e) => OpenAllCards();
 
     private void OpenAllCards() => MainWindow.Current.Open(new AllCardsView());
+
+    private void Stats_Click(object sender, RoutedEventArgs e) => MainWindow.Current.Open(new StatsView());
+
+    private void Settings_Click(object sender, RoutedEventArgs e) => OpenSettings();
+
+    private void OpenSettings() => MainWindow.Current.Open(new SettingsView());
 
     private void NewDeck_Click(object sender, RoutedEventArgs e) => NewDeck();
 

@@ -423,6 +423,71 @@
         </Style.Triggers>
     </Style>
 
+    <!-- Sliders (e.g. Target memory): a soft rounded track, teal up to a big round handle. -->
+    <Style x:Key="SliderHandle" TargetType="Thumb">
+        <Setter Property="Width" Value="26" />
+        <Setter Property="Height" Value="26" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Ellipse x:Name="Knob" Fill="{DynamicResource TealBrush}" Stroke="{DynamicResource SurfaceBrush}" StrokeThickness="4" />
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Knob" Property="StrokeThickness" Value="2" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="SliderFilled" TargetType="RepeatButton">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Border Height="10" CornerRadius="5" Background="{DynamicResource TealBrush}" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="SliderEmpty" TargetType="RepeatButton">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Border Height="10" CornerRadius="5" Background="{DynamicResource SoftFillBrush}" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="RevSlider" TargetType="Slider">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Border x:Name="Ring" BorderBrush="{DynamicResource MustardBrush}" BorderThickness="0" CornerRadius="16" Padding="4">
+                        <Track x:Name="PART_Track" MinHeight="30">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Style="{StaticResource SliderFilled}" Command="Slider.DecreaseLarge" />
+                            </Track.DecreaseRepeatButton>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Style="{StaticResource SliderEmpty}" Command="Slider.IncreaseLarge" />
+                            </Track.IncreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb Style="{StaticResource SliderHandle}" />
+                            </Track.Thumb>
+                        </Track>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Ring" Property="BorderThickness" Value="2" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- A rounded card on the page, e.g. the "No decks yet" message. -->
     <Style x:Key="SurfaceCard" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
