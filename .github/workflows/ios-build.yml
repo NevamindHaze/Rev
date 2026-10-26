@@ -4,6 +4,9 @@
 # It runs automatically every time you change files on the "main" branch,
 # and you can also start it by hand: Actions tab → "iOS Build" → "Run workflow".
 #
+# Before each change, update RELEASE_NOTES.md: it becomes the "What's new" text in SideStore
+# and on the GitHub release.
+#
 # SideStore source link (add it once in SideStore → Sources → +):
 #   https://github.com/<your-name>/<repo>/releases/latest/download/source.json
 
@@ -68,42 +71,23 @@ jobs:
           cp -R build/Build/Products/Release-iphoneos/Rev.app Payload/
           zip -qry Rev.ipa Payload
 
+      # The "What's new" text SideStore shows comes from RELEASE_NOTES.md.
       - name: Write the SideStore source file
         run: |
           SIZE=$(stat -f%z Rev.ipa)
           DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/v${VERSION}/Rev.ipa"
-          ICON="https://github.com/${GITHUB_REPOSITORY_OWNER}.png"
-          cat > source.json <<EOF
-          {
-            "name": "Rev",
-            "identifier": "com.personal.rev.source",
-            "apps": [
-              {
-                "name": "Rev",
-                "bundleIdentifier": "com.personal.rev",
-                "developerName": "${GITHUB_REPOSITORY_OWNER}",
-                "localizedDescription": "Personal flashcard app.",
-                "iconURL": "${ICON}",
-                "version": "${VERSION}",
-                "versionDate": "${DATE}",
-                "downloadURL": "${URL}",
-                "size": ${SIZE},
-                "versions": [
-                  {
-                    "version": "${VERSION}",
-                    "buildVersion": "${BUILD}",
-                    "date": "${DATE}",
-                    "downloadURL": "${URL}",
-                    "size": ${SIZE},
-                    "minOSVersion": "17.0"
-                  }
-                ]
-              }
-            ],
-            "news": []
-          }
-          EOF
+          ICON="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/Rev/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
+          # The previous source file, so earlier versions stay in SideStore's version history.
+          curl -fsSL "https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/source.json" -o previous.json \
+            || echo '{"apps":[{"versions":[]}]}' > previous.json
+          jq -n \
+            --arg version "$VERSION" --arg build "$BUILD" --arg date "$DATE" --arg url "$URL" \
+            --arg icon "$ICON" --arg owner "$GITHUB_REPOSITORY_OWNER" \
+            --arg website "https://github.com/${GITHUB_REPOSITORY}" \
+            --arg notes "$(cat RELEASE_NOTES.md)" --argjson size "$SIZE" \
+            --slurpfile previous previous.json \
+            -f .github/sidestore-source.jq > source.json
           cat source.json
 
       - name: Publish the release
@@ -113,7 +97,7 @@ jobs:
           gh release create "v${VERSION}" Rev.ipa source.json \
             --repo "$GITHUB_REPOSITORY" \
             --title "Rev ${VERSION}" \
-            --notes "Automatic build #${BUILD}" \
+            --notes-file RELEASE_NOTES.md \
             --latest
 
       - name: Upload the .ipa (backup copy)
