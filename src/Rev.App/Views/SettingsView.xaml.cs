@@ -139,6 +139,9 @@ public partial class SettingsView : UserControl, IScreen
         }
     }
 
+    private async void ExportAnki_Click(object sender, RoutedEventArgs e) =>
+        await AnkiExport.Run(OwnerWindow, ApkgWriter.AllDecks(App.Database), $"Rev decks {DateTime.Now:yyyy-MM-dd}");
+
     // ---- Backup ----
 
     private Window? OwnerWindow => Window.GetWindow(this);

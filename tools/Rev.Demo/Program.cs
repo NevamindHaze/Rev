@@ -6,16 +6,19 @@
 // Then start Rev with that folder:
 //   $env:REV_DATA_DIR = "C:\Temp\rev-demo"; dotnet run --project src/Rev.App
 
+using Rev.Core.Anki;
 using Rev.Core.Data;
 using Rev.Core.Models;
 using Rev.Core.Scheduling;
 
 //   --review-test  makes a small "Review test" deck instead, with one card of each special case
 //                  (an almost-leech, a list with bold text, an image, a type-in card and a plain card).
+//   --export       also adds a card with a picture and writes the decks to <folder>\export.apkg
+//                  (used to check that Anki accepts Rev's export: see tools/check-anki-export.py).
 
-if (args.Length is < 1 or > 2 || (args.Length == 2 && args[1] != "--review-test"))
+if (args.Length is < 1 or > 2 || (args.Length == 2 && args[1] is not ("--review-test" or "--export")))
 {
-    Console.WriteLine("Usage: Rev.Demo <empty folder> [--review-test]");
+    Console.WriteLine("Usage: Rev.Demo <empty folder> [--review-test | --export]");
     return 1;
 }
 
@@ -32,7 +35,7 @@ var today = now.StartOfStudyDay();
 var random = new Random(7);
 db.SaveSettings(new AppSettings { UserName = "Sam" });
 
-if (args.Length == 2)
+if (args.Length == 2 && args[1] == "--review-test")
 {
     var test = db.AddDeck("Review test", now.AddDays(-10));
     // A graduated card forgotten 7 times already: one more "Again" makes it a leech.
@@ -119,6 +122,20 @@ foreach (var card in db.GetCards())
 // A few answers given today, so "Done today" isn't zero.
 foreach (var card in db.GetCards().Take(5))
     db.AddReviewLog(new ReviewLog { CardId = card.Id, Date = today.AddHours(2 + random.NextDouble()), Rating = Rating.Good });
+
+if (args.Length == 2 && args[1] == "--export")
+{
+    // A tiny 2x2 PNG picture on one card, then the whole collection as an Anki package.
+    string media = Path.Combine(args[0], "Media");
+    Directory.CreateDirectory(media);
+    File.WriteAllBytes(Path.Combine(media, "heart.png"), Convert.FromHexString(
+        "89504e470d0a1a0a0000000d4948445200000002000000020802000000fdd49a730000001649444154789c63f8cfc0f01f0c18fe" +
+        "33300c0c0c00002f0a05fb8ad26ba50000000049454e44ae426082"));
+    var pharm = db.GetDecks().First(d => d.Name == "Pharmacology");
+    db.AddNote(pharm.Id, CardKind.Basic, "What does this **show**?", "[img:heart.png]\nA *heart* & lungs", ["pictures"], now);
+    var result = ApkgWriter.Write(Path.Combine(args[0], "export.apkg"), ApkgWriter.AllDecks(db), media, now);
+    Console.WriteLine($"Exported {result.Decks} decks, {result.Cards} cards and {result.Images} image to export.apkg.");
+}
 
 Console.WriteLine($"Made {path} with {db.GetDecks().Count} decks and {db.GetCards().Count} cards.");
 return 0;

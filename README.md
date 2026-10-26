@@ -45,7 +45,9 @@ Rev keeps its data in `%LOCALAPPDATA%\Rev\rev.db`. For testing, two switches kee
 
 The Anki import tests use small made-up Anki files in `tests/Fixtures`, made with Anki's own Python
 library (`tools/make-anki-fixtures.py`, which explains how to run it). It builds a throw-away collection
-in a temporary folder and never touches a real Anki collection.
+in a temporary folder and never touches a real Anki collection. `tools/check-anki-export.py` does the
+opposite check: it imports a .apkg made by Rev into a throw-away collection and prints what Anki made of it
+(`dotnet run --project tools/Rev.Demo -- <empty folder> --export` makes such a file).
 
 To try Rev with sample veterinary decks:
 

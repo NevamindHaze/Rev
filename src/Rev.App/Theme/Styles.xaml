@@ -55,9 +55,12 @@
         <Setter Property="HorizontalAlignment" Value="Center" />
     </Style>
 
+    <!-- Tooltips appear when you hover with the mouse, not by themselves when a button gets the keyboard
+         (e.g. when a dialog closes and the keyboard goes back to the button that opened it). -->
     <!-- A big round button, like Rev's "Review all decks".
          It shrinks a little while pressed and shows a mustard ring when reached with the Tab key. -->
     <Style x:Key="PillButton" TargetType="Button">
+        <Setter Property="ToolTipService.ShowsToolTipOnKeyboardFocus" Value="False" />
         <Setter Property="Background" Value="{DynamicResource InkBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource BackgroundBrush}" />
         <Setter Property="FontSize" Value="18" />
@@ -178,6 +181,7 @@
 
     <!-- A choice shown as a pill, e.g. the card kinds. The chosen one turns teal. -->
     <Style x:Key="ChoicePill" TargetType="RadioButton">
+        <Setter Property="ToolTipService.ShowsToolTipOnKeyboardFocus" Value="False" />
         <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
         <Setter Property="Background" Value="{DynamicResource SoftFillBrush}" />
         <Setter Property="FontSize" Value="15" />
@@ -209,6 +213,7 @@
 
     <!-- A row in a list of cards: a rounded card you can click. -->
     <Style x:Key="CardRowButton" TargetType="Button">
+        <Setter Property="ToolTipService.ShowsToolTipOnKeyboardFocus" Value="False" />
         <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="Cursor" Value="Hand" />

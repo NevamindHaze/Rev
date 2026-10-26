@@ -15,13 +15,22 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Button Style="{StaticResource RoundIconButton}" Click="Back_Click" ToolTip="Back (Esc)"
                         AutomationProperties.Name="Back" VerticalAlignment="Center">
                     <TextBlock Style="{StaticResource IconText}" Text="&#xE72B;" />
                 </Button>
-                <TextBlock x:Name="DeckName" Grid.Column="1" Style="{StaticResource TitleText}" Margin="16,0,0,0"
+                <TextBlock x:Name="DeckName" Grid.Column="1" Style="{StaticResource TitleText}" Margin="16,0,12,0"
                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                <Button Grid.Column="2" Style="{StaticResource SecondaryPillButton}" MinHeight="46" Padding="20,0"
+                        VerticalAlignment="Center" Click="Export_Click" ToolTip="Save this deck as an Anki .apkg file"
+                        AutomationProperties.Name="Export to Anki">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource IconText}" FontSize="14" Text="&#xEDE1;" Margin="0,0,8,0" />
+                        <TextBlock Text="Export to Anki" FontSize="16" />
+                    </StackPanel>
+                </Button>
             </Grid>
 
             <!-- The deck's numbers -->

@@ -13,7 +13,8 @@
     </UserControl.Resources>
 
     <Button x:Name="TileButton" Click="TileButton_Click" KeyDown="TileButton_KeyDown" Cursor="Hand"
-            FocusVisualStyle="{x:Null}" RenderTransformOrigin="0.5,0.5">
+            FocusVisualStyle="{x:Null}" RenderTransformOrigin="0.5,0.5"
+            ToolTipService.ShowsToolTipOnKeyboardFocus="False">
         <Button.ContextMenu>
             <ContextMenu>
                 <MenuItem Header="Rename" InputGestureText="F2" Click="Rename_Click" />

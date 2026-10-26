@@ -20,11 +20,7 @@ public partial class DeckView : UserControl, IScreen
         InputBindings.Add(new KeyBinding(new RelayCommand(() => MainWindow.Current.GoBack()), Key.Escape, ModifierKeys.None));
         Browser.Setup(() => App.Database.GetCards(deck.Id), withDeckNames: false);
         Browser.Changed += (_, _) => UpdateNumbers();
-        Loaded += (_, _) =>
-        {
-            UpdateNumbers();
-            AddCardButton.Focus();   // so the keyboard shortcuts work straight away
-        };
+        Loaded += (_, _) => UpdateNumbers();
     }
 
     public void Refresh()
@@ -60,6 +56,13 @@ public partial class DeckView : UserControl, IScreen
     private void Back_Click(object sender, RoutedEventArgs e) => MainWindow.Current.GoBack();
 
     private void Study_Click(object sender, RoutedEventArgs e) => MainWindow.Current.Open(new ReviewView(deck));
+
+    private async void Export_Click(object sender, RoutedEventArgs e)
+    {
+        var current = App.Database.GetDecks().FirstOrDefault(d => d.Id == deck.Id) ?? deck;
+        var cards = App.Database.GetCards(deck.Id).OrderBy(c => c.CreatedAt).ToList();
+        await AnkiExport.Run(Window.GetWindow(this), [(current, cards)], current.Name);
+    }
 
     private void AddCard_Click(object sender, RoutedEventArgs e) => AddCard();
 

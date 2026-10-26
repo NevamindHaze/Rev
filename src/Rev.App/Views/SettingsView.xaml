@@ -111,9 +111,16 @@
                                 <TextBlock Text="Import Anki deck (.apkg / .colpkg)…" />
                             </StackPanel>
                         </Button>
+                        <Button Style="{StaticResource SecondaryPillButton}" MinHeight="48" Margin="0,0,10,10"
+                                Click="ExportAnki_Click" AutomationProperties.Name="Export all decks to Anki">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource IconText}" FontSize="14" Text="&#xEDE1;" Margin="0,0,10,0" />
+                                <TextBlock Text="Export all decks to Anki (.apkg)…" />
+                            </StackPanel>
+                        </Button>
                     </WrapPanel>
                     <TextBlock Style="{StaticResource Note}" Margin="2,2,0,0"
-                               Text="Works with any .apkg or .colpkg from Anki, old or new. Text, images, study progress (with FSRS memory), tags, suspended cards and leeches come across; sounds are skipped. Importing the same deck again updates your cards instead of adding copies, and keeps your progress in Rev. Your Anki files are only read, never changed." />
+                               Text="Works with any .apkg or .colpkg from Anki, old or new. Text, images, study progress (with FSRS memory), tags, suspended cards and leeches come across; sounds are skipped. Importing the same deck again updates your cards instead of adding copies, and keeps your progress in Rev. Your Anki files are only read, never changed. Exporting makes a .apkg any Anki can open, with your schedules, tags, images, leeches and suspended cards (one deck at a time: use the export button inside the deck)." />
                 </StackPanel>
             </Border>
 

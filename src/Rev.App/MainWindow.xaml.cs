@@ -22,8 +22,8 @@ public partial class MainWindow : Window
         {
             if (Screen.Content is not UserControl { IsLoaded: true } screen || screen is not IScreen refreshable) return;
             refreshable.Refresh();
-            // If refreshing redrew whatever had the keyboard, give it to the screen's first button.
-            if (!screen.IsKeyboardFocusWithin && IsActive) screen.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
+            // If refreshing redrew whatever had the keyboard, give it back to the screen.
+            if (!screen.IsKeyboardFocusWithin && IsActive) FocusScreen(screen);
         };
         // Alt+Left goes back, like in a web browser.
         InputBindings.Add(new KeyBinding(new RelayCommand(GoBack), Key.Left, ModifierKeys.Alt));
@@ -51,11 +51,22 @@ public partial class MainWindow : Window
     private void Show(UserControl screen)
     {
         Screen.Content = screen;
-        // Make sure something on the new screen has the keyboard, so its shortcuts (Esc, Ctrl+N…) work at once.
+        // Make sure the new screen has the keyboard, so its shortcuts (Esc, Ctrl+N…) work at once.
         Dispatcher.BeginInvoke(() =>
         {
-            if (!screen.IsKeyboardFocusWithin) screen.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
+            if (!screen.IsKeyboardFocusWithin) FocusScreen(screen);
         }, System.Windows.Threading.DispatcherPriority.Input);
+    }
+
+    /// <summary>
+    /// Gives the keyboard to the screen itself rather than its first button: shortcuts work the same,
+    /// but no button's tooltip pops up on its own. (Tab still moves to the buttons.)
+    /// </summary>
+    private static void FocusScreen(UserControl screen)
+    {
+        screen.Focusable = true;
+        screen.FocusVisualStyle = null;
+        screen.Focus();
     }
 
     /// <summary>On a small or zoomed-in screen, shrinks the window so all of it is visible.</summary>

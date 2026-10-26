@@ -152,10 +152,26 @@ public static class AnkiText
 
     public static string HtmlFromPlain(string text)
     {
-        string escaped = text.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;")
-            .Replace("\"", "&quot;").Replace("\r\n", "\n").Replace("\n", "<br>");
-        // Image markers become real images again, and **bold** / *italic* become HTML.
-        string s = Regex.Replace(escaped, @"\[img:([^\]]+)\]", m => $"<img src=\"{m.Groups[1].Value}\">");
+        var lines = text.Replace("\r\n", "\n").Split('\n');
+        var html = new System.Text.StringBuilder();
+        for (int i = 0; i < lines.Length; i++)
+        {
+            // A picture on its own line becomes its own block (<div>), which already starts a new line,
+            // so no <br> goes next to it. That way the text comes back exactly the same when imported.
+            bool picture = IsPictureLine(lines[i]);
+            if (i > 0 && !picture && !IsPictureLine(lines[i - 1])) html.Append("<br>");
+            html.Append(picture ? $"<div>{Inline(lines[i].Trim())}</div>" : Inline(lines[i]));
+        }
+        return html.ToString();
+    }
+
+    private static bool IsPictureLine(string line) => Regex.IsMatch(line.Trim(), @"^\[img:[^\]]+\]$");
+
+    /// <summary>One line: characters HTML treats specially are escaped, then images, **bold** and *italic*.</summary>
+    private static string Inline(string line)
+    {
+        string s = line.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
+        s = Regex.Replace(s, @"\[img:([^\]]+)\]", m => $"<img src=\"{m.Groups[1].Value}\">");
         s = Regex.Replace(s, @"\*\*(.+?)\*\*", "<b>$1</b>");
         s = Regex.Replace(s, @"(?<![*\w])\*(?=\S)(.+?)(?<=\S)\*(?![*\w])", "<i>$1</i>");
         return s;

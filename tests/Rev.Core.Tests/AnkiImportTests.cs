@@ -196,7 +196,17 @@ public sealed class AnkiImportTests : IDisposable
 
     [Fact]
     public void RevTextBecomesAnkiHtml() =>
-        Assert.Equal("<b>Bold</b> &amp; <i>italic</i><br><img src=\"a.png\">", AnkiText.HtmlFromPlain("**Bold** & *italic*\n[img:a.png]"));
+        Assert.Equal("<b>Bold</b> &amp; <i>italic</i><div><img src=\"a.png\"></div>line 3<br><br>line 5",
+                     AnkiText.HtmlFromPlain("**Bold** & *italic*\n[img:a.png]\nline 3\n\nline 5"));
+
+    [Theory]
+    [InlineData("[img:a.png]\nA heart")]
+    [InlineData("[img:a.png]\n\nA heart")]
+    [InlineData("Look:\n[img:a.png]\n[img:b.png]")]
+    [InlineData("• one\n• two\n\n1. first")]
+    [InlineData("**bold** and *italic* & <tags>")]
+    public void RevTextSurvivesTheTripToAnkiAndBack(string text) =>
+        Assert.Equal(text, AnkiText.PlainText(AnkiText.HtmlFromPlain(text)));
 
     [Fact]
     public void TemplatesShowOptionalPartsOnlyWhenTheFieldHasText()
