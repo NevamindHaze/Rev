@@ -8,6 +8,8 @@ The apps never talk to each other directly. They share a folder (iCloud Drive / 
 Each Rev app reads anki.json and writes its own file; this add-on reads the Rev apps' files, applies
 whatever is newer, then writes anki.json. So Anki is the hub: a change in one Rev app reaches the other
 through Anki. With only rev.json in the folder, everything works exactly as it did before Windows.
+Rev on iPhone can also hand its file over directly on the home Wi-Fi (see wifi.py), which is much faster
+than iCloud. Whichever copy of its file is newer, from Wi-Fi or from iCloud, is the one used.
 
 A card is identified by "<note guid>:<card ordinal>", which is the same in both apps.
 For each card, content (text, tags, deck) and schedule are merged separately:
@@ -548,14 +550,29 @@ def merge_peers(snapshots):
     }
 
 
-def sync(col, folder, state):
-    """Read the Rev apps' files, apply them, then write Anki's file. Returns a short report."""
+def sync(col, folder, state, wifi_rev=None):
+    """Read the Rev apps' files, apply them, then write Anki's file. Returns a short report.
+
+    wifi_rev is the newest file Rev on iPhone sent over Wi-Fi, if any. It's used instead of rev.json
+    when it's newer, so an older rev.json that iCloud delivers late never undoes a Wi-Fi sync."""
+    return sync_and_export(col, folder, state, wifi_rev)[0]
+
+
+def _valid(snapshot):
+    return bool(snapshot) and snapshot.get("format") == FORMAT
+
+
+def sync_and_export(col, folder, state, wifi_rev=None):
+    """The same as sync(), but also returns what Anki's file now says (for Rev on iPhone over Wi-Fi)."""
     os.makedirs(os.path.join(folder, "media"), exist_ok=True)
     report = {}
     peers = []
     for name, mark in PEERS:
         snapshot = read_json(os.path.join(folder, name))
-        if snapshot and snapshot.get("format") == FORMAT:
+        if name == "rev.json" and _valid(wifi_rev) and (
+                not _valid(snapshot) or (wifi_rev.get("writtenAt") or 0) >= (snapshot.get("writtenAt") or 0)):
+            snapshot = wifi_rev
+        if _valid(snapshot):
             peers.append((snapshot, mark))
     # Only when a Rev app wrote something new. With just rev.json, this is exactly the original sync.
     if any(snapshot.get("writtenAt") != state.get(mark) for snapshot, mark in peers):
@@ -572,5 +589,11 @@ def sync(col, folder, state):
     if digest != state.get("lastExportDigest") or not os.path.exists(os.path.join(folder, "anki.json")):
         write_json_atomic(os.path.join(folder, "anki.json"), snapshot)
         state["lastExportDigest"] = digest
+        state["lastExportWrittenAt"] = snapshot["writtenAt"]
+    else:
+        # Not rewritten: report the time of the file as it is, so the apps see that nothing changed.
+        snapshot["writtenAt"] = (state.get("lastExportWrittenAt")
+                                 or (read_json(os.path.join(folder, "anki.json")) or {}).get("writtenAt")
+                                 or snapshot["writtenAt"])
     copy_media_from_anki(col, folder, snapshot)
-    return report
+    return report, snapshot
