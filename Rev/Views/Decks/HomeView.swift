@@ -57,6 +57,13 @@ struct HomeView: View {
             DeckDetailView(deck: deck)
         }
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                NavigationLink {
+                    AllCardsView()
+                } label: {
+                    Label("All cards", systemImage: "magnifyingglass")
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     newDeckName = ""

@@ -99,6 +99,8 @@ enum BackupService {
                     existingByFront[key] = matches
                     // Cards imported before Rev tracked Anki notes learn which note they belong to.
                     if existing.noteID == nil { existing.noteID = cardDTO.noteID }
+                    // Bring in Anki's tags, unless you've already tagged the card in Rev.
+                    if existing.tagsText.isEmpty, let tags = cardDTO.tags { existing.tagsText = tags }
                     if existing.front == cardDTO.front && existing.back == cardDTO.back {
                         result.skipped += 1
                     } else {

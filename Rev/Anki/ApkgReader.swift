@@ -155,6 +155,7 @@ enum ApkgReader {
             card.noteID = note.guid.isEmpty ? String(row.int(0)) : note.guid
             card.isSuspended = row.int(11) == -1
             card.isLeech = note.tags.lowercased().split(separator: " ").contains("leech")
+            card.tags = Tags.format(Tags.parse(note.tags).filter { $0.lowercased() != "leech" })
 
             // If Anki used FSRS, it stored the card's memory as {"s": stability, "d": difficulty}.
             let extra = jsonDictionary(row.text(10))

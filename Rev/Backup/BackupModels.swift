@@ -38,6 +38,11 @@ struct CardDTO: Codable, Sendable {
     var noteID: String?
     var isSuspended: Bool?
     var isLeech: Bool?
+    var tags: String?
+    var kind: String?
+    var clozeSource: String?
+    var clozeNumber: Int?
+    var clozeExtra: String?
 }
 
 struct ReviewLogDTO: Codable, Sendable {
@@ -63,7 +68,9 @@ extension CardDTO {
                   phase: card.phaseRaw, due: card.due, intervalDays: card.intervalDays, ease: card.ease,
                   reps: card.reps, lapses: card.lapses, step: card.step, lastReviewed: card.lastReviewed,
                   stability: card.stability, difficulty: card.difficulty, noteID: card.noteID,
-                  isSuspended: card.isSuspended, isLeech: card.isLeech)
+                  isSuspended: card.isSuspended, isLeech: card.isLeech, tags: card.tagsText,
+                  kind: card.kindRaw, clozeSource: card.clozeSource, clozeNumber: card.clozeNumber,
+                  clozeExtra: card.clozeExtra)
     }
 
     /// A brand-new, never-studied card.
@@ -101,5 +108,10 @@ extension Card {
         noteID = dto.noteID
         isSuspended = dto.isSuspended ?? false
         isLeech = dto.isLeech ?? false
+        tagsText = dto.tags ?? ""
+        kindRaw = dto.kind ?? CardKind.basic.rawValue
+        clozeSource = dto.clozeSource
+        clozeNumber = dto.clozeNumber
+        clozeExtra = dto.clozeExtra
     }
 }

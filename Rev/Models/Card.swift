@@ -17,6 +17,15 @@ final class Card {
     var isSuspended: Bool = false
     /// A "leech" is a card you keep forgetting (8 lapses). It usually needs rewriting.
     var isLeech: Bool = false
+    /// Tags separated by spaces, like Anki: "parasitology paper_1". Use `tags` instead of this directly.
+    var tagsText: String = ""
+    /// "basic", "reversed", "cloze" or "typeIn". Use `kind` instead of this directly.
+    var kindRaw: String = "basic"
+    /// Cloze cards only: the full text with {{c1::...}} markers, which cloze number this card is,
+    /// and the optional extra text shown on the back.
+    var clozeSource: String?
+    var clozeNumber: Int?
+    var clozeExtra: String?
 
     // MARK: Scheduling information (updated every time you answer the card)
 
@@ -50,6 +59,16 @@ extension Card {
     var phase: CardPhase {
         get { CardPhase(rawValue: phaseRaw) ?? .new }
         set { phaseRaw = newValue.rawValue }
+    }
+
+    var kind: CardKind {
+        get { CardKind(rawValue: kindRaw) ?? .basic }
+        set { kindRaw = newValue.rawValue }
+    }
+
+    var tags: [String] {
+        get { Tags.parse(tagsText) }
+        set { tagsText = Tags.format(newValue) }
     }
 
     /// All the scheduling fields bundled together, so the algorithm

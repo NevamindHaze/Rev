@@ -19,6 +19,9 @@ struct ReviewView: View {
     @State private var history: [PastAnswer] = []
     /// Set when a card has just become a leech, to show the "rewrite or suspend?" question.
     @State private var newLeech: Card?
+    /// What you typed on a "Type the answer" card.
+    @State private var typedAnswer = ""
+    @FocusState private var answerFieldFocused: Bool
 
     private struct PastAnswer {
         let card: Card
@@ -108,6 +111,10 @@ struct ReviewView: View {
                 sideLabel("QUESTION")
                 CardTextView(text: card.front, size: 26, weight: .semibold)
 
+                if card.kind == .typeIn {
+                    typeInBox(for: card)
+                }
+
                 if showAnswer {
                     Capsule()
                         .fill(Theme.softFill)
@@ -124,6 +131,37 @@ struct ReviewView: View {
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.corner, style: .continuous))
         .contentShape(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous))
         .onTapGesture(perform: reveal)
+    }
+
+    /// Before revealing: a box to type into. After: what you typed, green if it matched.
+    @ViewBuilder
+    private func typeInBox(for card: Card) -> some View {
+        if showAnswer {
+            let correct = Self.normalized(typedAnswer) == Self.normalized(card.back)
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Image(systemName: correct ? "checkmark.circle.fill" : "xmark.circle.fill")
+                Text(typedAnswer.isEmpty ? "(nothing typed)" : typedAnswer)
+            }
+            .font(Theme.body(18, weight: .semibold))
+            .foregroundStyle(correct ? Theme.teal : Theme.coral)
+        } else {
+            TextField("Type your answer", text: $typedAnswer)
+                .focused($answerFieldFocused)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .submitLabel(.done)
+                .onSubmit(reveal)
+                .font(Theme.body(19))
+                .padding(14)
+                .background(Theme.softFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+    }
+
+    /// Ignores capitals, extra spaces and a final full stop when comparing typed answers.
+    private static func normalized(_ text: String) -> String {
+        text.lowercased()
+            .components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.joined(separator: " ")
+            .trimmingCharacters(in: CharacterSet(charactersIn: ". "))
     }
 
     private func sideLabel(_ text: String) -> some View {
@@ -185,6 +223,7 @@ struct ReviewView: View {
     // MARK: Actions
 
     private func reveal() {
+        answerFieldFocused = false
         withAnimation(.snappy) { showAnswer = true }
     }
 
@@ -241,6 +280,7 @@ struct ReviewView: View {
             rebuildQueue()
             current = last.card
             showAnswer = false
+            typedAnswer = ""
         }
     }
 
@@ -249,6 +289,7 @@ struct ReviewView: View {
         rebuildQueue()
         current = queue.nextCard
         showAnswer = false
+        typedAnswer = ""
     }
 
     private func rebuildQueue() {

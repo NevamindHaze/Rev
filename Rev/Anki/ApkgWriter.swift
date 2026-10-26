@@ -82,8 +82,10 @@ enum ApkgWriter {
             for card in deck.cards {
                 nextID += 1
                 let fields = [AnkiText.html(fromPlain: card.front), AnkiText.html(fromPlain: card.back)]
-                // Leeches get Anki's "leech" tag.
-                let tags = card.isLeech == true ? " leech " : ""
+                // Anki stores tags with a space on each side. Leeches also get Anki's "leech" tag.
+                var tagList = Tags.parse(card.tags ?? "")
+                if card.isLeech == true { tagList.append("leech") }
+                let tags = tagList.isEmpty ? "" : " " + Tags.format(tagList) + " "
                 try db.run("INSERT INTO notes VALUES (?, ?, ?, ?, -1, ?, ?, ?, ?, 0, '')", [
                     .int(nextID), .text(guid(for: card.id)), .int(noteTypeID), .int(nowSeconds), .text(tags),
                     .text(fields.joined(separator: "\u{1F}")), .text(card.front), .int(checksum(card.front)),
