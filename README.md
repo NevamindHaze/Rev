@@ -76,6 +76,8 @@ Rev (iPhone)  ⇄  iCloud Drive / "Rev Sync"  ⇄  Rev Sync add-on (Anki on your
 
 Each card is matched by its Anki note and card number. Text and schedule are merged separately — whichever app changed it most recently wins — and review history from both apps is kept.
 
+**Rev for Windows** ([Rev-Windows](https://github.com/NevamindHaze/Rev-Windows)) can join the same sync: it writes its own `windows.json` in the same folder and reads `anki.json`, just like the iPhone. The add-on reads both apps' files, so Anki passes changes between the iPhone and Windows; with no `windows.json` in the folder, the sync works exactly as before. Tests: [`anki-addon/tests/test_windows.py`](anki-addon/tests/test_windows.py).
+
 ## How it's built
 
 | | |

@@ -1,4 +1,4 @@
-"""Rev Sync: keeps Anki and the Rev iPhone app in sync through a shared iCloud Drive folder.
+"""Rev Sync: keeps Anki and the Rev apps (Rev on iPhone, and Rev for Windows if you use it) in sync through a shared iCloud Drive folder.
 
 When it runs:
   - a few seconds after your profile opens
