@@ -6,6 +6,7 @@ enum BackupService {
     struct ImportResult {
         var decks = 0
         var cards = 0
+        var updated = 0
         var skipped = 0
     }
 
@@ -59,8 +60,9 @@ enum BackupService {
     // MARK: Insert decks
 
     /// Adds decks and cards to the database.
-    /// With `mergeByName`, cards go into an existing deck with the same name,
-    /// and cards with the exact same front and back are skipped (so importing twice is harmless).
+    /// With `mergeByName`, cards go into an existing deck with the same name.
+    /// A card whose question is already in that deck isn't added again: if its answer
+    /// changed, the answer is updated (your study progress in Rev is kept); otherwise it's skipped.
     @discardableResult
     static func insert(_ decks: [DeckDTO], into context: ModelContext, mergeByName: Bool) throws -> ImportResult {
         var result = ImportResult()
@@ -84,14 +86,24 @@ enum BackupService {
                 result.decks += 1
             }
 
-            var seen = Set(deck.cards.map { $0.front + "\u{1F}" + $0.back })
+            // Cards already in this deck, looked up by their question.
+            var existingByFront: [String: [Card]] = [:]
+            for card in deck.cards {
+                existingByFront[card.front, default: []].append(card)
+            }
+
             for cardDTO in dto.cards {
-                let key = cardDTO.front + "\u{1F}" + cardDTO.back
-                if mergeByName && seen.contains(key) {
-                    result.skipped += 1
+                if mergeByName, var matches = existingByFront[cardDTO.front], !matches.isEmpty {
+                    let existing = matches.removeFirst()
+                    existingByFront[cardDTO.front] = matches
+                    if existing.back == cardDTO.back {
+                        result.skipped += 1
+                    } else {
+                        existing.back = cardDTO.back
+                        result.updated += 1
+                    }
                     continue
                 }
-                seen.insert(key)
                 let card = Card(front: cardDTO.front, back: cardDTO.back)
                 context.insert(card)
                 card.apply(cardDTO)
