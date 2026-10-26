@@ -1,10 +1,13 @@
-"""Two-way sync between Anki and the Rev iPhone app.
+"""Two-way sync between Anki and the Rev apps (Rev on iPhone, and optionally Rev for Windows).
 
-The two apps never talk to each other directly. They share a folder (iCloud Drive / "Rev Sync"):
-  anki.json  - written by this add-on: every Anki card, its schedule, and recent reviews
-  rev.json   - written by Rev: the same for Rev's cards
-  media/     - images used by cards
-Each side reads the other's file, applies whatever is newer, then writes its own file.
+The apps never talk to each other directly. They share a folder (iCloud Drive / "Rev Sync"):
+  anki.json     - written by this add-on: every Anki card, its schedule, and recent reviews
+  rev.json      - written by Rev on iPhone: the same for its cards
+  windows.json  - written by Rev for Windows (only if you use it): the same for its cards
+  media/        - images used by cards
+Each Rev app reads anki.json and writes its own file; this add-on reads the Rev apps' files, applies
+whatever is newer, then writes anki.json. So Anki is the hub: a change in one Rev app reaches the other
+through Anki. With only rev.json in the folder, everything works exactly as it did before Windows.
 
 A card is identified by "<note guid>:<card ordinal>", which is the same in both apps.
 For each card, content (text, tags, deck) and schedule are merged separately:
@@ -23,6 +26,11 @@ import time
 FORMAT = 1
 REVIEW_DAYS = 60
 TOMBSTONE_DAYS = 60
+# The Rev apps' files, and where the add-on remembers which version of each it has already applied.
+PEERS = (
+    ("rev.json", "lastRevWrittenAt"),
+    ("windows.json", "lastWindowsWrittenAt"),
+)
 # Rev's own card kinds and the Anki note types used for cards created in Rev.
 REV_MODELS = {
     "basic": "Rev Basic",
@@ -199,6 +207,19 @@ def ensure_model(col, kind):
     return mm.by_name(name)
 
 
+# ---------------------------------------------------------------- when a card really changed
+
+def changed_at(applied, key, mod):
+    """When this part of a card (text or schedule) really last changed.
+
+    Applying a change from a Rev app stamps the Anki note or card with the time of the sync, not the time
+    the change was made. We remember both ([Anki's mod after applying, the Rev app's own time]), so while
+    nothing else has touched it since, the Rev app's own time is the true one.
+    """
+    echo = applied.get(key)
+    return echo[1] if echo and echo[0] == mod else mod
+
+
 # ---------------------------------------------------------------- export (Anki -> anki.json)
 
 def _all_cards(col):
@@ -239,15 +260,9 @@ def export_anki(col, state):
                 "back": clean_rendered(card.answer(), True),
             }
 
-        # If our last change came from Rev, report Rev's own timestamp so Rev doesn't re-apply it.
-        edited_at = note.mod
-        echo = applied_content.get(key)
-        if echo and echo[0] == note.mod:
-            edited_at = echo[1]
-        sched_at = card.mod
-        echo = applied_sched.get(key)
-        if echo and echo[0] == card.mod:
-            sched_at = echo[1]
+        # If our last change came from a Rev app, report that app's own timestamp so it doesn't re-apply it.
+        edited_at = changed_at(applied_content, key, note.mod)
+        sched_at = changed_at(applied_sched, key, card.mod)
 
         entry = {
             "key": key,
@@ -299,7 +314,7 @@ def export_anki(col, state):
     }
 
 
-# ---------------------------------------------------------------- import (rev.json -> Anki)
+# ---------------------------------------------------------------- import (rev.json / windows.json -> Anki)
 
 def import_rev(col, rev, state):
     report = {"added": 0, "updated": 0, "rescheduled": 0, "deleted": 0, "reviews": 0}
@@ -307,6 +322,7 @@ def import_rev(col, rev, state):
     applied_content = state.setdefault("appliedContent", {})
     applied_sched = state.setdefault("appliedSched", {})
     exported = set(state.get("exportedKeys", []))
+    anki_tombstones = state.get("tombstones", {})   # cards gone from Anki in the last 60 days, and when
 
     by_key = {}
     cards_of_note = {}
@@ -317,7 +333,7 @@ def import_rev(col, rev, state):
         nid_of_guid[guid] = nid
 
     # 1. Deletions made in Rev: remove a note once all of its cards were deleted there,
-    #    unless it was changed in Anki after the deletion.
+    #    unless it was changed (in Anki, or by another Rev app) after the deletion.
     tombstones = {d["key"]: d["at"] for d in rev.get("deleted", [])}
     doomed = {}
     for key, at in tombstones.items():
@@ -325,7 +341,7 @@ def import_rev(col, rev, state):
         if not cid:
             continue
         card = col.get_card(cid)
-        if card.mod < at and card.note().mod < at:
+        if changed_at(applied_sched, key, card.mod) < at and changed_at(applied_content, key, card.note().mod) < at:
             doomed.setdefault(card.nid, set()).add(cid)
     remove = [nid for nid, cids in doomed.items() if cids == set(cards_of_note.get(nid, []))]
     if remove:
@@ -342,6 +358,11 @@ def import_rev(col, rev, state):
         if not cid:
             if key in exported or rc["noteId"] in nid_of_guid:
                 continue  # deleted in Anki (or a card Anki can't make); Anki's deletion wins
+            # Deleted recently (in Anki, or by a Rev app): an app that hasn't heard yet may still list it.
+            # It only comes back if that app changed it after it was deleted.
+            newest = max(rc["editedAt"], rc["schedAt"])
+            if key in tombstones or newest <= anki_tombstones.get(key, -1):
+                continue
             new_notes.setdefault(rc["noteId"], []).append(rc)
             continue
 
@@ -350,7 +371,9 @@ def import_rev(col, rev, state):
         # Skip Rev changes we already applied (their time is remembered), even if clocks differ a little.
         content_done = applied_content.get(key, [0, 0])[1] >= rc["editedAt"]
         sched_done = applied_sched.get(key, [0, 0])[1] >= rc["schedAt"]
-        if rc["editedAt"] > note.mod + 1 and not content_done:
+        # Compare with when the card really last changed (see changed_at), so the newest change wins
+        # even when it reaches Anki after an older change from another Rev app was applied.
+        if rc["editedAt"] > changed_at(applied_content, key, note.mod) + 1 and not content_done:
             changed = False
             for name, value in (rc.get("fields") or {}).items():
                 if name in note.keys() and note[name] != value:
@@ -370,7 +393,7 @@ def import_rev(col, rev, state):
             applied_content[key] = [col.get_note(note.id).mod, rc["editedAt"]]
             card = col.get_card(cid)
 
-        if rc["schedAt"] > card.mod + 1 and not sched_done:
+        if rc["schedAt"] > changed_at(applied_sched, key, card.mod) + 1 and not sched_done:
             if apply_schedule(card, rc["sched"], today, day_start):
                 col.update_card(card)
                 report["rescheduled"] += 1
@@ -453,15 +476,64 @@ def _content_signature(snapshot):
     return json.dumps(body, sort_keys=True, ensure_ascii=False)
 
 
+def merge_peers(snapshots):
+    """Several Rev apps' files as one, so their changes are applied to Anki together.
+
+    For each card the newest text (editedAt) and the newest schedule (schedAt) win, possibly from different
+    apps. A deletion in one app loses to a newer change of the same card in another app. Reviews from all
+    apps are kept once each. Applying them together matters: applying one app's file first would stamp the
+    cards with the time of the sync, and the other app's newer change would then look older.
+    """
+    content, schedule, latest = {}, {}, {}
+    for snapshot in snapshots:
+        for rc in snapshot.get("cards", []):
+            key = rc["key"]
+            if key not in content or rc["editedAt"] > content[key]["editedAt"]:
+                content[key] = rc
+            if key not in schedule or rc["schedAt"] > schedule[key]["schedAt"]:
+                schedule[key] = rc
+            latest[key] = max(latest.get(key, 0), rc["editedAt"], rc["schedAt"])
+    cards = [dict(rc, sched=schedule[key]["sched"], schedAt=schedule[key]["schedAt"]) for key, rc in content.items()]
+
+    deleted = {}
+    for snapshot in snapshots:
+        for d in snapshot.get("deleted", []):
+            deleted[d["key"]] = max(deleted.get(d["key"], 0), d["at"])
+    tombstones = [{"key": key, "at": at} for key, at in sorted(deleted.items()) if latest.get(key, 0) <= at]
+
+    seen, reviews = set(), []
+    for snapshot in snapshots:
+        for r in snapshot.get("reviews", []):
+            if (r["key"], r["at"]) not in seen:
+                seen.add((r["key"], r["at"]))
+                reviews.append(r)
+
+    return {
+        "format": FORMAT,
+        "writer": "+".join(s.get("writer", "?") for s in snapshots),
+        "writtenAt": max(s.get("writtenAt") or 0 for s in snapshots),
+        "cards": cards,
+        "deleted": tombstones,
+        "reviews": reviews,
+    }
+
+
 def sync(col, folder, state):
-    """Read Rev's file, apply it, then write Anki's file. Returns a short report."""
+    """Read the Rev apps' files, apply them, then write Anki's file. Returns a short report."""
     os.makedirs(os.path.join(folder, "media"), exist_ok=True)
     report = {}
-    rev = read_json(os.path.join(folder, "rev.json"))
-    if rev and rev.get("format") == FORMAT and rev.get("writtenAt") != state.get("lastRevWrittenAt"):
-        report = import_rev(col, rev, state)
-        copy_media_to_anki(col, folder, rev)
-        state["lastRevWrittenAt"] = rev.get("writtenAt")
+    peers = []
+    for name, mark in PEERS:
+        snapshot = read_json(os.path.join(folder, name))
+        if snapshot and snapshot.get("format") == FORMAT:
+            peers.append((snapshot, mark))
+    # Only when a Rev app wrote something new. With just rev.json, this is exactly the original sync.
+    if any(snapshot.get("writtenAt") != state.get(mark) for snapshot, mark in peers):
+        incoming = peers[0][0] if len(peers) == 1 else merge_peers([s for s, _ in peers])
+        report = import_rev(col, incoming, state)
+        for snapshot, mark in peers:
+            copy_media_to_anki(col, folder, snapshot)
+            state[mark] = snapshot.get("writtenAt")
 
     snapshot = export_anki(col, state)
     signature = _content_signature(snapshot)

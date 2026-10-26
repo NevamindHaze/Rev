@@ -59,7 +59,10 @@ def main(source):
     by_key = {c["key"]: c for c in rev_cards}
     basic = [c for c in rev_cards if c["kind"] == "basic"]
     reviewed = next(c for c in basic[2:] if c["sched"]["phase"] == "review")
-    reviewed["sched"] = dict(reviewed["sched"], due=now + 10 * 86400, interval=10.0, reps=reviewed["sched"]["reps"] + 1)
+    # Rev makes review cards due at the start of a study day, so do the same here
+    # (a due time later in the day would round to the next day).
+    day_start = col.sched.day_cutoff - 86400
+    reviewed["sched"] = dict(reviewed["sched"], due=day_start + 10 * 86400, interval=10.0, reps=reviewed["sched"]["reps"] + 1)
     reviewed["schedAt"] = now
     edited = basic[0]
     edited["fields"] = {"Front": "Edited in Rev", "Back": "New answer"}
