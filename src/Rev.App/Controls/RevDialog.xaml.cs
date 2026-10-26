@@ -69,6 +69,9 @@ public partial class RevDialog : Window
         return chosen;
     }
 
+    /// <summary>Just tells you something, with an OK button.</summary>
+    public static void Tell(Window? owner, string title, string message) => Choose(owner, title, message, "OK");
+
     /// <summary>Asks for a line of text. Returns it (trimmed), or null if you cancelled.</summary>
     public static string? Prompt(Window? owner, string title, string? message, string initialText,
                                  string confirmText, string hint)

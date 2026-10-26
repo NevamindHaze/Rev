@@ -1,9 +1,14 @@
 using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft.Win32;
+using Rev.App.Controls;
+using Rev.Core.Backup;
 using Rev.Core.Data;
 using Rev.Core.Scheduling;
+using Rev.Core.Text;
 
 namespace Rev.App.Views;
 
@@ -93,6 +98,91 @@ public partial class SettingsView : UserControl, IScreen
         RetentionText.Text = $"Target memory: {Math.Round(RetentionSlider.Value)}%";
         RetentionPanel.Visibility = FsrsChoice.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
     }
+
+    // ---- Backup ----
+
+    private Window? OwnerWindow => Window.GetWindow(this);
+
+    /// <summary>Where restore keeps a copy of your data from just before, in case you need it back.</summary>
+    private static string SafetyFolder => Path.Combine(RevDatabase.DefaultFolder, "Backups");
+
+    private void ExportBackup_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = "Save backup",
+            FileName = BackupService.SuggestedFileName(DateTime.Now),
+            DefaultExt = ".json",
+            Filter = "Rev backup (*.json)|*.json",
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+        };
+        if (dialog.ShowDialog(OwnerWindow) != true) return;
+        try
+        {
+            var backup = BackupService.Make(App.Database);
+            BackupService.Save(backup, dialog.FileName);
+            RevDialog.Tell(OwnerWindow, "Backup saved",
+                $"{Summary(backup)} saved to {dialog.FileName}.");
+        }
+        catch (Exception error)
+        {
+            RevDialog.Tell(OwnerWindow, "The backup wasn't saved", error.Message);
+        }
+    }
+
+    private void RestoreBackup_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Restore from backup",
+            Filter = "Rev backup (*.json)|*.json",
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+        };
+        if (dialog.ShowDialog(OwnerWindow) != true) return;
+
+        BackupFile backup;
+        try
+        {
+            backup = BackupService.Load(dialog.FileName);
+        }
+        catch (Exception error)
+        {
+            RevDialog.Tell(OwnerWindow, "That file can't be restored", error.Message);
+            return;
+        }
+
+        var made = BackupService.FromSeconds(backup.ExportedAt);
+        bool sure = RevDialog.Confirm(OwnerWindow, "Replace everything with this backup?",
+            $"Backup from {made:d MMMM yyyy, HH:mm}: {Summary(backup)}. Everything currently in Rev will be replaced. " +
+            "(A copy of your current data is saved first, in the Backups folder.)",
+            "Replace everything", destructive: true);
+        if (!sure) return;
+
+        try
+        {
+            BackupService.Restore(App.Database, backup, SafetyFolder);
+        }
+        catch (Exception error)
+        {
+            RevDialog.Tell(OwnerWindow, "Nothing was changed", $"The backup couldn't be restored: {error.Message}");
+            return;
+        }
+
+        // Show the restored settings, then confirm.
+        loading = true;
+        settings = App.Database.GetSettings();
+        NameBox.Text = settings.UserName;
+        PerDayBox.Text = settings.NewCardsPerDay.ToString();
+        (settings.Scheduler == SchedulerKind.Sm2 ? Sm2Choice : FsrsChoice).IsChecked = true;
+        RetentionSlider.Value = Math.Round(settings.DesiredRetention * 100);
+        UpdateRetention();
+        loading = false;
+        RevDialog.Tell(OwnerWindow, "Backup restored", $"Rev now has {Summary(backup)}.");
+    }
+
+    /// <summary>"3 decks, 120 cards".</summary>
+    private static string Summary(BackupFile backup) =>
+        $"{backup.Decks.Count.Counted("deck")}, {backup.Decks.Sum(d => d.Cards.Count).Counted("card")}";
 
     // ---- About ----
 

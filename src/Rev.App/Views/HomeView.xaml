@@ -29,7 +29,7 @@
                             <TextBlock Text="All cards" />
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource SecondaryPillButton}" MinHeight="48" Margin="10,0,0,0"
+                    <Button x:Name="NewDeckButton" Style="{StaticResource SecondaryPillButton}" MinHeight="48" Margin="10,0,0,0"
                             Click="NewDeck_Click" ToolTip="New deck (Ctrl+N)" AutomationProperties.Name="New deck">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource IconText}" FontSize="14" Text="&#xE710;" Margin="0,0,8,0" />

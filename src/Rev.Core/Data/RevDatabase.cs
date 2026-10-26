@@ -142,12 +142,30 @@ public sealed partial class RevDatabase : IDisposable
         return command;
     }
 
-    /// <summary>Runs several changes as one: either all of them happen, or (if something fails) none do.</summary>
+    private bool inTransaction;
+
+    /// <summary>
+    /// Runs several changes as one: either all of them happen, or (if something fails) none do.
+    /// Inside another InTransaction (e.g. saving settings during a restore) it simply joins the outer one.
+    /// </summary>
     public void InTransaction(Action work)
     {
+        if (inTransaction)
+        {
+            work();
+            return;
+        }
         using var transaction = connection.BeginTransaction();
-        work();
-        transaction.Commit();
+        inTransaction = true;
+        try
+        {
+            work();
+            transaction.Commit();
+        }
+        finally
+        {
+            inTransaction = false;
+        }
     }
 
     // ---- Converting times ----

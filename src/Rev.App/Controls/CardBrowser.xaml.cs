@@ -58,9 +58,12 @@ public partial class CardBrowser : UserControl
     /// <summary>Reads the cards again and redraws the list, keeping your search, filters and sort.</summary>
     public void Refresh()
     {
+        // Redrawing replaces the rows; remember which card had the keyboard, to give it back after.
+        var focused = CardList.Children.OfType<Button>().FirstOrDefault(r => r.IsKeyboardFocusWithin)?.Tag;
         cards = loadCards();
         deckNames = App.Database.GetDecks().ToDictionary(d => d.Id, d => d.Name);
         Render();
+        if (focused != null) CardList.Children.OfType<Button>().FirstOrDefault(r => focused.Equals(r.Tag))?.Focus();
     }
 
     public void FocusSearch()

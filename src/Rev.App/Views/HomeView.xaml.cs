@@ -44,6 +44,8 @@ public partial class HomeView : UserControl, IScreen
 
         var cardsByDeck = allCards.ToLookup(c => c.DeckId);
         var decks = db.GetDecks();
+        // Redrawing replaces the tiles; remember which one had the keyboard, to give it back after.
+        var focusedDeck = DeckGrid.Children.OfType<DeckTile>().FirstOrDefault(t => t.IsKeyboardFocusWithin)?.Deck.Id;
         DeckGrid.Children.Clear();
         for (int i = 0; i < decks.Count; i++)
         {
@@ -58,6 +60,7 @@ public partial class HomeView : UserControl, IScreen
             DeckGrid.Children.Add(tile);
         }
         EmptyState.Visibility = decks.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        if (focusedDeck is { } id) FocusTile(id);
     }
 
     // ---- Actions ----
@@ -103,8 +106,15 @@ public partial class HomeView : UserControl, IScreen
             "This can't be undone.",
             "Delete", destructive: true);
         if (!sure) return;
+        int place = DeckGrid.Children.OfType<DeckTile>().ToList().FindIndex(t => t.Deck.Id == deck.Id);
         App.Database.DeleteDeck(deck.Id);
         Refresh();
+
+        // The deleted tile had the keyboard; give it to the tile now in its place (or New deck),
+        // so shortcuts keep working without a click.
+        var tiles = DeckGrid.Children.OfType<DeckTile>().ToList();
+        if (tiles.Count > 0) tiles[Math.Clamp(place, 0, tiles.Count - 1)].FocusTile();
+        else NewDeckButton.Focus();
     }
 
     /// <summary>Puts the keyboard back on a deck's tile after a dialog closes.</summary>

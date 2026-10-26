@@ -18,7 +18,13 @@ public partial class MainWindow : Window
         Show(new HomeView());
 
         // Coming back to Rev (e.g. the next morning) refreshes the screen's numbers.
-        Activated += (_, _) => { if (Screen.Content is IScreen { } screen && ((UserControl)screen).IsLoaded) screen.Refresh(); };
+        Activated += (_, _) =>
+        {
+            if (Screen.Content is not UserControl { IsLoaded: true } screen || screen is not IScreen refreshable) return;
+            refreshable.Refresh();
+            // If refreshing redrew whatever had the keyboard, give it to the screen's first button.
+            if (!screen.IsKeyboardFocusWithin && IsActive) screen.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
+        };
         // Alt+Left goes back, like in a web browser.
         InputBindings.Add(new KeyBinding(new RelayCommand(GoBack), Key.Left, ModifierKeys.Alt));
     }

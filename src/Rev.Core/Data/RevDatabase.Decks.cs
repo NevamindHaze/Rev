@@ -13,10 +13,18 @@ public sealed partial class RevDatabase
     public Deck AddDeck(string name, DateTime? createdAt = null)
     {
         var deck = new Deck { Name = name.Trim(), CreatedAt = createdAt ?? DateTime.Now };
-        Execute("INSERT INTO decks (id, name, created_at) VALUES ($id, $name, $created)",
-            ("$id", deck.Id.ToString()), ("$name", deck.Name), ("$created", ToMs(deck.CreatedAt)));
+        AddDeck(deck);
         return deck;
     }
+
+    /// <summary>Adds a deck that already has its id (e.g. from a backup).</summary>
+    public void AddDeck(Deck deck) =>
+        Execute("INSERT INTO decks (id, name, created_at) VALUES ($id, $name, $created)",
+            ("$id", deck.Id.ToString()), ("$name", deck.Name), ("$created", ToMs(deck.CreatedAt)));
+
+    /// <summary>Removes every deck, card and review (used by restore, inside its transaction).</summary>
+    public void DeleteEverything() =>
+        Execute("DELETE FROM review_logs; DELETE FROM cards; DELETE FROM decks;");
 
     /// <summary>
     /// Renames a deck. Its cards count as edited, because a card's deck is part of what syncs with Anki.

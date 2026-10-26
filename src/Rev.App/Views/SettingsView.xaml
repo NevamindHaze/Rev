@@ -99,6 +99,31 @@
                 </StackPanel>
             </Border>
 
+            <!-- Backup -->
+            <Border Style="{StaticResource Section}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Backup" />
+                    <WrapPanel>
+                        <Button Style="{StaticResource TealPillButton}" MinHeight="48" Margin="0,0,10,10"
+                                Click="ExportBackup_Click" AutomationProperties.Name="Export backup">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource IconText}" FontSize="14" Text="&#xE74E;" Margin="0,0,10,0" />
+                                <TextBlock Text="Export backup (.json)…" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource SecondaryPillButton}" MinHeight="48" Margin="0,0,10,10"
+                                Click="RestoreBackup_Click" AutomationProperties.Name="Restore from backup">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource IconText}" FontSize="14" Text="&#xE777;" Margin="0,0,10,0" />
+                                <TextBlock Text="Restore from backup…" />
+                            </StackPanel>
+                        </Button>
+                    </WrapPanel>
+                    <TextBlock Style="{StaticResource Note}" Margin="2,2,0,0"
+                               Text="Save a backup somewhere safe (e.g. OneDrive or a USB stick) now and then. Restoring replaces everything in Rev; your current data is saved first in the Backups folder, just in case. Backups from Rev on iPhone work here too. Images aren't inside the backup file: import your Anki decks again to bring them back (your progress is kept)." />
+                </StackPanel>
+            </Border>
+
             <!-- About -->
             <Border Style="{StaticResource Section}">
                 <StackPanel>
