@@ -1,10 +1,8 @@
 using System.Windows;
-using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Rev.Core.Scheduling;
 using Rev.Core.Stats;
-using Rev.Core.Text;
 
 namespace Rev.App.Views;
 
@@ -36,7 +34,6 @@ public partial class StatsView : UserControl, IScreen
         int streak = StatsCalculator.Streak(logs, now);
         StreakNumber.Text = streak.ToString();
         StreakLabel.Text = streak == 1 ? "day" : "days";
-        AutomationProperties.SetName(StreakBadge, $"Streak: {streak.Counted("day")}");
 
         ReviewedTile.Value = db.ReviewsToday(now).ToString();
         NewTile.Value = cards.NewCount().ToString();
@@ -84,7 +81,6 @@ public partial class StatsView : UserControl, IScreen
             column.Children.Add(label);
             column.Children.Add(bar);
             column.Children.Add(count);
-            AutomationProperties.SetName(column, $"{(day.IsToday ? "Today" : day.Day.ToString("dddd"))}: {day.Count.Counted("review")}");
             Chart.Children.Add(column);
         }
     }
