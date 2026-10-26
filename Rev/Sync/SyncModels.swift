@@ -67,6 +67,10 @@ struct SyncState: Codable {
     var tombstones: [String: Double] = [:]
     var lastAnkiWrittenAt: Double?
     var lastExportDigest: String?
+    /// When Rev's file last changed, so an unchanged file keeps its time (Anki then skips it).
+    var lastExportWrittenAt: Double?
+    /// Pictures already given to Anki over Wi-Fi (so they aren't sent again every time).
+    var wifiSentImages: [String]?
     /// 2 = cards from Anki keep bold/italic. Older syncs (nil) get one refresh of their text.
     var contentFormat: Int?
 

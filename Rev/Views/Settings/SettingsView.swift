@@ -27,6 +27,12 @@ struct SettingsView: View {
     @State private var isWorking = false
     @State private var message: String?
 
+    // Pairing for sync over Wi-Fi
+    @State private var wifiAddressText = ""
+    @State private var wifiCodeText = ""
+    @State private var isPairing = false
+    @State private var pairingMessage: String?
+
     var body: some View {
         Form {
             Section("You") {
@@ -60,6 +66,8 @@ struct SettingsView: View {
             }
 
             syncSection
+
+            wifiSection
 
             Section {
                 Button(action: exportBackup) {
@@ -180,6 +188,69 @@ struct SettingsView: View {
             Text(sync.isSetUp
                  ? "Rev syncs by itself when you open it and when you leave it. Anki on your computer syncs through the Rev Sync add-on, and then with AnkiWeb as usual."
                  : "Keeps Rev and Anki on your computer in step, both ways. Tap the button, open iCloud Drive, select the “Rev Sync” folder and tap Open.")
+        }
+    }
+
+    // MARK: Sync over Wi-Fi
+
+    private var wifiSection: some View {
+        Section {
+            if sync.isWifiSetUp {
+                LabeledContent("Computer", value: sync.wifiComputer ?? sync.wifiAddress ?? "")
+                if !sync.isSetUp {
+                    // Without an iCloud folder, the Sync now button and the last result live here.
+                    if !sync.lastMessage.isEmpty {
+                        Text(sync.lastMessage)
+                            .font(Theme.body(14))
+                            .foregroundStyle(Theme.mutedInk)
+                    }
+                    Button {
+                        Task { await sync.sync(context: context) }
+                    } label: {
+                        Label("Sync now", systemImage: "arrow.triangle.2.circlepath")
+                    }
+                    .disabled(sync.isSyncing)
+                }
+                Button(role: .destructive) {
+                    sync.forgetWifi()
+                    pairingMessage = nil
+                } label: {
+                    Label("Stop syncing over Wi-Fi", systemImage: "wifi.slash")
+                }
+            } else {
+                TextField("Computer, like 192.168.0.7:8765", text: $wifiAddressText)
+                    .keyboardType(.URL)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                TextField("Pairing code, like K7QM-3XPA", text: $wifiCodeText)
+                    .textInputAutocapitalization(.characters)
+                    .autocorrectionDisabled()
+                Button {
+                    Task {
+                        isPairing = true
+                        pairingMessage = await sync.pairWifi(address: wifiAddressText, code: wifiCodeText)
+                        isPairing = false
+                    }
+                } label: {
+                    if isPairing {
+                        ProgressView()
+                    } else {
+                        Label("Connect", systemImage: "wifi")
+                    }
+                }
+                .disabled(isPairing || wifiAddressText.isEmpty || wifiCodeText.isEmpty)
+            }
+            if let pairingMessage {
+                Text(pairingMessage)
+                    .font(Theme.body(14))
+                    .foregroundStyle(Theme.mutedInk)
+            }
+        } header: {
+            Text("Sync over Wi-Fi")
+        } footer: {
+            Text(sync.isWifiSetUp
+                 ? "When your iPhone is on the same Wi-Fi as your computer and Anki is open, Rev syncs with Anki directly in a second or two. Otherwise it uses the iCloud folder, as before."
+                 : "Much faster than iCloud at home. In Anki on your computer, open Tools → Rev Sync Wi-Fi…, switch it on, and type the computer and pairing code it shows here. The first time, allow Rev to use the local network.")
         }
     }
 

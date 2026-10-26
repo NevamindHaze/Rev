@@ -42,6 +42,11 @@ targets:
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         ITSAppUsesNonExemptEncryption: false
+        # Sync over Wi-Fi: iOS asks you once before Rev may talk to your computer on the home network.
+        NSLocalNetworkUsageDescription: "Rev syncs with Anki on your computer directly over your home Wi-Fi."
+        # Plain (unencrypted) web requests are allowed only to devices on your home network, never to the internet.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
         # Tells iOS what an ".apkg" file is, so the Files picker can offer them.
         UTImportedTypeDeclarations:
           - UTTypeIdentifier: net.ankiweb.apkg

@@ -78,6 +78,8 @@ Each card is matched by its Anki note and card number. Text and schedule are mer
 
 **Rev for Windows** ([Rev-Windows](https://github.com/NevamindHaze/Rev-Windows)) can join the same sync: it writes its own `windows.json` in the same folder and reads `anki.json`, just like the iPhone. The add-on reads both apps' files, so Anki passes changes between the iPhone and Windows; with no `windows.json` in the folder, the sync works exactly as before. Tests: [`anki-addon/tests/test_windows.py`](anki-addon/tests/test_windows.py).
 
+**Sync over Wi-Fi.** iCloud can take many minutes to move the files. At home, Rev on iPhone can instead hand its file straight to the add-on over your Wi-Fi and get Anki's back in the same second. Switch it on in Anki with **Tools → Rev Sync Wi-Fi…**, which shows the computer's address and a pairing code to type into Rev once. Every request needs that code, and after 5 wrong codes in a row the add-on stops answering for a minute. The sync rules are the same; whichever copy of the iPhone's file is newer, from Wi-Fi or from iCloud, is the one used. When the phone is away from home or Anki is closed, Rev uses iCloud as before. Tests: [`anki-addon/tests/test_wifi.py`](anki-addon/tests/test_wifi.py) and [`test_addon_glue.py`](anki-addon/tests/test_addon_glue.py).
+
 ## How it's built
 
 | | |
