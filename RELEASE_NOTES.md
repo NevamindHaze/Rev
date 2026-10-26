@@ -1,5 +1,5 @@
 What's new
 
-• Clearer counts: “Due today” is now “To review” — the cards waiting for you right now. It goes down with every card you answer.
-• Cards you press Again on are shown separately as “coming back”, with when the next one returns (e.g. “3 coming back · next in 8 min”). When their wait is over they move back into “To review” by themselves.
-• Deck tiles show “to review”, “later” and “new”, with the total number of cards under the deck name.
+• Deleting a deck now syncs properly: a deck deleted in Anki or in Rev for Windows disappears from Rev on your iPhone too, instead of staying behind with 0 cards. A deck renamed in Anki no longer leaves its old, empty name behind either.
+• Only decks that a sync emptied are removed. A deck you emptied yourself, a new deck you haven't filled yet, and a deck that still has sub-decks always stay.
+• Rev Sync add-on: the same for Anki. Copy the new anki-addon/rev_sync folder into Anki's addons21 folder and restart Anki.
