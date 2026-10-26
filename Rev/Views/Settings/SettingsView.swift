@@ -182,8 +182,9 @@ struct SettingsView: View {
                     try ApkgReader.read(fileAt: url)
                 }.value
                 let result = try BackupService.insert(importedDecks, into: context, mergeByName: true)
-                var text = "Imported \(result.cards) cards into \(importedDecks.count) decks."
-                if result.skipped > 0 { text += " Skipped \(result.skipped) cards you already had." }
+                var text = "Imported \(result.cards) new cards into \(importedDecks.count) decks."
+                if result.updated > 0 { text += " Updated the text of \(result.updated) cards you already had." }
+                if result.skipped > 0 { text += " Skipped \(result.skipped) unchanged cards." }
                 message = text
             } catch {
                 message = error.localizedDescription
