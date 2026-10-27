@@ -2,7 +2,7 @@
   <img src="src/Rev.App/Assets/AppIcon.png" width="140" alt="Rev app icon">
 </p>
 
-<h1 align="center">Rev for Windows</h1>
+<h1 align="center">Rev for Windows and Linux</h1>
 
 <p align="center">
   <b>The desktop sibling of <a href="https://github.com/NevamindHaze/Rev">Rev for iPhone</a>:
@@ -19,6 +19,11 @@ Prefer no installer? **Rev-x.y.z-portable.exe** is the whole app in one file: pu
 Rev isn't signed with a paid certificate, so Windows may first say "Windows protected your PC":
 click **More info → Run anyway**. Your decks and progress are kept in `%LOCALAPPDATA%\Rev`, so updating or
 uninstalling Rev never touches them (make a backup in Settings now and then anyway).
+
+**On Linux** (Linux Mint, Ubuntu, Debian): download **rev-flashcards_x.y.z_amd64.deb** from the same release and
+double-click it. Any other 64-bit Linux: **Rev-x.y.z-linux-x64.tar.gz**, unpack it and run `./Rev`. The step-by-step
+guide, with moving your decks from Windows and syncing with Anki and the iPhone on Linux, is in
+[`docs/LINUX.md`](docs/LINUX.md).
 
 See [`RELEASE_NOTES.md`](RELEASE_NOTES.md) for what's new.
 
@@ -52,19 +57,22 @@ So a change on the iPhone reaches Rev for Windows in seconds when you're at home
 
 | | |
 |---|---|
-| UI | WPF on .NET 8 (C#), Windows 10/11 |
+| UI | Windows: WPF on .NET 8 (C#), Windows 10/11. Linux: [Avalonia](https://avaloniaui.net) 11 on .NET 8, the same screens |
 | Storage | SQLite |
 | Font | [Nunito](https://github.com/googlefonts/nunito) (SIL Open Font License, bundled) |
-| Libraries | [Microsoft.Data.Sqlite](https://www.nuget.org/packages/Microsoft.Data.Sqlite), [ZstdSharp](https://github.com/oleg-st/ZstdSharp) |
-| Builds | GitHub Actions on Windows ([`build.yml`](.github/workflows/build.yml)): tests, a one-file `Rev.exe` and an [Inno Setup](https://jrsoftware.org/isinfo.php) installer ([`installer/Rev.iss`](installer/Rev.iss)) on every push |
+| Libraries | [Microsoft.Data.Sqlite](https://www.nuget.org/packages/Microsoft.Data.Sqlite), [ZstdSharp](https://github.com/oleg-st/ZstdSharp); on Linux also [Avalonia](https://github.com/AvaloniaUI/Avalonia) and [Material.Icons](https://github.com/SKProCH/Material.Icons) |
+| Builds | GitHub Actions ([`build.yml`](.github/workflows/build.yml)) on every push. Windows: tests, a one-file `Rev.exe` and an [Inno Setup](https://jrsoftware.org/isinfo.php) installer ([`installer/Rev.iss`](installer/Rev.iss)). Linux (Ubuntu): the tests and the sync check on Linux, the screen tests (pictures kept as "Rev-screens"), a `.deb` ([`packaging/linux`](packaging/linux)) that is installed and started on a virtual screen as a check, and a `.tar.gz` |
 | Release notes | [`RELEASE_NOTES.md`](RELEASE_NOTES.md), the text of each GitHub release |
 
 ```
 src/Rev.Core          the "thinking": scheduling, cards, Anki, backup, stats (no screens; tested)
 src/Rev.App           the Windows app: screens, theme, controls
+src/Rev.Linux         the Linux app (Avalonia): the same screens, theme and controls
 tests/Rev.Core.Tests  automatic checks for Rev.Core
+tests/Rev.Linux.Tests screen tests for the Linux app: keys and clicks, and a picture of every screen
 tools/                helpers: make-icon.ps1, Rev.Demo (sample data), Anki test scripts
-docs/                 SYNC-PROPOSAL.md: how Rev for Windows could join the iPhone ↔ Anki sync
+packaging/linux       the .deb and .tar.gz for Linux
+docs/                 SYNC-PROPOSAL.md (how the sync works), LINUX.md (installing and syncing on Linux Mint)
 ```
 
 ## Building it yourself
@@ -74,14 +82,16 @@ Install the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0), then
 ```
 dotnet test              # runs the automatic checks
 dotnet run --project src/Rev.App
+dotnet run --project src/Rev.Linux     # the Linux app (it runs on Windows too, for trying it out)
 ```
 
-Rev keeps its data in `%LOCALAPPDATA%\Rev\rev.db`. For testing, two switches keep your real data out of the way:
+Rev keeps its data in `%LOCALAPPDATA%\Rev\rev.db` (on Linux, `~/.local/share/Rev/rev.db`). For testing, two
+switches keep your real data out of the way:
 
 | | |
 |---|---|
 | `REV_DATA_DIR` | use this folder for the database instead |
-| `REV_THEME` | `dark` or `light`, instead of following Windows |
+| `REV_THEME` | `dark` or `light`, instead of following Windows (or the Linux desktop) |
 
 The Anki import tests use small made-up Anki files in `tests/Fixtures`, made with Anki's own Python
 library (`tools/make-anki-fixtures.py`, which explains how to run it). It builds a throw-away collection
@@ -97,11 +107,12 @@ dotnet publish src/Rev.App -c Release -r win-x64 --self-contained true -p:Publis
 
 ### Publishing a new version
 
-1. Change `<Version>` in [`src/Rev.App/Rev.App.csproj`](src/Rev.App/Rev.App.csproj), e.g. to `1.1.0`.
+1. Change `<Version>` in [`src/Rev.App/Rev.App.csproj`](src/Rev.App/Rev.App.csproj) and
+   [`src/Rev.Linux/Rev.Linux.csproj`](src/Rev.Linux/Rev.Linux.csproj), e.g. to `1.1.0`.
 2. Write the "What's new" for that version in [`RELEASE_NOTES.md`](RELEASE_NOTES.md).
 3. Commit, then add a matching tag and push it: `git tag v1.1.0` and `git push origin v1.1.0`.
 
-GitHub Actions then builds everything and publishes the release with both files.
+GitHub Actions then builds everything and publishes the release with the Windows and Linux files.
 
 To try Rev with sample veterinary decks:
 
