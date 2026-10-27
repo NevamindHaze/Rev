@@ -80,6 +80,14 @@ jobs:
           dotnet test tests/Rev.Core.Tests -c Release
           REV_SCREENSHOTS="$PWD/screens" dotnet test tests/Rev.Linux.Tests -c Release
 
+      - name: Check the sync on Linux (Rev's sync code, the real Rev Sync add-on, a pretend iPhone)
+        run: |
+          git clone -q --depth 1 https://github.com/NevamindHaze/Rev.git rev-addon
+          python3 -m venv venv
+          venv/bin/pip install -q anki
+          dotnet build tools/Rev.Demo -c Release -v q
+          venv/bin/python -I tools/check-sync.py rev-addon/anki-addon/rev_sync tools/Rev.Demo/bin/Release/net8.0/Rev.Demo
+
       - name: Find the version
         id: version
         run: |
