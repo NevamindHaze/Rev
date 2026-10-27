@@ -27,6 +27,7 @@ import os
 import re
 import secrets
 import socket
+import sys
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -167,8 +168,7 @@ class WifiServer:
 
     def start(self):
         """Starts listening. Raises OSError if the port is already used by another program."""
-        self._httpd = ThreadingHTTPServer((self.host, self.port), _handler_for(self))
-        self._httpd.daemon_threads = True
+        self._httpd = _QuietServer((self.host, self.port), _handler_for(self))
         self.port = self._httpd.server_address[1]
         threading.Thread(target=self._httpd.serve_forever, name="rev-sync-wifi", daemon=True).start()
 
@@ -197,6 +197,21 @@ class WifiServer:
                 self._failures = 0
                 self._paused_until = time.time() + PAUSE_SECONDS
             return "wrong"
+
+
+class _QuietServer(ThreadingHTTPServer):
+    """The web server, minus the console message when a phone hangs up halfway.
+
+    That happens all the time (the iPhone leaves the Wi-Fi, Rev goes to the background, iOS gives up on a
+    slow answer), and the phone simply tries again later. But Python prints it to the console, and Anki
+    shows anything printed there as an "Anki encountered a problem" window. Real errors still show."""
+
+    daemon_threads = True
+
+    def handle_error(self, request, client_address):
+        if isinstance(sys.exc_info()[1], (ConnectionError, TimeoutError)):
+            return
+        super().handle_error(request, client_address)
 
 
 def _handler_for(server):
