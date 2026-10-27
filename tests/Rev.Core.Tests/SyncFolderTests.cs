@@ -26,6 +26,7 @@ public sealed class SyncFolderTests
     [Fact]
     public void OnWindowsTheUsualVariablesAreExpanded()
     {
+        if (!OperatingSystem.IsWindows()) return;   // %USERPROFILE% only exists on Windows
         string expanded = SyncService.ExpandPath(@"%USERPROFILE%\iCloudDrive\Rev Sync", LinuxHome, windows: true)!;
         Assert.DoesNotContain("%", expanded);
         Assert.EndsWith(@"iCloudDrive\Rev Sync", expanded);

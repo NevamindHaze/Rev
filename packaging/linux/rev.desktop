@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Rev
+GenericName=Flashcards
+Comment=Flashcards with spaced repetition (FSRS) that sync with Anki
+Exec=rev
+Icon=rev
+Terminal=false
+Categories=Education;
+Keywords=flashcards;anki;spaced repetition;study;
+StartupWMClass=Rev
