@@ -41,8 +41,7 @@ def _config():
 
 
 def _folder():
-    folder = _config().get("sync_folder") or ""
-    return os.path.expandvars(os.path.expanduser(folder))
+    return core.sync_folder(_config().get("sync_folder") or "", windows=os.name == "nt")
 
 
 def _folder_ok(folder):
@@ -257,13 +256,15 @@ class WifiDialog(QDialog):
         port = _server.port if _server else _port()
         addresses = ["%s:%d" % (a, port) for a in wifi.local_addresses()]
         addresses.append("%s.local:%d" % (socket.gethostname(), port))
+        firewall = ("If Windows asks whether Anki may use the network, allow it on private networks." if os.name == "nt"
+                    else "If you switched on a firewall (Linux Mint's is off unless you turned it on), allow port %d." % port)
         self.details.setText(
             "In Rev on iPhone, go to Settings > Sync over Wi-Fi and type:\n\n"
             "Computer:  %s\n"
             "Pairing code:  %s\n\n"
-            "If Windows asks whether Anki may use the network, allow it on private networks.\n"
+            "%s\n"
             "\"New pairing code\" disconnects a phone you paired before."
-            % ("\n                    ".join(addresses), _wifi_settings()["code"]))
+            % ("\n                    ".join(addresses), _wifi_settings()["code"], firewall))
 
 
 def _show_wifi_dialog():
