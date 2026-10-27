@@ -45,6 +45,25 @@ CSS = ".card { font-family: arial; font-size: 20px; text-align: center; color: b
 
 # ---------------------------------------------------------------- files
 
+def sync_folder(setting, windows, home=None):
+    """The shared folder from the add-on's "sync_folder" setting, as a real path.
+
+    On Windows, %USERPROFILE% and the like are filled in, as always. On Linux (and a Mac), "~" and $HOME are
+    filled in; the original setting is a Windows path (iCloud Drive for Windows), which can't be the folder
+    there, so a Windows-style setting (or none) means "Rev Sync" in your home folder, made if needed."""
+    if windows:
+        return os.path.expandvars(os.path.expanduser(setting))
+    home = home or os.path.expanduser("~")
+    path = setting.strip()
+    if not path or "%" in path or "\\" in path:
+        path = os.path.join(home, "Rev Sync")
+        os.makedirs(path, exist_ok=True)
+        return path
+    if path == "~" or path.startswith("~/"):
+        path = home + path[1:]
+    return path.replace("${HOME}", home).replace("$HOME", home)
+
+
 def read_json(path):
     try:
         with open(path, encoding="utf-8") as f:

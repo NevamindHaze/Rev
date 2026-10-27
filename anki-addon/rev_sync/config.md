@@ -1,4 +1,4 @@
-**sync_folder**: the folder shared with the Rev app on your iPhone (in iCloud Drive). Rev for Windows uses the same folder.
+**sync_folder**: the folder shared with the Rev app on your iPhone (in iCloud Drive). Rev for Windows and Rev for Linux use the same folder. On Linux (which has no iCloud Drive) the Windows setting below means "Rev Sync" in your home folder (~/Rev Sync); there, Rev on iPhone syncs with Anki over Wi-Fi.
 
 **interval_minutes**: how often to sync while Anki is open (it never syncs in the middle of a review).
 

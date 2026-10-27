@@ -80,6 +80,8 @@ Each card is matched by its Anki note and card number. Text and schedule are mer
 
 **Sync over Wi-Fi.** iCloud can take many minutes to move the files. At home, Rev on iPhone can instead hand its file straight to the add-on over your Wi-Fi and get Anki's back in the same second. Switch it on in Anki with **Tools → Rev Sync Wi-Fi…**, which shows the computer's address and a pairing code to type into Rev once. Every request needs that code, and after 5 wrong codes in a row the add-on stops answering for a minute. The sync rules are the same; whichever copy of the iPhone's file is newer, from Wi-Fi or from iCloud, is the one used. When the phone is away from home or Anki is closed, Rev uses iCloud as before. Tests: [`anki-addon/tests/test_wifi.py`](anki-addon/tests/test_wifi.py) and [`test_addon_glue.py`](anki-addon/tests/test_addon_glue.py).
 
+**On Linux.** Anki and the add-on work the same on Linux, and so does Rev for Linux ([Rev-Windows](https://github.com/NevamindHaze/Rev-Windows) releases). Linux has no iCloud Drive, so there the add-on uses `~/Rev Sync` (unless you set another `sync_folder`), and Rev on iPhone syncs with Anki over Wi-Fi. Tests: [`anki-addon/tests/test_folders.py`](anki-addon/tests/test_folders.py).
+
 ## How it's built
 
 | | |
