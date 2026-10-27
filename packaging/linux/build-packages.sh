@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Makes the two Linux downloads from a "dotnet publish" folder (run on Linux, e.g. GitHub's Ubuntu machines):
-#   rev_<version>_amd64.deb          for Linux Mint / Ubuntu / Debian: double-click it to install
-#   Rev-<version>-linux-x64.tar.gz   for any Linux: unpack it anywhere and run ./Rev
+#   rev-flashcards_<version>_amd64.deb   for Linux Mint / Ubuntu / Debian: double-click it to install
+#   Rev-<version>-linux-x64.tar.gz       for any Linux: unpack it anywhere and run ./Rev
 #
 # Usage: packaging/linux/build-packages.sh <version> <publish folder> <output folder>
 set -euo pipefail
@@ -11,12 +11,13 @@ out="$3"
 here="$(cd "$(dirname "$0")" && pwd)"
 mkdir -p "$out"
 
-# ---- The .deb: Rev goes in /usr/lib/rev, with a "rev" command and an entry in the app menu.
+# ---- The .deb: Rev goes in /usr/lib/rev, with a "rev-cards" command and an entry in the app menu.
+# (Not "rev": Linux already has a small command of that name, which prints text backwards.)
 root="$(mktemp -d)"
 mkdir -p "$root/DEBIAN" "$root/usr/lib/rev" "$root/usr/bin" "$root/usr/share/applications" "$root/usr/share/pixmaps"
 cp -r "$publish"/. "$root/usr/lib/rev/"
 chmod 755 "$root/usr/lib/rev/Rev"
-ln -s ../lib/rev/Rev "$root/usr/bin/rev"
+ln -s ../lib/rev/Rev "$root/usr/bin/rev-cards"
 cp "$here/rev.desktop" "$root/usr/share/applications/rev.desktop"
 # The comic icon, in the sizes the menu and the panel use.
 icon="$here/../../src/Rev.App/Assets/AppIcon.png"
@@ -29,7 +30,7 @@ if command -v convert >/dev/null; then
 fi
 installed=$(du -sk "$root/usr" | cut -f1)
 cat > "$root/DEBIAN/control" <<CONTROL
-Package: rev
+Package: rev-flashcards
 Version: $version
 Section: education
 Priority: optional
@@ -52,7 +53,7 @@ command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -q -t /usr/
 SCRIPT
 cp "$root/DEBIAN/postinst" "$root/DEBIAN/postrm"
 chmod 755 "$root/DEBIAN/postinst" "$root/DEBIAN/postrm"
-dpkg-deb --build --root-owner-group "$root" "$out/rev_${version}_amd64.deb"
+dpkg-deb --build --root-owner-group "$root" "$out/rev-flashcards_${version}_amd64.deb"
 rm -rf "$root"
 
 # ---- The .tar.gz: the same program in a "Rev" folder.

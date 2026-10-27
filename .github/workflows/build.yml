@@ -100,11 +100,11 @@ jobs:
 
       - name: Install the .deb and start Rev on a virtual screen
         run: |
-          sudo apt-get install -y -qq ./dist/rev_*_amd64.deb > /dev/null
-          test -x /usr/bin/rev && test -f /usr/share/applications/rev.desktop
+          sudo apt-get install -y ./dist/rev-flashcards_*_amd64.deb
+          test -x /usr/bin/rev-cards && test -f /usr/share/applications/rev.desktop
           export REV_DATA_DIR="$(mktemp -d)"
           xvfb-run -a -s "-screen 0 1280x900x24" bash -c '
-            rev & pid=$!
+            rev-cards & pid=$!
             sleep 15
             import -window root screens/00-linux-desktop.png
             if kill -0 $pid; then echo "Rev is running"; kill $pid; else echo "Rev stopped by itself"; exit 1; fi'
