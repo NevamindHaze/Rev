@@ -1,0 +1,23 @@
+<!--
+    Every card from every deck in one list, with the same search, filters, tags and sorting as a deck.
+    Ctrl+F jumps to the search box, Esc goes back.
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:controls="clr-namespace:Rev.Linux.Controls"
+             x:Class="Rev.Linux.Views.AllCardsView">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="900" Margin="{StaticResource PagePadding}">
+            <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,22">
+                <Button Classes="rev secondary round" Click="Back_Click" ToolTip.Tip="Back (Esc)"
+                        AutomationProperties.Name="Back" VerticalAlignment="Center">
+                    <mi:MaterialIcon Kind="ArrowLeft" Width="18" Height="18" />
+                </Button>
+                <TextBlock Grid.Column="1" Classes="title" Text="All cards" Margin="16,0,0,0" VerticalAlignment="Center" />
+            </Grid>
+            <TextBlock x:Name="EmptyText" Classes="muted" Margin="4,0,0,0" Text="No cards yet." />
+            <controls:CardBrowser x:Name="Browser" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

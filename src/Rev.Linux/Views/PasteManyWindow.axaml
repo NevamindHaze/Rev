@@ -1,0 +1,33 @@
+<!--
+    Paste many cards at once: one card per line, with "|" (or a tab) between front and back.
+    Ctrl+Enter adds them, Esc closes.
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:Rev.Linux.Controls"
+        x:Class="Rev.Linux.Views.PasteManyWindow"
+        Icon="avares://Rev/Assets/AppIcon.png"
+        Title="Paste many" Width="760" Height="700" MinWidth="480" MinHeight="420"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <Panel>
+        <Grid Margin="32,24,32,24" RowDefinitions="Auto,*,Auto">
+            <StackPanel>
+                <TextBlock Classes="title" Text="Paste many" />
+                <TextBlock x:Name="DeckText" Classes="muted" Margin="2,2,0,16" />
+                <TextBlock Classes="body" Text="One card per line. Put a | between the front and the back." />
+                <TextBlock Classes="muted" FontSize="14" Margin="0,4,0,14"
+                           Text="Example:  Normal canine heart rate | 60–160 bpm    (copying two columns from a spreadsheet works too)" />
+            </StackPanel>
+
+            <TextBox x:Name="PasteBox" Grid.Row="1" Classes="rev multi" AcceptsTab="True" FontSize="17" TextWrapping="NoWrap"
+                     AutomationProperties.Name="Cards to paste" />
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+                <Button Classes="rev secondary" MinHeight="54" Content="Cancel" Click="Cancel_Click" />
+                <Button x:Name="AddButton" Classes="rev teal" MinHeight="54" Margin="12,0,0,0"
+                        Content="Add 0 cards" IsEnabled="False" Click="Add_Click" ToolTip.Tip="Ctrl+Enter" />
+            </StackPanel>
+        </Grid>
+        <controls:DialogLayer />
+    </Panel>
+</Window>

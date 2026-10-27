@@ -1,0 +1,79 @@
+<!--
+    The Home screen: a greeting, today's numbers, and your decks as big colourful tiles.
+    Ctrl+N makes a new deck, Ctrl+F searches every card, Ctrl+, opens Settings.
+    On a deck tile: F2 renames, Delete deletes (or right-click).
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:controls="clr-namespace:Rev.Linux.Controls"
+             x:Class="Rev.Linux.Views.HomeView">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <!-- Content stays a comfortable width in the middle, even on a wide screen. -->
+        <StackPanel MaxWidth="900" Margin="{StaticResource PagePadding}">
+
+            <!-- Greeting and today's date, with the buttons on the right -->
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel>
+                    <TextBlock x:Name="GreetingText" Classes="heading" Text="Hi there 👋" />
+                    <TextBlock x:Name="DateText" Classes="muted" Margin="0,4,0,0" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Classes="rev secondary" MinHeight="48" Click="AllCards_Click"
+                            ToolTip.Tip="Search every card (Ctrl+F)" AutomationProperties.Name="All cards">
+                        <StackPanel Orientation="Horizontal">
+                            <mi:MaterialIcon Kind="Magnify" Width="16" Height="16" Margin="0,0,8,0" />
+                            <TextBlock Text="All cards" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="NewDeckButton" Classes="rev secondary" MinHeight="48" Margin="10,0,0,0"
+                            Click="NewDeck_Click" ToolTip.Tip="New deck (Ctrl+N)" AutomationProperties.Name="New deck">
+                        <StackPanel Orientation="Horizontal">
+                            <mi:MaterialIcon Kind="Plus" Width="16" Height="16" Margin="0,0,8,0" />
+                            <TextBlock Text="New deck" />
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="rev secondary round" Width="48" Height="48" Margin="10,0,0,0"
+                            Click="Stats_Click" ToolTip.Tip="Stats" AutomationProperties.Name="Stats">
+                        <mi:MaterialIcon Kind="ChartBar" Width="18" Height="18" />
+                    </Button>
+                    <Button Classes="rev secondary round" Width="48" Height="48" Margin="10,0,0,0"
+                            Click="Settings_Click" ToolTip.Tip="Settings (Ctrl+,)" AutomationProperties.Name="Settings">
+                        <mi:MaterialIcon Kind="CogOutline" Width="18" Height="18" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Today's numbers -->
+            <UniformGrid Columns="3" Margin="0,24,0,0">
+                <controls:StatTile x:Name="DueTile" Margin="0,0,8,0" Label="Due today"
+                                   Icon="ClockOutline" Tint="{DynamicResource TealBrush}" />
+                <controls:StatTile x:Name="NewTile" Margin="4,0,4,0" Label="New"
+                                   Icon="StarOutline" Tint="{DynamicResource CoralBrush}" />
+                <controls:StatTile x:Name="DoneTile" Margin="8,0,0,0" Label="Done today"
+                                   Icon="Check" Tint="{DynamicResource MustardBrush}" />
+            </UniformGrid>
+
+            <Button x:Name="ReviewAllButton" Classes="rev" Margin="0,14,0,0" HorizontalAlignment="Stretch"
+                    Click="ReviewAll_Click" AutomationProperties.Name="Review all decks">
+                <StackPanel Orientation="Horizontal">
+                    <mi:MaterialIcon Kind="Play" Width="20" Height="20" Margin="0,0,10,0" />
+                    <TextBlock Text="Review all decks" />
+                </StackPanel>
+            </Button>
+
+            <!-- Decks -->
+            <TextBlock Classes="title" Text="Your decks" Margin="0,30,0,14" />
+            <!-- Each tile has 7 px on each side; the grid's -7 px edges line the tiles up with the page. -->
+            <UniformGrid x:Name="DeckGrid" Columns="2" Margin="-7,0" />
+            <Border x:Name="EmptyState" Classes="card">
+                <StackPanel HorizontalAlignment="Center">
+                    <mi:MaterialIcon Kind="Bookshelf" Width="44" Height="44" Foreground="{DynamicResource TealBrush}" />
+                    <TextBlock Classes="heading" FontSize="22" Text="No decks yet" HorizontalAlignment="Center" Margin="0,12,0,0" />
+                    <TextBlock Classes="muted" TextAlignment="Center" Margin="0,6,0,0"
+                               Text="Click New deck to make your first one, or import an Anki deck in Settings." />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,258 @@
+<!--
+    Rev's look in one place: text styles, buttons, text boxes and choice pills.
+    A control gets a look by its classes, e.g. <Button Classes="rev teal"> or <TextBlock Classes="muted">.
+    Colours come from App.axaml ("DynamicResource" = look the colour up again when light/dark changes).
+-->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Every window: cream background, ink text. (The font, Nunito, is set for the whole app in Program.cs.) -->
+    <Style Selector="Window">
+        <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+
+    <!-- Text styles -->
+    <Style Selector="TextBlock.title">
+        <Setter Property="FontSize" Value="30" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
+    </Style>
+    <Style Selector="TextBlock.heading">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
+    </Style>
+    <Style Selector="TextBlock.body">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style Selector="TextBlock.muted">
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="Foreground" Value="{DynamicResource MutedInkBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <!-- The small grey heading above a text box, e.g. "Front" -->
+    <Style Selector="TextBlock.label">
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource MutedInkBrush}" />
+        <Setter Property="Margin" Value="4,0,0,8" />
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+    </Style>
+
+    <!-- A big round button, like "Review all decks". It shrinks a little while pressed and shows a
+         mustard ring when reached with the Tab key. Colour classes: secondary, danger, teal, mustard. -->
+    <Style Selector="Button.rev">
+        <Setter Property="Background" Value="{DynamicResource InkBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource BackgroundBrush}" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="MinHeight" Value="60" />
+        <Setter Property="Padding" Value="28,0" />
+        <Setter Property="CornerRadius" Value="999" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="Pill" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}"
+                        BorderBrush="{DynamicResource MustardBrush}" BorderThickness="0" Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                      Foreground="{TemplateBinding Foreground}" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <!-- Rev shows its own mustard ring for the keyboard, so Avalonia's square focus frame is switched off. -->
+    <Style Selector="Button.rev, RadioButton.choice">
+        <Setter Property="FocusAdorner" Value="{x:Null}" />
+    </Style>
+    <Style Selector="Button.rev:pointerover /template/ Border#Pill">
+        <Setter Property="Opacity" Value="0.9" />
+    </Style>
+    <Style Selector="Button.rev:focus-visible /template/ Border#Pill">
+        <Setter Property="BorderThickness" Value="3" />
+    </Style>
+    <Style Selector="Button.rev:pressed">
+        <Setter Property="RenderTransform" Value="scale(0.97)" />
+    </Style>
+    <Style Selector="Button.rev:disabled /template/ Border#Pill">
+        <Setter Property="Opacity" Value="0.4" />
+    </Style>
+
+    <Style Selector="Button.secondary">
+        <Setter Property="Background" Value="{DynamicResource SoftFillBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
+    </Style>
+    <Style Selector="Button.danger">
+        <Setter Property="Background" Value="{DynamicResource CoralBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource OnCoralBrush}" />
+    </Style>
+    <Style Selector="Button.teal">
+        <Setter Property="Background" Value="{DynamicResource TealBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource OnTealBrush}" />
+    </Style>
+    <Style Selector="Button.mustard">
+        <Setter Property="Background" Value="{DynamicResource MustardBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource OnMustardBrush}" />
+    </Style>
+
+    <!-- Sizes: a small pill (the card browser's filters), a round button with just a symbol,
+         and the four big answer tiles on the review screen. -->
+    <Style Selector="Button.chip">
+        <Setter Property="MinHeight" Value="40" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Padding" Value="16,0" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+    </Style>
+    <Style Selector="Button.round">
+        <Setter Property="Width" Value="46" />
+        <Setter Property="Height" Value="46" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+    <Style Selector="Button.rating">
+        <Setter Property="MinHeight" Value="80" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="CornerRadius" Value="24" />
+    </Style>
+    <Style Selector="Button.rating:pressed">
+        <Setter Property="RenderTransform" Value="scale(0.96)" />
+    </Style>
+
+    <!-- A row in a list of cards: a rounded card you can click. -->
+    <Style Selector="Button.cardrow">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
+        <Setter Property="CornerRadius" Value="22" />
+        <Setter Property="Padding" Value="20,14" />
+        <Setter Property="Margin" Value="0,0,0,10" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="Button.cardrow:pointerover">
+        <Setter Property="Background" Value="{DynamicResource SoftFillBrush}" />
+    </Style>
+    <Style Selector="Button.cardrow:pointerover /template/ Border#Pill">
+        <Setter Property="Opacity" Value="1" />
+    </Style>
+    <Style Selector="Button.cardrow:pressed">
+        <Setter Property="RenderTransform" Value="none" />
+    </Style>
+
+    <!-- A deck on the Home screen: a big coloured card (its colour is set per deck). -->
+    <Style Selector="Button.tile">
+        <Setter Property="CornerRadius" Value="{StaticResource Corner}" />
+        <Setter Property="Padding" Value="24,22" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="Button.tile /template/ Border#Pill">
+        <Setter Property="BorderBrush" Value="{DynamicResource InkBrush}" />
+    </Style>
+    <Style Selector="Button.tile:pointerover /template/ Border#Pill">
+        <Setter Property="Opacity" Value="0.93" />
+    </Style>
+
+    <!-- Text boxes: a soft rounded field with a teal ring while you type. The grey hint is the Watermark. -->
+    <Style Selector="TextBox.rev">
+        <Setter Property="Background" Value="{DynamicResource SoftFillBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource InkBrush}" />
+        <Setter Property="SelectionBrush" Value="{DynamicResource TealBrush}" />
+        <Setter Property="SelectionForegroundBrush" Value="{DynamicResource OnTealBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="18" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="Padding" Value="16,12" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBox.rev:pointerover /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="{DynamicResource SoftFillBrush}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="TextBox.rev:focus /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="{DynamicResource SoftFillBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource TealBrush}" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <Style Selector="TextBox.rev:pointerover, TextBox.rev:focus">
+        <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
+    </Style>
+    <Style Selector="TextBox.rev /template/ TextBlock#PART_Watermark, TextBox.rev:focus /template/ TextBlock#PART_Watermark">
+        <Setter Property="Foreground" Value="{DynamicResource MutedInkBrush}" />
+    </Style>
+    <!-- A tall text box for card text: Enter makes a new line, long text scrolls. -->
+    <Style Selector="TextBox.multi">
+        <Setter Property="AcceptsReturn" Value="True" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="FontSize" Value="19" />
+        <Setter Property="VerticalContentAlignment" Value="Top" />
+    </Style>
+
+    <!-- A choice shown as a pill, e.g. the card kinds. The chosen one turns teal. -->
+    <Style Selector="RadioButton.choice">
+        <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SoftFillBrush}" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="Pill" Background="{TemplateBinding Background}" Padding="18,10" CornerRadius="999"
+                        BorderBrush="{DynamicResource MustardBrush}" BorderThickness="0">
+                    <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center"
+                                      Foreground="{TemplateBinding Foreground}" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="RadioButton.choice:checked">
+        <Setter Property="Background" Value="{DynamicResource TealBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource OnTealBrush}" />
+    </Style>
+    <Style Selector="RadioButton.choice:focus-visible /template/ Border#Pill">
+        <Setter Property="BorderThickness" Value="3" />
+    </Style>
+
+    <!-- A rounded card on the page, e.g. a Settings section. -->
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="CornerRadius" Value="{StaticResource Corner}" />
+        <Setter Property="Padding" Value="28" />
+    </Style>
+
+    <!-- Right-click menus: a rounded card with roomy rows. -->
+    <Style Selector="ContextMenu">
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="Padding" Value="6" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="MaxHeight" Value="440" />
+    </Style>
+    <Style Selector="MenuItem">
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="14,9" />
+        <Setter Property="FontSize" Value="15" />
+    </Style>
+
+    <Style Selector="Slider">
+        <Setter Property="Foreground" Value="{DynamicResource TealBrush}" />
+    </Style>
+</Styles>

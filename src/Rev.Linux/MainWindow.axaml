@@ -1,0 +1,17 @@
+<!--
+    The main window. It shows one screen at a time: Home first, then e.g. a deck.
+    Going back (← button, Esc or Alt+Left) returns to the screen before.
+    Questions like "Delete this deck?" appear on the dialog layer on top.
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:Rev.Linux.Controls"
+        x:Class="Rev.Linux.MainWindow"
+        Icon="avares://Rev/Assets/AppIcon.png"
+        Title="Rev" Width="1040" Height="760" MinWidth="640" MinHeight="520"
+        WindowStartupLocation="CenterScreen">
+    <Panel>
+        <ContentControl x:Name="Screen" Focusable="False" />
+        <controls:DialogLayer />
+    </Panel>
+</Window>

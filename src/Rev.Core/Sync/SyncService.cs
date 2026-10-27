@@ -119,30 +119,71 @@ public sealed class SyncService(RevDatabase db, string folder, string statePath,
     }
 
     /// <summary>
-    /// The add-on's folder setting, to suggest the same folder: Anki keeps it in
-    /// %APPDATA%\Anki2\addons21\rev_sync\meta.json (if changed) or the add-on's config.json.
+    /// The add-on's folder setting, to suggest the same folder. Anki keeps it in its data folder under
+    /// addons21/rev_sync, in meta.json (if you changed it) or the add-on's config.json.
     /// </summary>
     public static string? FolderFromAnkiAddon()
     {
-        string addon = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Anki2", "addons21", "rev_sync");
-        foreach (var (file, inConfig) in new[] { ("meta.json", true), ("config.json", false) })
+        string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        foreach (string anki in AnkiDataFolders(home, Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                                                Environment.GetEnvironmentVariable("XDG_DATA_HOME"), OperatingSystem.IsWindows()))
         {
-            try
+            string addon = Path.Combine(anki, "addons21", "rev_sync");
+            foreach (var (file, inConfig) in new[] { ("meta.json", true), ("config.json", false) })
             {
-                string path = Path.Combine(addon, file);
-                if (!File.Exists(path)) continue;
-                using var doc = JsonDocument.Parse(File.ReadAllText(path));
-                var root = doc.RootElement;
-                if (inConfig && !root.TryGetProperty("config", out root)) continue;
-                if (root.TryGetProperty("sync_folder", out var value) && value.GetString() is { Length: > 0 } folder)
-                    return Environment.ExpandEnvironmentVariables(folder);
+                try
+                {
+                    string path = Path.Combine(addon, file);
+                    if (!File.Exists(path)) continue;
+                    using var doc = JsonDocument.Parse(File.ReadAllText(path));
+                    var root = doc.RootElement;
+                    if (inConfig && !root.TryGetProperty("config", out root)) continue;
+                    if (root.TryGetProperty("sync_folder", out var value) && value.GetString() is { Length: > 0 } folder
+                        && ExpandPath(folder, home, OperatingSystem.IsWindows()) is { } expanded)
+                        return expanded;
+                }
+                catch (Exception error) when (error is JsonException or IOException or UnauthorizedAccessException) { }
             }
-            catch (Exception error) when (error is JsonException or IOException or UnauthorizedAccessException) { }
         }
         return null;
     }
 
-    /// <summary>Where iCloud for Windows usually keeps the "Rev Sync" folder.</summary>
-    public static string UsualFolder =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "iCloudDrive", "Rev Sync");
+    /// <summary>
+    /// Where Anki keeps its data: %APPDATA%\Anki2 on Windows; on Linux ~/.local/share/Anki2 (or under
+    /// $XDG_DATA_HOME), or the Flatpak's own folder if Anki was installed from Flathub.
+    /// </summary>
+    public static IEnumerable<string> AnkiDataFolders(string home, string appData, string? xdgDataHome, bool windows)
+    {
+        if (windows)
+        {
+            yield return Path.Combine(appData, "Anki2");
+            yield break;
+        }
+        yield return Path.Combine(xdgDataHome is { Length: > 0 } xdg ? xdg : Path.Combine(home, ".local", "share"), "Anki2");
+        yield return Path.Combine(home, ".var", "app", "net.ankiweb.Anki", "data", "Anki2");
+        yield return Path.Combine(home, "Library", "Application Support", "Anki2");   // a Mac
+    }
+
+    /// <summary>
+    /// A folder as the add-on's setting writes it, as a real path: "%USERPROFILE%\iCloudDrive\Rev Sync" on
+    /// Windows; "~/Rev Sync" or "$HOME/Rev Sync" on Linux. Null for a Windows-style setting on Linux (the
+    /// add-on's original default), which can't be the folder there.
+    /// </summary>
+    public static string? ExpandPath(string folder, string home, bool windows)
+    {
+        if (windows) return Environment.ExpandEnvironmentVariables(folder);
+        string path = folder.Trim();
+        if (path == "~" || path.StartsWith("~/")) path = home + path[1..];
+        path = path.Replace("${HOME}", home).Replace("$HOME", home);
+        return path.Contains('%') || path.Contains('\\') || !Path.IsPathRooted(path) ? null : path;
+    }
+
+    /// <summary>
+    /// The folder to suggest when nothing is set up: where iCloud for Windows keeps "Rev Sync", or on Linux
+    /// (which has no iCloud) a "Rev Sync" folder in your home folder.
+    /// </summary>
+    public static string UsualFolder => UsualFolderFor(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), OperatingSystem.IsWindows());
+
+    public static string UsualFolderFor(string home, bool windows) =>
+        windows ? Path.Combine(home, "iCloudDrive", "Rev Sync") : Path.Combine(home, "Rev Sync");
 }

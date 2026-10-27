@@ -1,0 +1,59 @@
+<!--
+    Your progress: cards due today, your streak, today's numbers, and a chart of the last 7 days.
+    Esc goes back.
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:controls="clr-namespace:Rev.Linux.Controls"
+             x:Class="Rev.Linux.Views.StatsView">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="900" Margin="{StaticResource PagePadding}">
+            <Grid ColumnDefinitions="Auto,*">
+                <Button Classes="rev secondary round" Click="Back_Click" ToolTip.Tip="Back (Esc)"
+                        AutomationProperties.Name="Back" VerticalAlignment="Center">
+                    <mi:MaterialIcon Kind="ArrowLeft" Width="18" Height="18" />
+                </Button>
+                <TextBlock Grid.Column="1" Classes="title" Text="Your progress" Margin="16,0,0,0" VerticalAlignment="Center" />
+            </Grid>
+
+            <!-- The big number, and the streak badge -->
+            <Grid Margin="4,24,0,0" ColumnDefinitions="*,Auto">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="DueNumber" FontSize="84" FontWeight="ExtraBold" Foreground="{DynamicResource InkBrush}"
+                               Margin="0,-10,0,-8" />
+                    <TextBlock x:Name="DueLabel" Classes="muted" FontSize="18" FontWeight="SemiBold" />
+                </StackPanel>
+                <Border x:Name="StreakBadge" Grid.Column="1" Width="124" Height="124" CornerRadius="62"
+                        Background="{DynamicResource CoralBrush}">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <!-- A little flame, drawn as a shape -->
+                        <Path Width="22" Height="26" Stretch="Uniform" Fill="{DynamicResource OnCoralBrush}" HorizontalAlignment="Center"
+                              Data="M12,1 C13,5 18,8 18,14 C18,18 15.5,21 12,21 C8.5,21 6,18 6,14.5 C6,11.5 7.5,9.5 9,8.5 C9,11 10,12.5 11.5,13 C11,9 11,5 12,1 Z" />
+                        <TextBlock x:Name="StreakNumber" FontSize="32" FontWeight="ExtraBold" HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource OnCoralBrush}" Margin="0,-2,0,-4" />
+                        <TextBlock x:Name="StreakLabel" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource OnCoralBrush}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <UniformGrid Columns="3" Margin="0,26,0,0">
+                <controls:StatTile x:Name="ReviewedTile" Margin="0,0,8,0" Label="Reviewed today"
+                                   Icon="Check" Tint="{DynamicResource TealBrush}" />
+                <controls:StatTile x:Name="NewTile" Margin="4,0,4,0" Label="New cards"
+                                   Icon="StarOutline" Tint="{DynamicResource CoralBrush}" />
+                <controls:StatTile x:Name="TotalTile" Margin="8,0,0,0" Label="Total cards"
+                                   Icon="CardsOutline" Tint="{DynamicResource MustardBrush}" />
+            </UniformGrid>
+
+            <!-- Last 7 days -->
+            <Border Classes="card" Margin="0,18,0,0" Padding="28,24">
+                <StackPanel>
+                    <TextBlock Classes="heading" FontSize="20" Text="Last 7 days" />
+                    <UniformGrid x:Name="Chart" Columns="7" Rows="1" Height="230" Margin="0,16,0,0" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

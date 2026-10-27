@@ -1,0 +1,106 @@
+<!--
+    The app's colours, shapes and styles. Light and dark colours have the same names; Avalonia picks the
+    set that matches your Linux desktop's light/dark setting (and switches when you change it).
+    Screens never use a colour directly: they ask for a name like "InkBrush" with DynamicResource.
+-->
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="Rev.Linux.App"
+             Name="Rev"
+             RequestedThemeVariant="Default">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <!-- The same colours as Rev for Windows and Rev on iPhone -->
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="BackgroundBrush" Color="#FBF6E3" />
+                    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFDF4" />
+                    <SolidColorBrush x:Key="SoftFillBrush" Color="#EEEFD8" />
+                    <SolidColorBrush x:Key="InkBrush" Color="#1F1B16" />
+                    <SolidColorBrush x:Key="MutedInkBrush" Color="#6F695C" />
+                    <SolidColorBrush x:Key="CoralBrush" Color="#E96F8A" />
+                    <SolidColorBrush x:Key="TealBrush" Color="#4A9886" />
+                    <SolidColorBrush x:Key="MustardBrush" Color="#F4B53F" />
+                    <SolidColorBrush x:Key="SageBrush" Color="#D3E4C8" />
+                    <SolidColorBrush x:Key="DarkTextBrush" Color="#1F1B16" />
+                    <SolidColorBrush x:Key="OnCoralBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="OnTealBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="OnMustardBrush" Color="#1F1B16" />
+                    <SolidColorBrush x:Key="OnSageBrush" Color="#1F1B16" />
+                    <SolidColorBrush x:Key="ShadeBrush" Color="#661F1B16" />
+                    <!-- Avalonia's own controls (sliders, menus, tooltips) in Rev's colours -->
+                    <Color x:Key="SystemAccentColor">#4A9886</Color>
+                    <Color x:Key="SystemAccentColorDark1">#3F8474</Color>
+                    <Color x:Key="SystemAccentColorLight1">#5CAA98</Color>
+                    <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#FFFDF4" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#EEEFD8" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#EEEFD8" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemForeground" Color="#1F1B16" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemForegroundPointerOver" Color="#1F1B16" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForeground" Color="#6F695C" />
+                    <SolidColorBrush x:Key="ToolTipBackground" Color="#1F1B16" />
+                    <SolidColorBrush x:Key="ToolTipForeground" Color="#FBF6E3" />
+                    <SolidColorBrush x:Key="SliderThumbBackground" Color="#4A9886" />
+                    <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="#4A9886" />
+                    <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="#4A9886" />
+                    <SolidColorBrush x:Key="SliderTrackValueFill" Color="#4A9886" />
+                    <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="#4A9886" />
+                    <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="#4A9886" />
+                    <SolidColorBrush x:Key="SliderTrackFill" Color="#EEEFD8" />
+                    <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="#EEEFD8" />
+                    <SolidColorBrush x:Key="SliderTrackFillPressed" Color="#EEEFD8" />
+                </ResourceDictionary>
+                <!-- Coral, teal and mustard are tuned slightly for dark backgrounds, as on the iPhone -->
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="BackgroundBrush" Color="#181714" />
+                    <SolidColorBrush x:Key="SurfaceBrush" Color="#24231F" />
+                    <SolidColorBrush x:Key="SoftFillBrush" Color="#302F29" />
+                    <SolidColorBrush x:Key="InkBrush" Color="#F5F1E3" />
+                    <SolidColorBrush x:Key="MutedInkBrush" Color="#A8A393" />
+                    <SolidColorBrush x:Key="CoralBrush" Color="#E47C93" />
+                    <SolidColorBrush x:Key="TealBrush" Color="#58AA97" />
+                    <SolidColorBrush x:Key="MustardBrush" Color="#E8AE45" />
+                    <SolidColorBrush x:Key="SageBrush" Color="#3E5A4D" />
+                    <SolidColorBrush x:Key="DarkTextBrush" Color="#1F1B16" />
+                    <SolidColorBrush x:Key="OnCoralBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="OnTealBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="OnMustardBrush" Color="#1F1B16" />
+                    <SolidColorBrush x:Key="OnSageBrush" Color="#F5F1E3" />
+                    <SolidColorBrush x:Key="ShadeBrush" Color="#99000000" />
+                    <Color x:Key="SystemAccentColor">#58AA97</Color>
+                    <Color x:Key="SystemAccentColorDark1">#4A9886</Color>
+                    <Color x:Key="SystemAccentColorLight1">#6BBBA8</Color>
+                    <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#24231F" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#302F29" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#302F29" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemForeground" Color="#F5F1E3" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemForegroundPointerOver" Color="#F5F1E3" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForeground" Color="#A8A393" />
+                    <SolidColorBrush x:Key="ToolTipBackground" Color="#F5F1E3" />
+                    <SolidColorBrush x:Key="ToolTipForeground" Color="#181714" />
+                    <SolidColorBrush x:Key="SliderThumbBackground" Color="#58AA97" />
+                    <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="#58AA97" />
+                    <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="#58AA97" />
+                    <SolidColorBrush x:Key="SliderTrackValueFill" Color="#58AA97" />
+                    <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="#58AA97" />
+                    <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="#58AA97" />
+                    <SolidColorBrush x:Key="SliderTrackFill" Color="#302F29" />
+                    <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="#302F29" />
+                    <SolidColorBrush x:Key="SliderTrackFillPressed" Color="#302F29" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <!-- Shapes and spacing -->
+            <CornerRadius x:Key="Corner">30</CornerRadius>
+            <CornerRadius x:Key="TileCorner">24</CornerRadius>
+            <Thickness x:Key="PagePadding">32,28,32,32</Thickness>
+        </ResourceDictionary>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+        <mi:MaterialIconStyles />
+        <StyleInclude Source="avares://Rev/Theme/Styles.axaml" />
+    </Application.Styles>
+</Application>

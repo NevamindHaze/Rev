@@ -1,0 +1,71 @@
+<!--
+    Inside a deck: its numbers, a big Study button, ways to add cards, and the card list.
+    Keys: Ctrl+N adds a card, Ctrl+F searches, Esc (or Alt+Left) goes back. Click a card to edit it.
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:controls="clr-namespace:Rev.Linux.Controls"
+             x:Class="Rev.Linux.Views.DeckView">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="900" Margin="{StaticResource PagePadding}">
+
+            <!-- ← and the deck's name -->
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Button Classes="rev secondary round" Click="Back_Click" ToolTip.Tip="Back (Esc)"
+                        AutomationProperties.Name="Back" VerticalAlignment="Center">
+                    <mi:MaterialIcon Kind="ArrowLeft" Width="18" Height="18" />
+                </Button>
+                <TextBlock x:Name="DeckName" Grid.Column="1" Classes="title" Margin="16,0,12,0"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                <Button Grid.Column="2" Classes="rev secondary" MinHeight="46" Padding="20,0" VerticalAlignment="Center"
+                        Click="Export_Click" ToolTip.Tip="Save this deck as an Anki .apkg file"
+                        AutomationProperties.Name="Export to Anki">
+                    <StackPanel Orientation="Horizontal">
+                        <mi:MaterialIcon Kind="Export" Width="16" Height="16" Margin="0,0,8,0" />
+                        <TextBlock Text="Export to Anki" FontSize="16" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- The deck's numbers -->
+            <UniformGrid Columns="3" Margin="0,24,0,0">
+                <controls:StatTile x:Name="CardsTile" Margin="0,0,8,0" Label="Cards"
+                                   Icon="CardsOutline" Tint="{DynamicResource MustardBrush}" />
+                <controls:StatTile x:Name="DueTile" Margin="4,0,4,0" Label="Due today"
+                                   Icon="ClockOutline" Tint="{DynamicResource TealBrush}" />
+                <controls:StatTile x:Name="NewTile" Margin="8,0,0,0" Label="New"
+                                   Icon="StarOutline" Tint="{DynamicResource CoralBrush}" />
+            </UniformGrid>
+
+            <Button Classes="rev" Margin="0,14,0,0" MinHeight="64" HorizontalAlignment="Stretch" Click="Study_Click"
+                    AutomationProperties.Name="Study now">
+                <StackPanel Orientation="Horizontal">
+                    <mi:MaterialIcon Kind="Play" Width="20" Height="20" Margin="0,0,10,0" />
+                    <TextBlock Text="Study now" />
+                </StackPanel>
+            </Button>
+
+            <UniformGrid Columns="2" Margin="0,12,0,0">
+                <Button x:Name="AddCardButton" Classes="rev teal" Margin="0,0,6,0" HorizontalAlignment="Stretch"
+                        Click="AddCard_Click" ToolTip.Tip="Add card (Ctrl+N)" AutomationProperties.Name="Add card">
+                    <StackPanel Orientation="Horizontal">
+                        <mi:MaterialIcon Kind="Plus" Width="18" Height="18" Margin="0,0,10,0" />
+                        <TextBlock Text="Add card" />
+                    </StackPanel>
+                </Button>
+                <Button Classes="rev mustard" Margin="6,0,0,0" HorizontalAlignment="Stretch" Click="PasteMany_Click"
+                        AutomationProperties.Name="Paste many">
+                    <StackPanel Orientation="Horizontal">
+                        <mi:MaterialIcon Kind="ContentPaste" Width="18" Height="18" Margin="0,0,10,0" />
+                        <TextBlock Text="Paste many" />
+                    </StackPanel>
+                </Button>
+            </UniformGrid>
+
+            <TextBlock Classes="heading" Text="Cards" Margin="4,32,0,12" />
+            <TextBlock x:Name="EmptyText" Classes="muted" Margin="4,0,0,0" Text="No cards yet. Click “Add card” to start." />
+            <controls:CardBrowser x:Name="Browser" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
