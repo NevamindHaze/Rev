@@ -208,48 +208,6 @@
         <Setter Property="Padding" Value="14,0" />
     </Style>
 
-    <!-- A row in a list of cards: a rounded card you can click. -->
-    <Style Selector="Button.cardrow">
-        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
-        <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
-        <Setter Property="CornerRadius" Value="22" />
-        <Setter Property="Padding" Value="20,14" />
-        <Setter Property="Margin" Value="0,0,0,10" />
-        <Setter Property="MinHeight" Value="0" />
-        <Setter Property="FontSize" Value="16" />
-        <Setter Property="FontWeight" Value="Normal" />
-        <Setter Property="HorizontalAlignment" Value="Stretch" />
-        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        <Setter Property="VerticalContentAlignment" Value="Stretch" />
-    </Style>
-    <Style Selector="Button.cardrow:pointerover">
-        <Setter Property="Background" Value="{DynamicResource SoftFillBrush}" />
-    </Style>
-    <Style Selector="Button.cardrow:pointerover /template/ Border#Pill">
-        <Setter Property="Opacity" Value="1" />
-    </Style>
-    <Style Selector="Button.cardrow:pressed">
-        <Setter Property="RenderTransform" Value="none" />
-    </Style>
-
-    <!-- A deck on the Home screen: a big coloured card (its colour is set per deck). -->
-    <Style Selector="Button.tile">
-        <Setter Property="CornerRadius" Value="{StaticResource Corner}" />
-        <Setter Property="Padding" Value="24,22" />
-        <Setter Property="MinHeight" Value="0" />
-        <Setter Property="FontWeight" Value="Normal" />
-        <Setter Property="FontSize" Value="16" />
-        <Setter Property="HorizontalAlignment" Value="Stretch" />
-        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        <Setter Property="VerticalContentAlignment" Value="Stretch" />
-    </Style>
-    <Style Selector="Button.tile /template/ Border#Pill">
-        <Setter Property="BorderBrush" Value="{DynamicResource InkBrush}" />
-    </Style>
-    <Style Selector="Button.tile:pointerover /template/ Border#Pill">
-        <Setter Property="Opacity" Value="0.93" />
-    </Style>
-
     <!-- Text boxes: a soft rounded field with a teal ring while you type. The grey hint is the Watermark. -->
     <Style Selector="TextBox.rev">
         <Setter Property="Background" Value="{DynamicResource SoftFillBrush}" />

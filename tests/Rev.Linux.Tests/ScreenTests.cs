@@ -1,4 +1,6 @@
+using Avalonia;
 using Avalonia.Automation;
+using Avalonia.VisualTree;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Headless.XUnit;
@@ -486,10 +488,50 @@ public sealed class ScreenTests : ScreenTest
             Settle();
             Press(Key.Space);
             Picture(Window, "18-review-dark");
+            Window.ShowDeck(Parasitology);
+            Settle();
+            Picture(Window, "18a-deck-dark");
+            Press(Key.D3, KeyModifiers.Control);
+            Picture(Window, "18b-stats-dark");
+            Press(Key.OemComma, KeyModifiers.Control);
+            Picture(Window, "18c-settings-dark");
         }
         finally
         {
             Avalonia.Application.Current!.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Light;
+        }
+    }
+
+    [AvaloniaFact]
+    public void NarrowWindowFitsEverything()
+    {
+        AddSampleDecks();
+        Db.AddDeck("Clinical pathology and laboratory diagnostics", DateTime.Now);
+        Window.Width = 900;
+        Window.Height = 600;
+        Settle();
+        var sidebar = All<Sidebar>(Window).Single();
+        foreach (var text in All<TextBlock>(sidebar).Where(t => t.IsEffectivelyVisible))
+        {
+            var right = text.TranslatePoint(new Point(text.Bounds.Width, 0), sidebar)!.Value.X;
+            Assert.True(right <= sidebar.Bounds.Width + 0.5, $"“{text.Text}” runs past the sidebar");
+        }
+        Picture(Window, "30-narrow-home");
+        Press(Key.D2, KeyModifiers.Control); Picture(Window, "31-narrow-all-cards");
+        Press(Key.D3, KeyModifiers.Control); Picture(Window, "32-narrow-stats");
+        Press(Key.OemComma, KeyModifiers.Control); Picture(Window, "33-narrow-settings");
+        Window.ShowDeck(Pharmacology); Settle(); Picture(Window, "34-narrow-deck");
+        Window.Open(new ReviewView(Pharmacology)); Settle(); Press(Key.Space); Picture(Window, "35-narrow-review");
+        // The "4 new · 0 learning · 0 review" counts stop before the Undo button instead of running under it.
+        var review = CurrentScreen!;
+        var undo = Find<Button>(review, "Undo");
+        var undoLeft = undo.TranslatePoint(new Point(0, 0), review)!.Value.X;
+        foreach (var count in All<TextBlock>(review).Where(t => t.IsEffectivelyVisible && t.Text is { } x && x.EndsWith(" review")))
+        {
+            var clip = count.GetVisualAncestors().OfType<Control>().First(c => c.ClipToBounds);
+            var visibleRight = Math.Min(count.TranslatePoint(new Point(count.Bounds.Width, 0), review)!.Value.X,
+                                        clip.TranslatePoint(new Point(clip.Bounds.Width, 0), review)!.Value.X);
+            Assert.True(visibleRight <= undoLeft, $"“{count.Text}” runs under Undo");
         }
     }
 }

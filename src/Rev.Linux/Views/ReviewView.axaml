@@ -13,10 +13,11 @@
 
         <!-- What you're studying and how much is left, with Undo, Edit and Stop -->
         <Grid ColumnDefinitions="Auto,*,Auto">
-            <TextBlock x:Name="TitleText" Classes="heading" Margin="0,0,14,0" MaxWidth="420"
+            <TextBlock x:Name="TitleText" Classes="heading" Margin="0,0,14,0" MaxWidth="320"
                        VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
             <!-- 3 new · 2 learning · 5 review -->
-            <StackPanel x:Name="CountsPanel" Grid.Column="1" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center" />
+            <StackPanel x:Name="CountsPanel" Grid.Column="1" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center"
+                        ClipToBounds="True" Margin="0,0,8,0" />
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
                 <Button x:Name="UndoButton" Classes="rev toolbar"
                         Click="Undo_Click" ToolTip.Tip="Undo the last answer (Ctrl+Z)" AutomationProperties.Name="Undo" Focusable="False">
