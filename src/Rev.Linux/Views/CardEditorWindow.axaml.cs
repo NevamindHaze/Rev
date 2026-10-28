@@ -21,7 +21,7 @@ public partial class CardEditorWindow : Window
 
     private CardKind kind = CardKind.Basic;
     private List<Card> allCards;          // for tag suggestions
-    private TextBox lastTextBox;          // where Bold / Italic apply
+    private CardTextBox lastTextBox;          // where Bold / Italic apply
     private int addedCount;
     private bool closingChecked;          // so the "discard?" question is asked only once
     private bool ready;                   // false while the window is being filled in
@@ -87,8 +87,8 @@ public partial class CardEditorWindow : Window
         };
     }
 
-    private string Front => FrontBox.Text ?? "";
-    private string Back => BackBox.Text ?? "";
+    private string Front => FrontBox.Text;
+    private string Back => BackBox.Text;
     private string TagsText => TagsBox.Text ?? "";
 
     // ---- What the window shows ----
@@ -200,13 +200,9 @@ public partial class CardEditorWindow : Window
     private void ApplyFormat(string marker)
     {
         var box = lastTextBox;
-        int start = Math.Min(box.SelectionStart, box.SelectionEnd);
-        int length = Math.Abs(box.SelectionEnd - box.SelectionStart);
-        var (text, newStart, newLength) = TextTools.ToggleFormat(box.Text ?? "", marker, start, length);
-        box.Text = text;
+        var (text, newStart, newLength) = TextTools.ToggleFormat(box.Text, marker, box.SelectionStart, box.SelectionLength);
+        box.ReplaceText(text, newStart, newLength);
         box.Focus();
-        box.SelectionStart = newStart;
-        box.SelectionEnd = newStart + newLength;
     }
 
     // ---- Cloze helper ----
@@ -294,8 +290,7 @@ public partial class CardEditorWindow : Window
     {
         if (DialogLayer.For(this) is { IsShowing: true }) return;   // the question on top has the keys
         bool ctrl = e.KeyModifiers == KeyModifiers.Control;
-        var focused = FocusManager?.GetFocusedElement();
-        bool inCardText = focused == FrontBox || focused == BackBox;
+        bool inCardText = FrontBox.IsTyping || BackBox.IsTyping;
         if (ctrl && e.Key == Key.Enter) Primary_Click(this, e);
         else if (ctrl && e.Key == Key.B && inCardText) ApplyFormat("**");
         else if (ctrl && e.Key == Key.I && inCardText) ApplyFormat("*");

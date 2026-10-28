@@ -16,6 +16,18 @@ public abstract record CardLine
 /// <summary>A piece of text with its formatting, e.g. ("Toxocara", Bold: false, Italic: true).</summary>
 public sealed record TextSpan(string Value, bool Bold, bool Italic);
 
+/// <summary>Where a ** or * marker is in a line.</summary>
+public readonly record struct MarkerRange(int Start, int Length)
+{
+    public int End => Start + Length;
+}
+
+/// <summary>A bold and/or italic stretch of a line, by position (without its markers).</summary>
+public sealed record FormatRange(int Start, int Length, bool Bold, bool Italic);
+
+/// <summary>The formatted stretches of a line and the ** / * markers around them (outer ones first).</summary>
+public sealed record FormatLayout(List<FormatRange> Styled, List<MarkerRange> Markers);
+
 /// <summary>
 /// Understands the simple structure inside card text: list items, image markers ([img:heart.jpg]),
 /// blank lines, and **bold** / *italic* markers.
@@ -60,6 +72,31 @@ public static partial class CardText
         }
         if (position < line.Length) spans.Add(new TextSpan(line[position..], bold, italic));
         return spans;
+    }
+
+    /// <summary>
+    /// Where the formatting is in one line, by position: the bold and italic parts, and the ** / * markers
+    /// around them. The editor uses this to show the parts formatted and hide the markers.
+    /// </summary>
+    public static FormatLayout Layout(string line)
+    {
+        var layout = new FormatLayout([], []);
+        AddLayout(line, 0, false, false, layout);
+        return layout;
+    }
+
+    private static void AddLayout(string line, int offset, bool bold, bool italic, FormatLayout layout)
+    {
+        foreach (Match match in FormatPattern().Matches(line))
+        {
+            bool isBold = match.Groups[1].Success;
+            var inner = isBold ? match.Groups[1] : match.Groups[2];
+            int size = isBold ? 2 : 1;
+            layout.Markers.Add(new MarkerRange(offset + match.Index, size));
+            layout.Markers.Add(new MarkerRange(offset + match.Index + match.Length - size, size));
+            layout.Styled.Add(new FormatRange(offset + inner.Index, inner.Length, bold || isBold, italic || !isBold));
+            AddLayout(inner.Value, offset + inner.Index, bold || isBold, italic || !isBold, layout);
+        }
     }
 
     /// <summary>Short one-line text for lists, with image markers shown as a picture symbol.</summary>

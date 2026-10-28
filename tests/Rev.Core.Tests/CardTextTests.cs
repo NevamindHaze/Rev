@@ -58,6 +58,26 @@ public class TextToolsTests
     }
 
     [Fact]
+    public void PressingBoldWithTheMarkersSelectedRemovesIt()
+    {
+        var (text, start, length) = TextTools.ToggleFormat("the **heart** rate", "**", 4, 9);
+        Assert.Equal("the heart rate", text);
+        Assert.Equal((4, 5), (start, length));
+    }
+
+    [Fact]
+    public void PressingItalicOnABoldWordKeepsItBold() =>
+        Assert.Contains("**", TextTools.ToggleFormat("the **heart** rate", "*", 6, 5).Text);
+
+    [Fact]
+    public void LayoutFindsTheFormattedPartsAndTheirMarkers()
+    {
+        var layout = CardText.Layout("a **b *c* d** e");
+        Assert.Equal([new MarkerRange(2, 2), new MarkerRange(11, 2), new MarkerRange(6, 1), new MarkerRange(8, 1)], layout.Markers);
+        Assert.Equal([new FormatRange(4, 7, true, false), new FormatRange(7, 1, true, true)], layout.Styled);
+    }
+
+    [Fact]
     public void ItalicUsesOneStar() =>
         Assert.Equal("*Fasciola* hepatica", TextTools.ToggleFormat("Fasciola hepatica", "*", 0, 8).Text);
 
