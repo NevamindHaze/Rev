@@ -42,8 +42,7 @@
                             </Button>
                         </StackPanel>
                     </Grid>
-                    <TextBox x:Name="FrontBox" Classes="rev multi" MinHeight="100" MaxHeight="260"
-                             AutomationProperties.Name="Front" />
+                    <controls:CardTextBox x:Name="FrontBox" MinHeight="100" MaxHeight="260" AutomationProperties.Name="Front" />
 
                     <!-- Cloze helper: type a word, click Hide -->
                     <StackPanel x:Name="ClozeTools" Margin="0,12,0,0" IsVisible="False">
@@ -58,7 +57,7 @@
                     </StackPanel>
 
                     <TextBlock x:Name="BackLabel" Classes="label" Text="Back" Margin="4,20,0,8" />
-                    <TextBox x:Name="BackBox" Classes="rev multi" MinHeight="150" MaxHeight="320" AutomationProperties.Name="Back" />
+                    <controls:CardTextBox x:Name="BackBox" MinHeight="150" MaxHeight="320" AutomationProperties.Name="Back" />
                     <TextBlock Classes="muted" FontSize="13" Margin="4,8,0,0"
                                Text="Select words, then press Ctrl+B or Ctrl+I (or click B / I) for bold or italic. Start a line with • or 1. for a list." />
 

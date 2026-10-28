@@ -181,7 +181,7 @@ public sealed class ScreenTests : ScreenTest
         All<RadioButton>(editor!).First(r => (string?)r.Tag == "Basic").IsChecked = true;
         Settle();
         Type("Normal canine heart rate?", editor);
-        Find<TextBox>(editor!, "Back").Focus();
+        Find<CardTextBox>(editor!, "Back").Focus();
         Settle();
         Type("60–160 bpm", editor);
         Picture(editor!, "11-editor");
@@ -189,7 +189,45 @@ public sealed class ScreenTests : ScreenTest
         Press(Key.Enter, KeyModifiers.Control, editor);   // Save & next
         Assert.Equal(before + 1, Db.GetCards(Pharmacology.Id).Count);
         Assert.Contains("1 card added so far", Texts(editor!));
-        Assert.Equal("", Find<TextBox>(editor!, "Front").Text);
+        Assert.Equal("", Find<CardTextBox>(editor!, "Front").Text);
+    }
+
+    [AvaloniaFact]
+    public void BoldAndItalicShowAsYouTypeWithTheStarsHidden()
+    {
+        AddSampleDecks();
+        var editor = new CardEditorWindow(Parasitology, null);
+        editor.Show(Window);
+        Settle();
+        var front = Find<CardTextBox>(editor, "Front");
+        front.Focus();
+        Type("Toxocara canis eggs", editor);
+        front.Select(0, 14);
+        Press(Key.I, KeyModifiers.Control, editor);
+        Assert.Equal("*Toxocara canis* eggs", front.Text);
+        front.Select(17, 4);
+        Press(Key.B, KeyModifiers.Control, editor);
+        Assert.Equal("*Toxocara canis* **eggs**", front.Text);
+
+        // The arrow keys step over the hidden stars: one press, one letter you can see.
+        front.Select(0, 0);
+        Press(Key.Right, KeyModifiers.None, editor);
+        Type("X", editor);
+        Assert.Equal("*TXoxocara canis* **eggs**", front.Text);   // typed inside the italic
+
+        // Backspace at the very end takes the last letter, not a hidden star, and an emptied word loses its stars.
+        front.Select(front.Text.Length, 0);
+        for (int i = 0; i < 4; i++) Press(Key.Back, KeyModifiers.None, editor);
+        Assert.Equal("*TXoxocara canis* ", front.Text);
+
+        // Selecting the words with their (hidden) stars and pressing Italic takes the italic off.
+        front.Select(0, 17);
+        Press(Key.I, KeyModifiers.Control, editor);
+        Assert.Equal("TXoxocara canis ", front.Text);
+
+        front.Text = "*Toxocara canis* eggs are **very** sticky";
+        Settle();
+        Picture(editor, "12a-editor-formatting");
     }
 
     [AvaloniaFact]
@@ -201,11 +239,11 @@ public sealed class ScreenTests : ScreenTest
         Settle();
         All<RadioButton>(editor).First(r => (string?)r.Tag == "Cloze").IsChecked = true;
         Settle();
-        Find<TextBox>(editor, "Front").Text = "Toxocara canis eggs need weeks to embryonate";
+        Find<CardTextBox>(editor, "Front").Text = "Toxocara canis eggs need weeks to embryonate";
         Find<TextBox>(editor, "Word to hide").Text = "weeks";
         Settle();
         Click(All<Button>(editor).First(b => b.Content as string == "Hide c1"));
-        Assert.Equal("Toxocara canis eggs need {{c1::weeks}} to embryonate", Find<TextBox>(editor, "Front").Text);
+        Assert.Equal("Toxocara canis eggs need {{c1::weeks}} to embryonate", Find<CardTextBox>(editor, "Front").Text);
         Assert.Contains("This makes 1 card.", Texts(editor));
         Picture(editor, "12-editor-cloze");
     }

@@ -28,6 +28,8 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.22" />
     <!-- Icons drawn as shapes, so they look the same on every Linux (Windows' icon font isn't there). -->
     <PackageReference Include="Material.Icons.Avalonia" Version="2.4.0" />
+    <!-- The card text boxes in the editor, which show bold and italic as you type. -->
+    <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.3.0" />
   </ItemGroup>
 
   <ItemGroup>

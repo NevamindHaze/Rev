@@ -101,6 +101,7 @@
     <Application.Styles>
         <FluentTheme />
         <mi:MaterialIconStyles />
+        <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
         <StyleInclude Source="avares://Rev/Theme/Styles.axaml" />
     </Application.Styles>
 </Application>

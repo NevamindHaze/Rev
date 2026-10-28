@@ -1,5 +1,7 @@
 What's new
 
+• On Linux, bold and italic show while you edit a card: select words, press Ctrl+B or Ctrl+I, and they turn bold or italic right away, with the stars hidden. The arrow keys, Backspace and Delete step over the hidden stars, and Ctrl+Z undoes.
+• Pressing Italic on a bold word (or Bold on an italic one) no longer swaps one for the other.
 • Custom study is clearer: each option now shows how many cards it would pick, so you can see at a glance which one has something to study.
 • It opens on the first option that has cards. In a deck with no new cards left, that's "Study by tag", which goes over every card when you don't pick a tag.
 • When an option finds nothing, it tells you why, for example "There are no new cards left in this deck" or "The next card is due in 21 days".

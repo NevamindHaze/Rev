@@ -14,14 +14,21 @@ public static class TextTools
     {
         int end = start + length;
         int size = marker.Length;
-        bool markedBefore = start >= size && text.Substring(start - size, size) == marker;
-        bool markedAfter = end + size <= text.Length && text.Substring(end, size) == marker;
 
-        if (markedBefore && markedAfter)
+        // Already this kind of formatting? Remove its markers, whether the selection is just the words
+        // or takes in the markers too (easy to do when the editor hides them). Only markers of the same
+        // kind count, so Italic on a bold word doesn't take a star from each side and make it italic.
+        var markers = CardText.Layout(text).Markers;
+        for (int i = 0; i + 1 < markers.Count; i += 2)
         {
-            string removed = text[..(start - size)] + text[start..end] + text[(end + size)..];
-            return (removed, start - size, length);
+            var (open, close) = (markers[i], markers[i + 1]);
+            if (open.Length != size) continue;
+            if (open.End == start && close.Start == end)
+                return (text[..open.Start] + text[start..end] + text[close.End..], open.Start, length);
+            if (open.Start == start && close.End == end)
+                return (text[..start] + text[open.End..close.Start] + text[end..], start, length - 2 * size);
         }
+
         string added = text[..start] + marker + text[start..end] + marker + text[end..];
         return (added, start + size, length);
     }
