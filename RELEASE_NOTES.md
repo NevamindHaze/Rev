@@ -1,8 +1,6 @@
 What's new
 
-• Custom study: tap "Custom study" inside a deck, or on the "All caught up!" screen, to study more than today's queue. Choose one of four options:
-  – More new cards: learn new cards beyond today's limit.
-  – Forgotten cards: go over every card you pressed Again on in the last few days.
-  – Review ahead: review cards that come due in the next few days, for example before an exam.
-  – Study by tag: pick one or more tags and choose all, new or studied cards, how many, and whether to shuffle.
-• Answers in custom study count as normal reviews and reschedule the cards, and they sync with Anki as usual.
+• Custom study is clearer: each option now shows how many cards it would pick, so you can see at a glance which one has something to study.
+• It opens on the first option that has cards. In a deck with no new cards left, that's "Study by tag", which goes over every card when you don't pick a tag.
+• When an option finds nothing, it tells you why, for example "There are no new cards left in this deck" or "The next card is due in 21 days".
+• Review ahead and Forgotten cards now reach up to a year: one day at a time for the first week, then a week at a time.

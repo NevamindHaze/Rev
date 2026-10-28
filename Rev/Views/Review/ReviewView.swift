@@ -85,7 +85,7 @@ struct ReviewView: View {
             CardEditorView(mode: .edit(card))
         }
         .sheet(isPresented: $showingCustomStudy) {
-            CustomStudyView(cards: cards) { customSession = $0 }
+            CustomStudyView(cards: cards, place: deck == nil ? "your decks" : "this deck") { customSession = $0 }
         }
         .navigationDestination(item: $customSession) { session in
             ReviewView(deck: deck, custom: session)
