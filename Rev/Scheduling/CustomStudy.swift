@@ -17,6 +17,16 @@ struct CustomStudy: Hashable, Identifiable {
             }
         }
 
+        /// One line under the title, so it's clear what each choice picks.
+        var subtitle: String {
+            switch self {
+            case .moreNew: return "New cards beyond today's limit"
+            case .forgotten: return "Cards you pressed Again on lately"
+            case .reviewAhead: return "Cards that come due soon"
+            case .byTag: return "Any cards, or only ones with a tag"
+            }
+        }
+
         var icon: String {
             switch self {
             case .moreNew: return "sparkles"
@@ -100,6 +110,40 @@ struct CustomStudy: Hashable, Identifiable {
             }
             return Array(matching.prefix(max(0, limit)))
         }
+    }
+
+    /// Why nothing was picked, in words, e.g. "The next card is due in 21 days."
+    /// `place` is "this deck" or "your decks".
+    func emptyReason(from cards: [Card], place: String, now: Date = Date()) -> String {
+        let available = cards.filter { !$0.isSuspended }
+        switch kind {
+        case .moreNew:
+            return available.contains { $0.phase == .new }
+                ? "Today's other new cards share a note with a card you studied today, so they wait until tomorrow."
+                : "There are no new cards left in \(place). Try “Study by tag” to go over cards you've already learned."
+        case .forgotten:
+            return "You haven't pressed Again on any card in the last \(days.counted("day")). "
+                + "Try “Study by tag” to go over everything."
+        case .reviewAhead:
+            let later = available.filter { $0.phase == .review && $0.due >= now.endOfDay }.map(\.due).min()
+            guard let later else {
+                return "Nothing in \(place) is waiting for a later review yet."
+            }
+            let wait = max(1, now.studyDays(to: later))
+            return "Nothing comes due in the next \(days.counted("day")). The next card is due in \(wait.counted("day")): "
+                + "press + to look further ahead, or try “Study by tag”."
+        case .byTag:
+            if tags.isEmpty { return "There are no cards to study in \(place)." }
+            return tagCards == .all
+                ? "No cards have the picked tags."
+                : "No \(tagCards == .new ? "new" : "studied") cards have the picked tags. Try “All cards”."
+        }
+    }
+
+    /// The day counts the stepper goes through: 1–7 one day at a time, then a week at a time up to a year.
+    static func stepDays(_ days: Int, up: Bool) -> Int {
+        if up { return days < 7 ? days + 1 : min(365, days + 7) }
+        return days > 7 ? max(7, days - 7) : max(1, days - 1)
     }
 
     static func == (a: CustomStudy, b: CustomStudy) -> Bool { a.id == b.id }
