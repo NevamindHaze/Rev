@@ -251,13 +251,13 @@ public sealed class ScreenTests : ScreenTest
         var start = All<Button>(window).First(b => b is not ToggleButton && b.Content is string s && s.StartsWith("Study"));
         Assert.Equal("Study 4 cards", start.Content);   // more new cards: past the limit of 0
 
-        All<RadioButton>(window).First(rb => rb.Content as string == "Study by tag").IsChecked = true;
+        All<RadioButton>(window).First(rb => rb.Tag as string == "ByTag").IsChecked = true;
         All<ToggleButton>(window).First(tb => tb.Content as string == "nsaid").IsChecked = true;
         Settle();
         Assert.Equal("Study 1 card", start.Content);
         Picture(window, "19-custom-study");
 
-        All<RadioButton>(window).First(rb => rb.Content as string == "Review ahead").IsChecked = true;
+        All<RadioButton>(window).First(rb => rb.Tag as string == "ReviewAhead").IsChecked = true;
         Settle();
         Assert.False(start.IsEnabled);   // nothing studied yet, so nothing comes due
 
@@ -266,6 +266,38 @@ public sealed class ScreenTests : ScreenTest
         Settle();
         Assert.Contains("More new cards", Texts(review));
         Assert.Contains("1 new", Texts(review));
+    }
+
+    [AvaloniaFact]
+    public void CustomStudyInADeckWithNothingNewStartsOnStudyByTagAndExplains()
+    {
+        AddSampleDecks();
+        foreach (var card in Db.GetCards(Parasitology.Id))   // everything learned, next due in 3 weeks
+        {
+            card.SchedulingState = card.SchedulingState with
+            {
+                Phase = CardPhase.Review, IntervalDays = 21, Reps = 3,
+                Due = DateTime.Now.AddDays(21), LastReviewed = DateTime.Now.AddDays(-1),
+            };
+            Db.UpdateCard(card);
+        }
+        var window = new CustomStudyWindow(Parasitology);
+        window.Show(Window);
+        Settle();
+
+        Assert.True(All<RadioButton>(window).First(rb => rb.Tag as string == "ByTag").IsChecked);
+        var start = All<Button>(window).First(b => b is not ToggleButton && b.Content is string s && s.StartsWith("Study"));
+        Assert.Equal("Study 3 cards", start.Content);
+        Assert.Contains("0", Texts(All<RadioButton>(window).First(rb => rb.Tag as string == "MoreNew")));
+
+        All<RadioButton>(window).First(rb => rb.Tag as string == "MoreNew").IsChecked = true;
+        Settle();
+        Assert.Contains("There are no new cards left in this deck", Texts(window));
+        Picture(window, "20-custom-study-nothing-new");
+
+        All<RadioButton>(window).First(rb => rb.Tag as string == "ReviewAhead").IsChecked = true;
+        Settle();
+        Assert.Contains("The next card is due in", Texts(window));
     }
 
     [AvaloniaFact]

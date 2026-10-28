@@ -1,6 +1,7 @@
 using Rev.Core.Data;
 using Rev.Core.Models;
 using Rev.Core.Scheduling;
+using Rev.Core.Text;
 
 namespace Rev.Core.Review;
 
@@ -45,6 +46,52 @@ public sealed record CustomStudy
     };
 
     public string Title() => Title(Kind);
+
+    /// <summary>One line under the title, so it's clear what each choice picks.</summary>
+    public static string Subtitle(CustomStudyKind kind) => kind switch
+    {
+        CustomStudyKind.MoreNew => "New cards beyond today's limit",
+        CustomStudyKind.Forgotten => "Cards you pressed Again on lately",
+        CustomStudyKind.ReviewAhead => "Cards that come due soon",
+        _ => "Any cards, or only ones with a tag",
+    };
+
+    /// <summary>
+    /// Why nothing was picked, in words, e.g. "The next card is due in 21 days."
+    /// <paramref name="place"/> is "this deck" or "your decks".
+    /// </summary>
+    public string EmptyReason(IEnumerable<Card> cards, string place, DateTime now)
+    {
+        var available = cards.Where(c => !c.IsSuspended).ToList();
+        switch (Kind)
+        {
+            case CustomStudyKind.MoreNew:
+                return available.Any(c => c.Phase == CardPhase.New)
+                    ? "Today's other new cards share a note with a card you studied today, so they wait until tomorrow."
+                    : $"There are no new cards left in {place}. Try “Study by tag” to go over cards you've already learned.";
+            case CustomStudyKind.Forgotten:
+                return $"You haven't pressed Again on any card in the last {Days.Counted("day")}. Try “Study by tag” to go over everything.";
+            case CustomStudyKind.ReviewAhead:
+            {
+                var later = available.Where(c => c.Phase == CardPhase.Review && c.Due >= now.EndOfStudyDay())
+                    .Select(c => (DateTime?)c.Due).Min();
+                if (later is not { } next) return $"Nothing in {place} is waiting for a later review yet.";
+                int wait = Math.Max(1, now.StudyDaysTo(next));
+                return $"Nothing comes due in the next {Days.Counted("day")}. The next card is due in {wait.Counted("day")}: " +
+                       "press + to look further ahead, or try “Study by tag”.";
+            }
+            default:
+                if (Tags.Count == 0) return $"There are no cards to study in {place}.";
+                return TagCards == TagCards.All
+                    ? "No cards have the picked tags."
+                    : $"No {(TagCards == TagCards.NewOnly ? "new" : "studied")} cards have the picked tags. Try “All cards”.";
+        }
+    }
+
+    /// <summary>The day counts the − and + buttons go through: 1–7 one day at a time, then a week at a time up to a year.</summary>
+    public static int StepDays(int days, bool up) => up
+        ? days < 7 ? days + 1 : Math.Min(365, days + 7)
+        : days > 7 ? Math.Max(7, days - 7) : Math.Max(1, days - 1);
 
     /// <summary>The cards this session will show, in order. Suspended cards are never picked.</summary>
     public List<Card> PickCards(RevDatabase db, IEnumerable<Card> cards, DateTime now, Random? random = null)

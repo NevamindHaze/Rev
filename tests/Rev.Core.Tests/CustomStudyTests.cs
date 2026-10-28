@@ -138,6 +138,33 @@ public sealed class CustomStudyTests : IDisposable
     }
 
     [Fact]
+    public void WhenNothingMatchesTheReasonIsExplained()
+    {
+        AddCard("Learned", ReviewState() with { Due = TodayStart.AddDays(21) });
+        var cards = db.GetCards(deck.Id);
+
+        Assert.Contains("no new cards left in this deck",
+            new CustomStudy { Kind = CustomStudyKind.MoreNew }.EmptyReason(cards, "this deck", Now));
+        Assert.Contains("The next card is due in 21 days",
+            new CustomStudy { Kind = CustomStudyKind.ReviewAhead }.EmptyReason(cards, "this deck", Now));
+        Assert.Contains("last 3 days",
+            new CustomStudy { Kind = CustomStudyKind.Forgotten, Days = 3 }.EmptyReason(cards, "this deck", Now));
+        // "Study by tag" with no tag picked takes every card, so it has something here.
+        Assert.Equal(["Learned"], Picked(new CustomStudy { Kind = CustomStudyKind.ByTag }));
+    }
+
+    [Fact]
+    public void DaysGoByOneForAWeekThenByWeeksUpToAYear()
+    {
+        Assert.Equal(2, CustomStudy.StepDays(1, up: true));
+        Assert.Equal(14, CustomStudy.StepDays(7, up: true));
+        Assert.Equal(365, CustomStudy.StepDays(364, up: true));
+        Assert.Equal(7, CustomStudy.StepDays(14, up: false));
+        Assert.Equal(6, CustomStudy.StepDays(7, up: false));
+        Assert.Equal(1, CustomStudy.StepDays(1, up: false));
+    }
+
+    [Fact]
     public void NothingMatchingSaysSo()
     {
         AddNew("Q1");
