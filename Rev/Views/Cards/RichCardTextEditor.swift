@@ -133,6 +133,7 @@ enum RichCardText {
 
     /// Bold or italic for the selected words, or off again if they all have it already.
     /// With nothing selected, it switches it on or off for what you type next.
+    @available(iOS 26.0, *)
     static func toggle(_ format: CardFormat, in rich: inout AttributedString,
                        selection: inout AttributedTextSelection, size: CGFloat) {
         let alreadyOn: Bool
