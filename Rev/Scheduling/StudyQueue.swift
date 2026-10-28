@@ -52,6 +52,31 @@ struct StudyQueue {
         newCards = Array(allNew.prefix(max(0, newCardsAllowed)))
     }
 
+    /// A custom study session: the session's cards you haven't answered yet, in the order given,
+    /// plus any you answered that came back as learning cards (like a normal session).
+    init(sessionCards: [Card], answered: Set<UUID>, now: Date) {
+        let endOfToday = now.endOfDay
+        for card in sessionCards where !card.isSuspended {
+            if !answered.contains(card.id) {
+                switch card.phase {
+                case .new: newCards.append(card)
+                case .review: reviewDue.append(card)
+                case .learning, .relearning: learningDue.append(card)
+                }
+            } else if card.phase == .learning || card.phase == .relearning {
+                if card.due <= now {
+                    learningDue.append(card)
+                } else if card.due <= now.addingTimeInterval(Self.learnAhead) {
+                    learningSoon.append(card)
+                } else if card.due < endOfToday {
+                    laterToday += 1
+                }
+            }
+        }
+        learningDue.sort { $0.due < $1.due }
+        learningSoon.sort { $0.due < $1.due }
+    }
+
     var nextCard: Card? {
         learningDue.first ?? reviewDue.first ?? newCards.first ?? learningSoon.first
     }
