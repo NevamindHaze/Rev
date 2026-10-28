@@ -155,6 +155,25 @@
         <Setter Property="Background" Value="{DynamicResource SoftFillBrush}" />
         <Setter Property="Opacity" Value="1" />
     </Style>
+    <Style Selector="Button.tablerow:focus /template/ Border#Pill">
+        <Setter Property="Background" Value="{DynamicResource SoftFillBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Button.tablerow:focus-visible /template/ Border#Pill">
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <!-- A column heading you can click to sort; teal while the table is sorted by it. -->
+    <Style Selector="Button.columnsort">
+        <Setter Property="MinHeight" Value="24" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource MutedInkBrush}" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+    <Style Selector="Button.columnsort.selected">
+        <Setter Property="Foreground" Value="{DynamicResource TealBrush}" />
+    </Style>
     <!-- The box a table sits in, and the small grey headings above its columns. -->
     <Style Selector="Border.table">
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />

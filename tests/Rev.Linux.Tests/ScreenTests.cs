@@ -1,3 +1,4 @@
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Headless.XUnit;
@@ -155,7 +156,8 @@ public sealed class ScreenTests : ScreenTest
         Assert.True(Find<Button>(deck, "Study").IsEnabled);
         Assert.True(Find<Button>(deck, "More").IsEnabled);
         Assert.Contains("Cloze", text);
-        Assert.Contains("#flukes", text);
+        var cloze = All<Button>(deck).First(b => b.Tag is Guid && ToolTip.GetTip(b) is string tip && tip.Contains("#flukes"));
+        Assert.NotNull(cloze);   // tags show in the row's tooltip
         Picture(Window, "05-deck");
         Press(Key.D1, KeyModifiers.Control);
         Assert.IsType<HomeView>(CurrentScreen);
@@ -176,6 +178,23 @@ public sealed class ScreenTests : ScreenTest
         Wait(400);   // the search waits a moment after typing
         Assert.Contains("1 card of 7", Texts(browser));
         Picture(Window, "06-all-cards-search");
+    }
+
+    [AvaloniaFact]
+    public void TheCardTableSortsByAColumnAndEnterEdits()
+    {
+        AddSampleDecks();
+        Window.Open(new AllCardsView());
+        Settle();
+        var browser = All<CardBrowser>(Window).Single();
+        Click(Find<Button>(browser, "Front"));
+        var rows = All<Button>(browser).Where(b => b.Tag is Guid).ToList();
+        var fronts = rows.Select(r => AutomationProperties.GetName(r)!.Replace("*", "")).ToList();
+        Assert.Equal(fronts.OrderBy(f => f, StringComparer.CurrentCultureIgnoreCase), fronts);
+        Assert.Contains("A to Z", Texts(browser));   // the sort menu shows the sort the heading chose
+        rows[0].Focus();
+        Press(Key.Enter);
+        Assert.NotNull(Opened<CardEditorWindow>());
     }
 
     [AvaloniaFact]
