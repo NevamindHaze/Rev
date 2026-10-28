@@ -13,6 +13,9 @@ public sealed class ReviewSession
     private readonly RevDatabase db;
     private readonly Guid? deckId;
     private readonly Func<DateTime> clock;
+    /// <summary>Custom study: the cards picked when the session started (null for the normal daily queue).</summary>
+    private readonly List<Guid>? sessionCardIds;
+    private readonly HashSet<Guid> answeredInSession = [];
 
     /// <summary>Answers given in this session, newest last, so they can be undone.</summary>
     private readonly Stack<PastAnswer> history = new();
@@ -21,21 +24,31 @@ public sealed class ReviewSession
 
     /// <param name="deckId">The deck to study, or null for "Review all decks".</param>
     /// <param name="clock">Where "now" comes from (tests pass a fixed time).</param>
-    public ReviewSession(RevDatabase db, Guid? deckId, Func<DateTime>? clock = null)
+    /// <param name="custom">A custom study session, or null for the normal daily queue.</param>
+    public ReviewSession(RevDatabase db, Guid? deckId, Func<DateTime>? clock = null, CustomStudy? custom = null)
     {
         this.db = db;
         this.deckId = deckId;
         this.clock = clock ?? (() => DateTime.Now);
+        Custom = custom;
+        if (custom != null)
+            sessionCardIds = custom.PickCards(db, CardsToStudy(), this.clock()).Select(c => c.Id).ToList();
         Queue = new StudyQueue([], 0, this.clock());
         LoadNext();
     }
+
+    /// <summary>The custom study session, or null for the normal daily queue.</summary>
+    public CustomStudy? Custom { get; }
 
     public StudyQueue Queue { get; private set; }
     /// <summary>The card on screen, or null when there's nothing left to study right now.</summary>
     public Card? Current { get; private set; }
     public int ReviewedThisSession { get; private set; }
     public bool CanUndo => history.Count > 0;
-    /// <summary>False when the deck (or every deck) has no cards at all.</summary>
+    /// <summary>
+    /// False when the deck (or every deck) has no cards at all,
+    /// or, for custom study, when nothing matched the choices.
+    /// </summary>
     public bool HasAnyCards { get; private set; }
 
     /// <summary>The algorithm from Settings, read fresh each time so a change applies straight away.</summary>
@@ -48,9 +61,21 @@ public sealed class ReviewSession
         Current = Queue.NextCard;
     }
 
+    /// <summary>The deck's cards, or every card when studying all decks.</summary>
+    private List<Card> CardsToStudy() => db.GetCards(deckId);
+
     private void RebuildQueue()
     {
         var now = clock();
+        if (sessionCardIds != null)
+        {
+            // Read the cards fresh (in the order they were picked), so answers and edits show.
+            var byId = db.GetCards(deckId).ToDictionary(c => c.Id);
+            var sessionCards = sessionCardIds.Where(byId.ContainsKey).Select(id => byId[id]).ToList();
+            HasAnyCards = sessionCardIds.Count > 0;
+            Queue = new StudyQueue(sessionCards, answeredInSession, now);
+            return;
+        }
         var allCards = db.GetCards();
         var cards = deckId is { } id ? allCards.Where(c => c.DeckId == id).ToList() : allCards;
         HasAnyCards = cards.Count > 0;
@@ -94,6 +119,7 @@ public sealed class ReviewSession
         });
 
         history.Push(new PastAnswer(card.Id, before, wasLeech, card.IsSuspended, log.Id));
+        answeredInSession.Add(card.Id);
         ReviewedThisSession += 1;
         LoadNext();
         return becameLeech;
@@ -106,6 +132,7 @@ public sealed class ReviewSession
         var now = clock();
         db.DeleteReviewLog(last.LogId);
         ReviewedThisSession = Math.Max(0, ReviewedThisSession - 1);
+        if (!history.Any(a => a.CardId == last.CardId)) answeredInSession.Remove(last.CardId);
 
         if (db.GetCard(last.CardId) is not { } card)
         {

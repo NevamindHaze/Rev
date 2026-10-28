@@ -70,7 +70,7 @@
         </Setter>
     </Style>
     <!-- Rev shows its own mustard ring for the keyboard, so Avalonia's square focus frame is switched off. -->
-    <Style Selector="Button.rev, RadioButton.choice">
+    <Style Selector="Button.rev, RadioButton.choice, ToggleButton.choice">
         <Setter Property="FocusAdorner" Value="{x:Null}" />
     </Style>
     <Style Selector="Button.rev:pointerover /template/ Border#Pill">
@@ -207,7 +207,7 @@
     </Style>
 
     <!-- A choice shown as a pill, e.g. the card kinds. The chosen one turns teal. -->
-    <Style Selector="RadioButton.choice">
+    <Style Selector="RadioButton.choice, ToggleButton.choice">
         <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
         <Setter Property="Background" Value="{DynamicResource SoftFillBrush}" />
         <Setter Property="FontSize" Value="15" />
@@ -224,11 +224,11 @@
             </ControlTemplate>
         </Setter>
     </Style>
-    <Style Selector="RadioButton.choice:checked">
+    <Style Selector="RadioButton.choice:checked, ToggleButton.choice:checked">
         <Setter Property="Background" Value="{DynamicResource TealBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource OnTealBrush}" />
     </Style>
-    <Style Selector="RadioButton.choice:focus-visible /template/ Border#Pill">
+    <Style Selector="RadioButton.choice:focus-visible /template/ Border#Pill, ToggleButton.choice:focus-visible /template/ Border#Pill">
         <Setter Property="BorderThickness" Value="3" />
     </Style>
 

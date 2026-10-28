@@ -15,7 +15,7 @@
     <AssemblyName>Rev</AssemblyName>
     <RootNamespace>Rev.Linux</RootNamespace>
     <Product>Rev</Product>
-    <Version>1.3.0</Version>
+    <Version>1.4.0</Version>
     <ApplicationIcon>..\Rev.App\Assets\AppIcon.ico</ApplicationIcon>
     <!-- Dates and numbers the same everywhere, and no extra system library (ICU) needed on Linux. -->
     <InvariantGlobalization>true</InvariantGlobalization>

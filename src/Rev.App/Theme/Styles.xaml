@@ -180,7 +180,8 @@
     </Style>
 
     <!-- A choice shown as a pill, e.g. the card kinds. The chosen one turns teal. -->
-    <Style x:Key="ChoicePill" TargetType="RadioButton">
+    <!-- (For a ToggleButton too, e.g. the tags in Custom study, where several can be picked.) -->
+    <Style x:Key="ChoicePill" TargetType="ToggleButton">
         <Setter Property="ToolTipService.ShowsToolTipOnKeyboardFocus" Value="False" />
         <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
         <Setter Property="Background" Value="{DynamicResource SoftFillBrush}" />
@@ -191,7 +192,7 @@
         <Setter Property="Margin" Value="0,0,8,8" />
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="RadioButton">
+                <ControlTemplate TargetType="ToggleButton">
                     <Border x:Name="Pill" Background="{TemplateBinding Background}" Padding="18,10"
                             BorderBrush="{DynamicResource MustardBrush}" BorderThickness="0"
                             CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource Self}, Converter={StaticResource PillCorners}}">

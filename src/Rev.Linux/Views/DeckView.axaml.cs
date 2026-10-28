@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Rev.Core.Models;
+using Rev.Core.Review;
 using Rev.Core.Scheduling;
 
 namespace Rev.Linux.Views;
@@ -58,6 +59,12 @@ public partial class DeckView : UserControl, IScreen
     private void Back_Click(object? sender, RoutedEventArgs e) => MainWindow.Current.GoBack();
 
     private void Study_Click(object? sender, RoutedEventArgs e) => MainWindow.Current.Open(new ReviewView(deck));
+
+    private async void CustomStudy_Click(object? sender, RoutedEventArgs e)
+    {
+        var custom = await new CustomStudyWindow(deck).ShowDialog<CustomStudy?>(MainWindow.Current);
+        if (custom != null) MainWindow.Current.Open(new ReviewView(deck, custom));
+    }
 
     private async void Export_Click(object? sender, RoutedEventArgs e)
     {

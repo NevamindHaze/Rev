@@ -1,0 +1,75 @@
+<!--
+    Custom study: an extra session outside today's queue, like Anki's.
+    More new cards, forgotten cards, review ahead, or study by tag. Enter starts, Esc closes.
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:controls="clr-namespace:Rev.Linux.Controls"
+        x:Class="Rev.Linux.Views.CustomStudyWindow"
+        Icon="avares://Rev/Assets/AppIcon.png"
+        Title="Custom study" Width="720" Height="640" MinWidth="480" MinHeight="420"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <Panel>
+        <Grid Margin="32,24,32,24" RowDefinitions="Auto,*,Auto">
+            <StackPanel>
+                <TextBlock Classes="title" Text="Custom study" />
+                <TextBlock x:Name="DeckText" Classes="muted" Margin="2,2,0,16" />
+                <WrapPanel x:Name="KindChoices">
+                    <RadioButton Classes="choice" GroupName="Kind" Tag="MoreNew" Content="More new cards" IsChecked="True" IsCheckedChanged="Kind_Changed" />
+                    <RadioButton Classes="choice" GroupName="Kind" Tag="Forgotten" Content="Forgotten cards" IsCheckedChanged="Kind_Changed" />
+                    <RadioButton Classes="choice" GroupName="Kind" Tag="ReviewAhead" Content="Review ahead" IsCheckedChanged="Kind_Changed" />
+                    <RadioButton Classes="choice" GroupName="Kind" Tag="ByTag" Content="Study by tag" IsCheckedChanged="Kind_Changed" />
+                </WrapPanel>
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,12,0,0">
+                <StackPanel>
+                    <TextBlock x:Name="ExplainText" Classes="muted" FontSize="15" TextWrapping="Wrap" Margin="2,0,0,14" />
+
+                    <!-- How many cards, or how many days -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock x:Name="NumberLabel" Classes="body" FontSize="17" VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Classes="rev secondary round" Click="Fewer_Click" AutomationProperties.Name="Fewer">
+                                <mi:MaterialIcon Kind="Minus" Width="18" Height="18" />
+                            </Button>
+                            <TextBlock x:Name="NumberText" Width="86" FontSize="19" FontWeight="Bold"
+                                       TextAlignment="Center" VerticalAlignment="Center" />
+                            <Button Classes="rev secondary round" Click="More_Click" AutomationProperties.Name="More">
+                                <mi:MaterialIcon Kind="Plus" Width="18" Height="18" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Study by tag only -->
+                    <StackPanel x:Name="TagPanel" IsVisible="False" Margin="0,18,0,0">
+                        <WrapPanel>
+                            <RadioButton Classes="choice" GroupName="TagCards" Tag="All" Content="All cards" IsChecked="True" IsCheckedChanged="TagCards_Changed" />
+                            <RadioButton Classes="choice" GroupName="TagCards" Tag="NewOnly" Content="New only" IsCheckedChanged="TagCards_Changed" />
+                            <RadioButton Classes="choice" GroupName="TagCards" Tag="StudiedOnly" Content="Studied only" IsCheckedChanged="TagCards_Changed" />
+                        </WrapPanel>
+                        <WrapPanel>
+                            <RadioButton Classes="choice" GroupName="Order" Content="Random order" IsChecked="True" IsCheckedChanged="Order_Changed" />
+                            <RadioButton x:Name="OldestFirstChoice" Classes="choice" GroupName="Order" Content="Oldest first" IsCheckedChanged="Order_Changed" />
+                        </WrapPanel>
+                        <TextBlock Classes="label" Text="TAGS" Margin="2,12,0,8" />
+                        <WrapPanel x:Name="TagChoices" />
+                        <TextBlock x:Name="TagsHint" Classes="muted" FontSize="14" Margin="2,4,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,18,0,0">
+                <TextBlock Classes="muted" FontSize="14" VerticalAlignment="Center" TextWrapping="Wrap" Margin="2,0,16,0"
+                           Text="Answers count as normal reviews and reschedule the cards." />
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Classes="rev secondary" MinHeight="54" Content="Cancel" Click="Cancel_Click" />
+                    <Button x:Name="StartButton" Classes="rev teal" MinHeight="54" Margin="12,0,0,0"
+                            Content="Study 0 cards" IsEnabled="False" Click="Start_Click" ToolTip.Tip="Enter" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+        <controls:DialogLayer />
+    </Panel>
+</Window>
