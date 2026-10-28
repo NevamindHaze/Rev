@@ -23,7 +23,7 @@ like a desktop app: navigation always in view, compact controls, tables for list
 - **Sidebar (left, about 220px, collapsible with Ctrl+B or a button at its top):**
   - Home (Ctrl+1), All cards (Ctrl+2), Stats (Ctrl+3).
   - "Decks" heading with a + button (new deck, Ctrl+Shift+N), then one row per deck: its colour as a dot, its name,
-    and its due count. Right-click a deck: Study, Rename, Export to Anki, Delete.
+    and how many cards are waiting today (due + new). Right-click a deck: Study, Rename, Export to Anki, Delete.
   - At the bottom: Settings (Ctrl+,) and a one-line sync status ("Synced with Anki 2 min ago"), from `SyncRunner`.
   - The current page is highlighted. While studying, the deck being studied is highlighted with a play icon.
 - **Content area (right):** shows one page at a time. Clicking a sidebar item replaces the page; there is no back
@@ -46,7 +46,7 @@ like a desktop app: navigation always in view, compact controls, tables for list
   dark/filled button), **Custom study**, **Add** (Ctrl+N), and a ⋯ menu with Paste many and Export to Anki.
 - Search box (Ctrl+F) with the filter / tag / sort menus beside it, on one row.
 - The card list becomes a table (`CardBrowser`): columns Front, Back, Type, Due, with bold/italic shown, one line per
-  card with "…" when it's cut off. Click a column heading to sort. Double-click or Enter edits, Delete deletes (asking
+  card with "…" when it's cut off. Click the Front heading to sort A–Z or the Due heading to sort by due date; the sort menu keeps the other sorts. Double-click or Enter edits, Delete deletes (asking
   first, as now), right-click shows the existing card actions (edit, suspend, delete, …). The state badges (New,
   Cloze, …) move into the Type and Due columns.
 - All cards uses the same table, with a Deck column added.
