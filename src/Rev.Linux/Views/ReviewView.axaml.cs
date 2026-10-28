@@ -22,6 +22,7 @@ public partial class ReviewView : UserControl, IScreen
 {
     private readonly ReviewSession session;
     private readonly Deck? deck;
+    private readonly CustomStudy? custom;
     private bool answerShown;
     private bool busy;   // a dialog or the editor is open: keys wait
 
@@ -42,16 +43,25 @@ public partial class ReviewView : UserControl, IScreen
     {
         InitializeComponent();
         this.deck = deck;
-        // e.g. "Studying Pharmacology", or "Studying Pharmacology · More new cards" for custom study
-        TitleText.Text = $"Studying {deck?.Name ?? "all decks"}" + (custom is null ? "" : $" · {custom.Title()}");
+        this.custom = custom;
+        UpdateTitle();
         session = new ReviewSession(App.Database, deck?.Id, custom: custom);
         AddHandler(KeyDownEvent, Screen_KeyDown, RoutingStrategies.Tunnel);
         Loaded += (_, _) => ShowCurrent();
     }
 
     /// <summary>Coming back to the screen (e.g. the next morning): pick up any newly due cards.</summary>
+    /// <summary>e.g. "Studying Pharmacology", or "Studying Pharmacology · More new cards" for custom study.
+    /// Reads the deck's name again, so a rename shows here too.</summary>
+    private void UpdateTitle()
+    {
+        string? name = deck is null ? null : App.Database.GetDecks().FirstOrDefault(d => d.Id == deck.Id)?.Name ?? deck.Name;
+        TitleText.Text = $"Studying {name ?? "all decks"}" + (custom is null ? "" : $" · {custom.Title()}");
+    }
+
     public void Refresh()
     {
+        UpdateTitle();
         if (session.Current is null)
         {
             session.LoadNext();
@@ -65,7 +75,6 @@ public partial class ReviewView : UserControl, IScreen
     {
         answerShown = false;
         UpdateCounts();
-        MainWindow.Current?.RefreshSidebar();   // the deck's count in the sidebar goes down as you study
         UndoButton.IsEnabled = session.CanUndo;
 
         var card = session.Current;

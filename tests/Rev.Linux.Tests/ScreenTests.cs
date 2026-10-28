@@ -534,4 +534,100 @@ public sealed class ScreenTests : ScreenTest
             Assert.True(visibleRight <= undoLeft, $"“{count.Text}” runs under Undo");
         }
     }
+
+    private const string LongName = "Clinical pathology and laboratory diagnostics for the final year exams";
+
+    [AvaloniaFact]
+    public void ALongDeckNameKeepsTheToolbarAndColumnsInView()
+    {
+        AddSampleDecks();
+        Db.RenameDeck(Pharmacology.Id, LongName);
+        Window.Width = 900;
+        Window.Height = 600;
+        Settle();
+        // Home: the name ends in "…" before the Due column
+        var row = All<DeckListRow>(Window).First(r => r.Deck.Id == Pharmacology.Id);
+        var name = All<TextBlock>(row).First(t => t.Text == LongName);
+        var due = All<TextBlock>(row).Where(t => t.Text != LongName).First();
+        Assert.True(name.TranslatePoint(new Point(name.Bounds.Width, 0), row)!.Value.X <= due.TranslatePoint(new Point(0, 0), row)!.Value.X,
+            "the deck name runs into the Due column");
+        // The deck page: the toolbar's ⋯ stays inside the page
+        Window.ShowDeck(Db.GetDecks().First(d => d.Id == Pharmacology.Id));
+        Settle();
+        var page = CurrentScreen!;
+        var more = Find<Button>(page, "More");
+        Assert.True(more.TranslatePoint(new Point(more.Bounds.Width, 0), page)!.Value.X <= page.Bounds.Width, "⋯ is pushed off the page");
+        Picture(Window, "36-narrow-long-name");
+    }
+
+    [AvaloniaFact]
+    public void ARenameShowsInTheReviewTitle()
+    {
+        AddSampleDecks();
+        Window.ShowDeck(Pharmacology);
+        Settle();
+        Db.RenameDeck(Pharmacology.Id, "Pharma 2");
+        ((IScreen)CurrentScreen!).Refresh();
+        Click(Find<Button>(CurrentScreen!, "Study"));
+        Assert.Contains("Studying Pharma 2", Texts(CurrentScreen!));
+        Db.RenameDeck(Pharmacology.Id, "Pharma 3");   // renamed while studying
+        ((IScreen)CurrentScreen!).Refresh();
+        Assert.Contains("Studying Pharma 3", Texts(CurrentScreen!));
+    }
+
+    [AvaloniaFact]
+    public void DeletingADeckDuringReviewAllTakesItsCardsOut()
+    {
+        AddSampleDecks();
+        Window.Open(new ReviewView(null));
+        Settle();
+        All<SidebarDeckRow>(Window).First(r => r.Deck.Name == "Pharmacology").Focus();
+        Press(Key.Delete);
+        Click(Find<Button>(OpenDialog(Window)!, "Delete"));
+        var review = Assert.IsType<ReviewView>(CurrentScreen);
+        Assert.Contains("3 new", Texts(review));   // only Parasitology's cards are left
+    }
+
+    [AvaloniaFact]
+    public void WindowShortcutsWaitWhileAQuestionIsOpen()
+    {
+        AddSampleDecks();
+        Window.ShowDeck(Pharmacology);
+        Settle();
+        All<SidebarDeckRow>(Window).First(r => r.Deck.Name == "Pharmacology").Focus();
+        Press(Key.F2);   // Rename deck
+        Assert.NotNull(OpenDialog(Window));
+        Press(Key.D1, KeyModifiers.Control);
+        Press(Key.B, KeyModifiers.Control);
+        Assert.IsType<DeckView>(CurrentScreen);
+        Assert.True(Window.IsSidebarOpen);
+    }
+
+    [AvaloniaFact]
+    public void StudyingDoesntRedrawTheSidebarAfterEveryAnswer()
+    {
+        AddSampleDecks();
+        Window.Open(new ReviewView(Pharmacology));
+        Settle();
+        var before = All<SidebarDeckRow>(Window).First(r => r.Deck.Name == "Parasitology");
+        Press(Key.Space);
+        Press(Key.D3);
+        Assert.Same(before, All<SidebarDeckRow>(Window).First(r => r.Deck.Name == "Parasitology"));
+        Press(Key.Escape);   // stopping brings the numbers up to date
+        Assert.NotSame(before, All<SidebarDeckRow>(Window).First(r => r.Deck.Name == "Parasitology"));
+    }
+
+    [AvaloniaFact]
+    public void TheSmallestWindowStillFitsTheRatingButtons()
+    {
+        AddSampleDecks();
+        Window.Width = 600;   // below the smallest size: the window stops at its minimum
+        Settle();
+        Window.Open(new ReviewView(Pharmacology));
+        Settle();
+        Press(Key.Space);
+        var review = CurrentScreen!;
+        var easy = Find<Button>(review, "Easy");
+        Assert.True(easy.TranslatePoint(new Point(easy.Bounds.Width, 0), review)!.Value.X <= review.Bounds.Width, "Easy is cut off");
+    }
 }

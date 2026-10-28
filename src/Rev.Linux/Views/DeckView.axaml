@@ -11,12 +11,13 @@
         <StackPanel MaxWidth="1200" Margin="{StaticResource PagePadding}">
 
             <!-- The deck's name and numbers, then Study, Custom study, Add card and ⋯ (Paste many, Export to Anki) -->
-            <Grid ColumnDefinitions="Auto,*,Auto">
-                <TextBlock x:Name="DeckName" Classes="title" Margin="0,0,12,0" MaxWidth="360"
-                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                <TextBlock x:Name="NumbersText" Grid.Column="1" Classes="muted" VerticalAlignment="Center"
-                           TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+            <!-- The name shrinks (ending in "…") so the toolbar always fits -->
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Margin="0,0,12,0" VerticalAlignment="Center">
+                    <TextBlock x:Name="DeckName" Classes="title" TextTrimming="CharacterEllipsis" />
+                    <TextBlock x:Name="NumbersText" Classes="muted" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                     <Button Classes="rev primary" Click="Study_Click" ToolTip.Tip="Study this deck (Space)"
                             AutomationProperties.Name="Study">
                         <StackPanel Orientation="Horizontal">

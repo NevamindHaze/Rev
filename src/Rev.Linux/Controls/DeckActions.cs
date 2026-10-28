@@ -49,6 +49,8 @@ public static class DeckActions
             _ => false,
         };
         if (wasOpen) MainWindow.Current.ShowHome();
+        // Reviewing every deck: start again, so the deleted deck's cards are gone from the queue.
+        else if (MainWindow.Current.CurrentScreen is ReviewView { Deck: null }) MainWindow.Current.Open(new ReviewView(null));
         Updated();
     }
 

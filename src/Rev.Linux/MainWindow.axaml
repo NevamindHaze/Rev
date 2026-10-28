@@ -9,7 +9,7 @@
         xmlns:controls="clr-namespace:Rev.Linux.Controls"
         x:Class="Rev.Linux.MainWindow"
         Icon="avares://Rev/Assets/AppIcon.png"
-        Title="Rev" Width="1280" Height="800" MinWidth="760" MinHeight="520"
+        Title="Rev" Width="1280" Height="800" MinWidth="880" MinHeight="520"
         WindowStartupLocation="CenterScreen">
     <Panel>
         <Grid ColumnDefinitions="Auto,*">

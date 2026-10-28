@@ -12,7 +12,7 @@ namespace Rev.Linux.Views;
 /// <summary>One deck: its numbers, Study now, Add card / Paste many, and the card browser.</summary>
 public partial class DeckView : UserControl, IScreen
 {
-    private readonly Deck deck;
+    private Deck deck;   // read again on every refresh, so a rename shows everywhere
 
     public DeckView() : this(new Deck()) { }   // (for the XAML previewer only)
 
@@ -48,7 +48,8 @@ public partial class DeckView : UserControl, IScreen
     {
         var now = DateTime.Now;
         // The deck may have been renamed meanwhile, so read its name again.
-        DeckName.Text = App.Database.GetDecks().FirstOrDefault(d => d.Id == deck.Id)?.Name ?? deck.Name;
+        deck = App.Database.GetDecks().FirstOrDefault(d => d.Id == deck.Id) ?? deck;
+        DeckName.Text = deck.Name;
         var cards = App.Database.GetCards(deck.Id);
         NumbersText.Text = $"{cards.Count.Counted("card")} · {cards.DueCount(now)} due · {cards.NewCount()} new";
         EmptyText.IsVisible = cards.Count == 0;

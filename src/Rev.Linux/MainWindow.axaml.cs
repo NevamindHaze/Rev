@@ -17,7 +17,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         Current = this;
-        SidebarPanel.Refresh();
+        SidebarPanel.Refresh();   // straight away, so the window opens complete
         ShowHome();
 
         // Coming back to Rev (e.g. the next morning) refreshes the numbers.
@@ -67,6 +67,8 @@ public partial class MainWindow : Window
     /// <summary>Shows a page beside the sidebar, in place of the one there now.</summary>
     public void Open(Control page)
     {
+        // The sidebar isn't redrawn after every answer (slow on a big collection), so catch up when studying ends.
+        if (Screen.Content is ReviewView) RefreshSidebar();
         Screen.Content = page;
         SidebarPanel.Highlight(page);
         // Give the keyboard to the new page, so its shortcuts (Space, Ctrl+N…) work at once.
@@ -81,8 +83,22 @@ public partial class MainWindow : Window
 
     public void ShowDeck(Deck deck) => Open(new DeckView(deck));
 
-    /// <summary>Reads the decks and their numbers again for the sidebar.</summary>
-    public void RefreshSidebar() => SidebarPanel.Refresh();
+    private bool sidebarRefreshPending;
+
+    /// <summary>
+    /// Reads the decks and their numbers again for the sidebar. Several calls in a row (e.g. after closing the
+    /// card editor) are done once, a moment later, since reading every card takes a while in a big collection.
+    /// </summary>
+    public void RefreshSidebar()
+    {
+        if (sidebarRefreshPending) return;
+        sidebarRefreshPending = true;
+        Dispatcher.UIThread.Post(() =>
+        {
+            sidebarRefreshPending = false;
+            SidebarPanel.Refresh();
+        }, DispatcherPriority.Background);
+    }
 
     public void ToggleSidebar()
     {
@@ -92,8 +108,17 @@ public partial class MainWindow : Window
 
     private void ShowSidebar_Click(object? sender, RoutedEventArgs e) => ToggleSidebar();
 
+    /// <summary>A window-wide shortcut. It waits while a question (a dialog) is open, which has the keys.</summary>
     private void Bind(Key key, KeyModifiers modifiers, Action action) =>
-        KeyBindings.Add(new KeyBinding { Gesture = new KeyGesture(key, modifiers), Command = new RelayCommand(action) });
+        KeyBindings.Add(new KeyBinding
+        {
+            Gesture = new KeyGesture(key, modifiers),
+            Command = new RelayCommand(() =>
+            {
+                if (DialogLayer.For(this) is { IsShowing: true }) return;
+                action();
+            }),
+        });
 
     /// <summary>On a small or zoomed-in screen, shrinks the window so all of it is visible.</summary>
     private void FitOnScreen()

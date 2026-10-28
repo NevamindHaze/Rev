@@ -31,11 +31,12 @@ public sealed class DeckListRow : Button
 
         var dot = new Ellipse { Width = 10, Height = 10, Margin = new Thickness(0, 0, 12, 0), VerticalAlignment = VerticalAlignment.Center }
             .Colour(Shape.FillProperty, Ui.DeckColours(index).Background);
-        var name = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            Children = { dot, new TextBlock { Text = deck.Name, FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center } },
-        };
+        // A grid (not a StackPanel) so the name is limited to its column and ends in "…" when long.
+        var name = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), Margin = new Thickness(0, 0, 12, 0) };
+        name.Children.Add(dot);
+        var nameText = new TextBlock { Text = deck.Name, FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
+        Grid.SetColumn(nameText, 1);
+        name.Children.Add(nameText);
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitions(Columns) };
         grid.Children.Add(name);
         AddNumber(grid, 1, dueCount, dueCount > 0 ? "TealBrush" : "MutedInkBrush");
