@@ -65,6 +65,44 @@ public sealed class StudyQueue
         LaterToday = laterToday;
     }
 
+    /// <summary>
+    /// A custom study session: the session's cards you haven't answered yet, in the order given,
+    /// plus any you answered that came back as learning cards (like a normal session).
+    /// </summary>
+    public StudyQueue(IEnumerable<Card> sessionCards, IReadOnlySet<Guid> answered, DateTime now)
+    {
+        var endOfToday = now.EndOfStudyDay();
+        var learningDue = new List<Card>();
+        var reviewDue = new List<Card>();
+        var newCards = new List<Card>();
+        var learningSoon = new List<Card>();
+        int laterToday = 0;
+
+        foreach (var card in sessionCards)
+        {
+            if (card.IsSuspended) continue;
+            bool learning = card.Phase is CardPhase.Learning or CardPhase.Relearning;
+            if (!answered.Contains(card.Id))
+            {
+                if (card.Phase == CardPhase.New) newCards.Add(card);
+                else if (learning) learningDue.Add(card);
+                else reviewDue.Add(card);
+            }
+            else if (learning)
+            {
+                if (card.Due <= now) learningDue.Add(card);
+                else if (card.Due <= now + LearnAhead) learningSoon.Add(card);
+                else if (card.Due < endOfToday) laterToday += 1;
+            }
+        }
+
+        LearningDue = learningDue.OrderBy(c => c.Due).ToList();
+        ReviewDue = reviewDue;
+        NewCards = newCards;
+        LearningSoon = learningSoon.OrderBy(c => c.Due).ToList();
+        LaterToday = laterToday;
+    }
+
     /// <summary>The card to show now, or null when you're done for the moment.</summary>
     public Card? NextCard =>
         LearningDue.FirstOrDefault() ?? ReviewDue.FirstOrDefault() ?? NewCards.FirstOrDefault()

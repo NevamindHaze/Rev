@@ -46,6 +46,15 @@
                 </StackPanel>
             </Button>
 
+            <Button Classes="rev secondary" Margin="0,12,0,0" HorizontalAlignment="Stretch" Click="CustomStudy_Click"
+                    ToolTip.Tip="More new cards, forgotten cards, review ahead, or study by tag"
+                    AutomationProperties.Name="Custom study">
+                <StackPanel Orientation="Horizontal">
+                    <mi:MaterialIcon Kind="Tune" Width="18" Height="18" Margin="0,0,10,0" />
+                    <TextBlock Text="Custom study" />
+                </StackPanel>
+            </Button>
+
             <UniformGrid Columns="2" Margin="0,12,0,0">
                 <Button x:Name="AddCardButton" Classes="rev teal" Margin="0,0,6,0" HorizontalAlignment="Stretch"
                         Click="AddCard_Click" ToolTip.Tip="Add card (Ctrl+N)" AutomationProperties.Name="Add card">

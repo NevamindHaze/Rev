@@ -18,6 +18,7 @@ namespace Rev.App.Views;
 public partial class ReviewView : UserControl, IScreen
 {
     private readonly ReviewSession session;
+    private readonly Deck? deck;
     private bool answerShown;
 
     /// <summary>The colours of Again, Hard, Good and Easy (background, text).</summary>
@@ -30,11 +31,13 @@ public partial class ReviewView : UserControl, IScreen
     ];
 
     /// <param name="deck">The deck to study, or null for "Review all decks".</param>
-    public ReviewView(Deck? deck)
+    /// <param name="custom">A custom study session, or null for today's normal queue.</param>
+    public ReviewView(Deck? deck, CustomStudy? custom = null)
     {
         InitializeComponent();
-        TitleText.Text = deck?.Name ?? "Review";
-        session = new ReviewSession(App.Database, deck?.Id);
+        this.deck = deck;
+        TitleText.Text = custom?.Title() ?? deck?.Name ?? "Review";
+        session = new ReviewSession(App.Database, deck?.Id, custom: custom);
         PreviewKeyDown += Screen_PreviewKeyDown;
         Loaded += (_, _) => ShowCurrent();
     }
@@ -109,11 +112,16 @@ public partial class ReviewView : UserControl, IScreen
 
     private void ShowFinished()
     {
+        bool custom = session.Custom != null;
+        // Done for today, or want something different? Like Anki's Custom study.
+        CustomStudyButton.Visibility = !custom && session.HasAnyCards ? Visibility.Visible : Visibility.Collapsed;
         if (!session.HasAnyCards)
         {
             FinishedIcon.Text = "";   // an empty box
-            FinishedTitle.Text = "No cards yet";
-            FinishedMessage.Text = "Add some cards to a deck, then come back here.";
+            FinishedTitle.Text = custom ? "No matching cards" : "No cards yet";
+            FinishedMessage.Text = custom
+                ? "Nothing matches those choices. Go back and try different ones."
+                : "Add some cards to a deck, then come back here.";
             CheckAgainButton.Visibility = Visibility.Collapsed;
             return;
         }
@@ -124,7 +132,7 @@ public partial class ReviewView : UserControl, IScreen
         if (session.ReviewedThisSession > 0) lines.Add($"You reviewed {session.ReviewedThisSession.Counted("card")} this session.");
         lines.Add(later > 0
             ? $"{later.Counted("learning card")} {(later == 1 ? "comes" : "come")} back later today."
-            : "Come back tomorrow for more.");
+            : custom ? "That's the end of this custom study session." : "Come back tomorrow for more.");
         FinishedMessage.Text = string.Join("\n", lines);
         CheckAgainButton.Visibility = later > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -270,6 +278,13 @@ public partial class ReviewView : UserControl, IScreen
     private void Edit_Click(object sender, RoutedEventArgs e) => EditCurrent();
 
     private void Back_Click(object sender, RoutedEventArgs e) => MainWindow.Current.GoBack();
+
+    private void CustomStudy_Click(object sender, RoutedEventArgs e)
+    {
+        var window = new CustomStudyWindow(deck) { Owner = Window.GetWindow(this) };
+        if (window.ShowDialog() == true) MainWindow.Current.Open(new ReviewView(deck, window.Study));
+        else Focus();
+    }
 
     private void CheckAgain_Click(object sender, RoutedEventArgs e)
     {

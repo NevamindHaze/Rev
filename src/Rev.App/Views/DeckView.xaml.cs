@@ -57,6 +57,12 @@ public partial class DeckView : UserControl, IScreen
 
     private void Study_Click(object sender, RoutedEventArgs e) => MainWindow.Current.Open(new ReviewView(deck));
 
+    private void CustomStudy_Click(object sender, RoutedEventArgs e)
+    {
+        var window = new CustomStudyWindow(deck) { Owner = Window.GetWindow(this) };
+        if (window.ShowDialog() == true) MainWindow.Current.Open(new ReviewView(deck, window.Study));
+    }
+
     private async void Export_Click(object sender, RoutedEventArgs e)
     {
         var current = App.Database.GetDecks().FirstOrDefault(d => d.Id == deck.Id) ?? deck;

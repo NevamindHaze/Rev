@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Rev.Core.Scheduling;
@@ -237,6 +238,34 @@ public sealed class ScreenTests : ScreenTest
         int before = Db.GetCards(Pharmacology.Id).Count;
         Click(add);
         Assert.Equal(before + 2, Db.GetCards(Pharmacology.Id).Count);
+    }
+
+    [AvaloniaFact]
+    public void CustomStudyPicksCardsAndStartsASession()
+    {
+        AddSampleDecks();
+        Db.SaveSettings(Db.GetSettings() with { NewCardsPerDay = 0 });
+        var window = new CustomStudyWindow(Pharmacology);
+        window.Show(Window);
+        Settle();
+        var start = All<Button>(window).First(b => b is not ToggleButton && b.Content is string s && s.StartsWith("Study"));
+        Assert.Equal("Study 4 cards", start.Content);   // more new cards: past the limit of 0
+
+        All<RadioButton>(window).First(rb => rb.Content as string == "Study by tag").IsChecked = true;
+        All<ToggleButton>(window).First(tb => tb.Content as string == "nsaid").IsChecked = true;
+        Settle();
+        Assert.Equal("Study 1 card", start.Content);
+        Picture(window, "19-custom-study");
+
+        All<RadioButton>(window).First(rb => rb.Content as string == "Review ahead").IsChecked = true;
+        Settle();
+        Assert.False(start.IsEnabled);   // nothing studied yet, so nothing comes due
+
+        var review = new ReviewView(Pharmacology, new Rev.Core.Review.CustomStudy { Limit = 1 });
+        Window.Open(review);
+        Settle();
+        Assert.Contains("More new cards", Texts(review));
+        Assert.Contains("1 new", Texts(review));
     }
 
     [AvaloniaFact]
