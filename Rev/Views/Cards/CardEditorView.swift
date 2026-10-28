@@ -24,6 +24,8 @@ struct CardEditorView: View {
     @State private var wordToHide = ""
     @State private var frontSelection: TextSelection?
     @State private var backSelection: TextSelection?
+    @State private var frontFormat: CardFormat?   // B / I pressed, for the rich text boxes (iOS 26+)
+    @State private var backFormat: CardFormat?
     @State private var addedCount = 0
     @FocusState private var focusedField: Field?
 
@@ -48,10 +50,10 @@ struct CardEditorView: View {
                     kindSection
 
                     textBox(kind == .cloze ? "Text" : "Front", text: $front, selection: $frontSelection,
-                            field: .front, minHeight: 90)
+                            format: $frontFormat, field: .front, minHeight: 90)
                     if kind == .cloze { clozeTools }
                     textBox(kind == .cloze ? "Extra (optional, shown on the back)" : "Back", text: $back,
-                            selection: $backSelection, field: .back, minHeight: 150)
+                            selection: $backSelection, format: $backFormat, field: .back, minHeight: 150)
                     Text("Select words, then tap **B** or *I* above the keyboard for bold or italic.")
                         .font(Theme.body(13))
                         .foregroundStyle(Theme.mutedInk)
@@ -90,11 +92,11 @@ struct CardEditorView: View {
                 }
                 ToolbarItemGroup(placement: .keyboard) {
                     if focusedField == .front || focusedField == .back {
-                        Button { applyFormat("**") } label: {
+                        Button { applyFormat(.bold) } label: {
                             Image(systemName: "bold")
                         }
                         .accessibilityLabel("Bold")
-                        Button { applyFormat("*") } label: {
+                        Button { applyFormat(.italic) } label: {
                             Image(systemName: "italic")
                         }
                         .accessibilityLabel("Italic")
@@ -200,12 +202,19 @@ struct CardEditorView: View {
     }
 
     private func textBox(_ title: String, text: Binding<String>, selection: Binding<TextSelection?>,
-                         field: Field, minHeight: CGFloat) -> some View {
+                         format: Binding<CardFormat?>, field: Field, minHeight: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(Theme.body(15, weight: .semibold))
                 .foregroundStyle(Theme.mutedInk)
-            TextEditor(text: text, selection: selection)
+            Group {
+                // iOS 26 can show bold and italic while you type; before that, the box shows the ** / * markers.
+                if #available(iOS 26.0, *) {
+                    RichCardTextEditor(text: text, formatRequest: format, fontSize: 19)
+                } else {
+                    TextEditor(text: text, selection: selection)
+                }
+            }
                 .focused($focusedField, equals: field)
                 .font(Theme.body(19))
                 .foregroundStyle(Theme.ink)
@@ -219,10 +228,18 @@ struct CardEditorView: View {
     // MARK: - Bold and italic
 
     /// Bold or italic for the selected words in whichever box you're typing in.
-    private func applyFormat(_ marker: String) {
+    private func applyFormat(_ format: CardFormat) {
+        if #available(iOS 26.0, *) {
+            switch focusedField {
+            case .front: frontFormat = format
+            case .back: backFormat = format
+            default: break
+            }
+            return
+        }
         switch focusedField {
-        case .front: Self.toggle(marker, text: &front, selection: &frontSelection)
-        case .back: Self.toggle(marker, text: &back, selection: &backSelection)
+        case .front: Self.toggle(format.marker, text: &front, selection: &frontSelection)
+        case .back: Self.toggle(format.marker, text: &back, selection: &backSelection)
         default: break
         }
     }
