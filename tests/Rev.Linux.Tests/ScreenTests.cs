@@ -20,10 +20,10 @@ public sealed class ScreenTests : ScreenTest
         var home = Assert.IsType<HomeView>(CurrentScreen);
         string text = Texts(home);
         Assert.Contains("Hi, Marshal 👋", text);
-        Assert.Contains("Your decks", text);
-        var tiles = All<DeckTile>(home).ToList();
-        Assert.Equal(["Pharmacology", "Parasitology"], tiles.Select(t => t.Deck.Name));
-        Assert.Contains("4 cards", Texts(tiles[0]));   // basic + reversed (2) + type-in
+        Assert.Contains("0 due · 7 new · 0 done today", text);
+        var rows = All<DeckListRow>(home).ToList();
+        Assert.Equal(["Pharmacology", "Parasitology"], rows.Select(r => r.Deck.Name));
+        Assert.Contains("4", Texts(rows[0]).Split(" | "));   // Total: basic + reversed (2) + type-in
         Picture(Window, "01-home");
     }
 
@@ -89,6 +89,8 @@ public sealed class ScreenTests : ScreenTest
     public void AnEmptyRevInvitesYouToMakeADeck()
     {
         Assert.Contains("No decks yet", Texts(Window));
+        Assert.Empty(All<SidebarDeckRow>(Window));
+        Assert.True(Find<Button>(Window, "New deck").IsEnabled);
         Picture(Window, "02-home-empty");
     }
 
@@ -145,8 +147,7 @@ public sealed class ScreenTests : ScreenTest
     public void ADeckShowsItsNumbersAndCards()
     {
         AddSampleDecks();
-        All<DeckTile>(Window).First(t => t.Deck.Name == "Parasitology").RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
-        Settle();
+        Click(All<SidebarDeckRow>(Window).First(r => r.Deck.Name == "Parasitology"));
         var deck = Assert.IsType<DeckView>(CurrentScreen);
         string text = Texts(deck);
         Assert.Contains("Parasitology", text);
