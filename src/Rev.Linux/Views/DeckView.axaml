@@ -18,7 +18,7 @@
                 </Button>
                 <TextBlock x:Name="DeckName" Grid.Column="1" Classes="title" Margin="16,0,12,0"
                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                <Button Grid.Column="2" Classes="rev secondary" MinHeight="46" Padding="20,0" VerticalAlignment="Center"
+                <Button Grid.Column="2" Classes="rev secondary" VerticalAlignment="Center"
                         Click="Export_Click" ToolTip.Tip="Save this deck as an Anki .apkg file"
                         AutomationProperties.Name="Export to Anki">
                     <StackPanel Orientation="Horizontal">
@@ -38,7 +38,7 @@
                                    Icon="StarOutline" Tint="{DynamicResource CoralBrush}" />
             </UniformGrid>
 
-            <Button Classes="rev" Margin="0,14,0,0" MinHeight="64" HorizontalAlignment="Stretch" Click="Study_Click"
+            <Button Classes="rev" Margin="0,14,0,0" HorizontalAlignment="Stretch" Click="Study_Click"
                     AutomationProperties.Name="Study now">
                 <StackPanel Orientation="Horizontal">
                     <mi:MaterialIcon Kind="Play" Width="20" Height="20" Margin="0,0,10,0" />

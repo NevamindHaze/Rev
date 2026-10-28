@@ -52,7 +52,6 @@ public sealed class CardBrowser : StackPanel
         searchBox.Classes.Add("rev");
         searchBox.Named("Search cards");
         countText.Classes.Add("muted");
-        moreButton.MinHeight = 48;
         moreButton.HorizontalAlignment = HorizontalAlignment.Center;
         moreButton.Margin = new Thickness(0, 6, 0, 0);
         moreButton.IsVisible = false;

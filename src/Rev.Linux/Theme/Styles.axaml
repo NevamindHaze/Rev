@@ -10,49 +10,50 @@
     <Style Selector="Window">
         <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
-        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontSize" Value="14" />
     </Style>
 
     <!-- Text styles -->
     <Style Selector="TextBlock.title">
-        <Setter Property="FontSize" Value="30" />
+        <Setter Property="FontSize" Value="20" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
     </Style>
     <Style Selector="TextBlock.heading">
-        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontSize" Value="18" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
     </Style>
     <Style Selector="TextBlock.body">
-        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontSize" Value="14" />
         <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
     <Style Selector="TextBlock.muted">
-        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontSize" Value="13" />
         <Setter Property="Foreground" Value="{DynamicResource MutedInkBrush}" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
     <!-- The small grey heading above a text box, e.g. "Front" -->
     <Style Selector="TextBlock.label">
-        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontSize" Value="13" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Foreground" Value="{DynamicResource MutedInkBrush}" />
-        <Setter Property="Margin" Value="4,0,0,8" />
+        <Setter Property="Margin" Value="2,0,0,6" />
         <Setter Property="VerticalAlignment" Value="Bottom" />
     </Style>
 
-    <!-- A big round button, like "Review all decks". It shrinks a little while pressed and shows a
-         mustard ring when reached with the Tab key. Colour classes: secondary, danger, teal, mustard. -->
+    <!-- A button, like "Review all decks": desktop-sized, slightly rounded. It shows a mustard ring when
+         reached with the Tab key. Colour classes: secondary, danger, teal, mustard; "primary" for the one
+         main action on a page (a little taller), "toolbar" for quiet buttons in a toolbar. -->
     <Style Selector="Button.rev">
         <Setter Property="Background" Value="{DynamicResource InkBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource BackgroundBrush}" />
-        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontSize" Value="14" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="MinHeight" Value="60" />
-        <Setter Property="Padding" Value="28,0" />
-        <Setter Property="CornerRadius" Value="999" />
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="14,0" />
+        <Setter Property="CornerRadius" Value="6" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
@@ -79,8 +80,8 @@
     <Style Selector="Button.rev:focus-visible /template/ Border#Pill">
         <Setter Property="BorderThickness" Value="3" />
     </Style>
-    <Style Selector="Button.rev:pressed">
-        <Setter Property="RenderTransform" Value="scale(0.97)" />
+    <Style Selector="Button.rev:pressed /template/ Border#Pill">
+        <Setter Property="Opacity" Value="0.8" />
     </Style>
     <Style Selector="Button.rev:disabled /template/ Border#Pill">
         <Setter Property="Opacity" Value="0.4" />
@@ -102,29 +103,40 @@
         <Setter Property="Background" Value="{DynamicResource MustardBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource OnMustardBrush}" />
     </Style>
+    <Style Selector="Button.primary">
+        <Setter Property="MinHeight" Value="36" />
+        <Setter Property="Padding" Value="18,0" />
+    </Style>
+    <Style Selector="Button.toolbar">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Padding" Value="10,0" />
+    </Style>
+    <Style Selector="Button.toolbar:pointerover /template/ Border#Pill">
+        <Setter Property="Background" Value="{DynamicResource SoftFillBrush}" />
+        <Setter Property="Opacity" Value="1" />
+    </Style>
 
-    <!-- Sizes: a small pill (the card browser's filters), a round button with just a symbol,
-         and the four big answer tiles on the review screen. -->
+    <!-- Sizes: a small menu button (the card browser's filters), a square button with just a symbol,
+         and the four answer buttons on the review screen. -->
     <Style Selector="Button.chip">
-        <Setter Property="MinHeight" Value="40" />
-        <Setter Property="FontSize" Value="14" />
-        <Setter Property="Padding" Value="16,0" />
-        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="Margin" Value="0,0,6,0" />
     </Style>
     <Style Selector="Button.round">
-        <Setter Property="Width" Value="46" />
-        <Setter Property="Height" Value="46" />
+        <Setter Property="Width" Value="32" />
+        <Setter Property="Height" Value="32" />
         <Setter Property="MinHeight" Value="0" />
         <Setter Property="Padding" Value="0" />
-        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontSize" Value="14" />
     </Style>
     <Style Selector="Button.rating">
-        <Setter Property="MinHeight" Value="80" />
-        <Setter Property="Padding" Value="8,0" />
-        <Setter Property="CornerRadius" Value="24" />
-    </Style>
-    <Style Selector="Button.rating:pressed">
-        <Setter Property="RenderTransform" Value="scale(0.96)" />
+        <Setter Property="MinHeight" Value="36" />
+        <Setter Property="Padding" Value="14,0" />
     </Style>
 
     <!-- A row in a list of cards: a rounded card you can click. -->
@@ -177,9 +189,9 @@
         <Setter Property="SelectionBrush" Value="{DynamicResource TealBrush}" />
         <Setter Property="SelectionForegroundBrush" Value="{DynamicResource OnTealBrush}" />
         <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="CornerRadius" Value="18" />
-        <Setter Property="FontSize" Value="17" />
-        <Setter Property="Padding" Value="16,12" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Padding" Value="10,6" />
         <Setter Property="MinHeight" Value="0" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
@@ -210,13 +222,13 @@
     <Style Selector="RadioButton.choice, ToggleButton.choice">
         <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
         <Setter Property="Background" Value="{DynamicResource SoftFillBrush}" />
-        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontSize" Value="13" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="Margin" Value="0,0,6,6" />
         <Setter Property="Template">
             <ControlTemplate>
-                <Border Name="Pill" Background="{TemplateBinding Background}" Padding="18,10" CornerRadius="999"
+                <Border Name="Pill" Background="{TemplateBinding Background}" Padding="12,6" CornerRadius="6"
                         BorderBrush="{DynamicResource MustardBrush}" BorderThickness="0">
                     <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center"
                                       Foreground="{TemplateBinding Foreground}" />
@@ -232,24 +244,24 @@
         <Setter Property="BorderThickness" Value="3" />
     </Style>
 
-    <!-- A rounded card on the page, e.g. a Settings section. -->
+    <!-- A card on the page, e.g. the card being studied. -->
     <Style Selector="Border.card">
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
         <Setter Property="CornerRadius" Value="{StaticResource Corner}" />
-        <Setter Property="Padding" Value="28" />
+        <Setter Property="Padding" Value="24" />
     </Style>
 
-    <!-- Right-click menus: a rounded card with roomy rows. -->
+    <!-- Right-click menus. -->
     <Style Selector="ContextMenu">
-        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="CornerRadius" Value="8" />
         <Setter Property="Padding" Value="6" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="MaxHeight" Value="440" />
     </Style>
     <Style Selector="MenuItem">
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="Padding" Value="14,9" />
-        <Setter Property="FontSize" Value="15" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="10,5" />
+        <Setter Property="FontSize" Value="13" />
     </Style>
 
     <Style Selector="Slider">

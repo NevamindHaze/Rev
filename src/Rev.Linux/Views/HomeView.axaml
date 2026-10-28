@@ -19,25 +19,25 @@
                     <TextBlock x:Name="DateText" Classes="muted" Margin="0,4,0,0" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Classes="rev secondary" MinHeight="48" Click="AllCards_Click"
+                    <Button Classes="rev secondary" Click="AllCards_Click"
                             ToolTip.Tip="Search every card (Ctrl+F)" AutomationProperties.Name="All cards">
                         <StackPanel Orientation="Horizontal">
                             <mi:MaterialIcon Kind="Magnify" Width="16" Height="16" Margin="0,0,8,0" />
                             <TextBlock Text="All cards" />
                         </StackPanel>
                     </Button>
-                    <Button x:Name="NewDeckButton" Classes="rev secondary" MinHeight="48" Margin="10,0,0,0"
+                    <Button x:Name="NewDeckButton" Classes="rev secondary" Margin="10,0,0,0"
                             Click="NewDeck_Click" ToolTip.Tip="New deck (Ctrl+N)" AutomationProperties.Name="New deck">
                         <StackPanel Orientation="Horizontal">
                             <mi:MaterialIcon Kind="Plus" Width="16" Height="16" Margin="0,0,8,0" />
                             <TextBlock Text="New deck" />
                         </StackPanel>
                     </Button>
-                    <Button Classes="rev secondary round" Width="48" Height="48" Margin="10,0,0,0"
+                    <Button Classes="rev secondary round" Margin="10,0,0,0"
                             Click="Stats_Click" ToolTip.Tip="Stats" AutomationProperties.Name="Stats">
                         <mi:MaterialIcon Kind="ChartBar" Width="18" Height="18" />
                     </Button>
-                    <Button Classes="rev secondary round" Width="48" Height="48" Margin="10,0,0,0"
+                    <Button Classes="rev secondary round" Margin="10,0,0,0"
                             Click="Settings_Click" ToolTip.Tip="Settings (Ctrl+,)" AutomationProperties.Name="Settings">
                         <mi:MaterialIcon Kind="CogOutline" Width="18" Height="18" />
                     </Button>

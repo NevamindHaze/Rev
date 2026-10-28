@@ -27,6 +27,15 @@ public sealed class ScreenTests : ScreenTest
     }
 
     [AvaloniaFact]
+    public void ControlsAreDesktopSized()
+    {
+        AddSampleDecks();
+        var buttons = All<Button>(Window).Where(b => b.Classes.Contains("rev") && !b.Classes.Contains("tile") && b.IsEffectivelyVisible).ToList();
+        Assert.NotEmpty(buttons);
+        Assert.All(buttons, b => Assert.InRange(b.Bounds.Height, 24, 38));
+    }
+
+    [AvaloniaFact]
     public void AnEmptyRevInvitesYouToMakeADeck()
     {
         Assert.Contains("No decks yet", Texts(Window));

@@ -170,7 +170,7 @@
                     <TextBlock Classes="section" Text="About" />
                     <TextBlock x:Name="VersionText" Classes="body" FontSize="16" />
                     <TextBlock x:Name="FolderText" Classes="muted" FontSize="14" Margin="0,8,0,0" />
-                    <Button Classes="rev secondary" MinHeight="44" HorizontalAlignment="Left" Margin="0,14,0,0"
+                    <Button Classes="rev secondary" HorizontalAlignment="Left" Margin="0,14,0,0"
                             Click="OpenFolder_Click" Content="Open data folder" />
                 </StackPanel>
             </Border>

@@ -20,14 +20,14 @@
             <TextBlock x:Name="TitleText" Grid.Column="1" Classes="heading" Margin="16,0,12,0"
                        VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
             <StackPanel Grid.Column="2" Orientation="Horizontal">
-                <Button x:Name="UndoButton" Classes="rev secondary" MinHeight="46" Padding="20,0"
+                <Button x:Name="UndoButton" Classes="rev secondary"
                         Click="Undo_Click" ToolTip.Tip="Undo the last answer (Ctrl+Z)" AutomationProperties.Name="Undo" Focusable="False">
                     <StackPanel Orientation="Horizontal">
                         <mi:MaterialIcon Kind="Undo" Width="16" Height="16" Margin="0,0,8,0" />
                         <TextBlock Text="Undo" FontSize="16" />
                     </StackPanel>
                 </Button>
-                <Button x:Name="EditButton" Classes="rev secondary" MinHeight="46" Padding="20,0" Margin="10,0,0,0"
+                <Button x:Name="EditButton" Classes="rev secondary" Margin="10,0,0,0"
                         Click="Edit_Click" ToolTip.Tip="Edit this card (E)" AutomationProperties.Name="Edit card" Focusable="False">
                     <StackPanel Orientation="Horizontal">
                         <mi:MaterialIcon Kind="PencilOutline" Width="16" Height="16" Margin="0,0,8,0" />
@@ -83,7 +83,7 @@
 
         <!-- Show answer, or the four answer buttons -->
         <Panel Grid.Row="3" Margin="0,18,0,0">
-            <Button x:Name="ShowAnswerButton" Classes="rev" MinHeight="76" HorizontalAlignment="Stretch" Content="Show answer"
+            <Button x:Name="ShowAnswerButton" Classes="rev" HorizontalAlignment="Stretch" Content="Show answer"
                     Click="ShowAnswer_Click" ToolTip.Tip="Space" Focusable="False" />
             <UniformGrid x:Name="RatingGrid" Columns="4" IsVisible="False" Margin="-5,0" />
         </Panel>

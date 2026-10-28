@@ -23,8 +23,8 @@
                      AutomationProperties.Name="Cards to paste" />
 
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
-                <Button Classes="rev secondary" MinHeight="54" Content="Cancel" Click="Cancel_Click" />
-                <Button x:Name="AddButton" Classes="rev teal" MinHeight="54" Margin="12,0,0,0"
+                <Button Classes="rev secondary" Content="Cancel" Click="Cancel_Click" />
+                <Button x:Name="AddButton" Classes="rev teal primary" Margin="12,0,0,0"
                         Content="Add 0 cards" IsEnabled="False" Click="Add_Click" ToolTip.Tip="Ctrl+Enter" />
             </StackPanel>
         </Grid>
