@@ -54,7 +54,8 @@ struct CustomStudy: Hashable, Identifiable {
     var tagCards: TagCards = .all
     var shuffled = true
 
-    /// Picked once when the session starts, so the list doesn't change under you.
+    /// Tells sessions apart. Equality compares every field (the synthesized ==), so changing a choice
+    /// in the sheet is a real change and SwiftUI redraws it.
     let id = UUID()
 
     var title: String { kind.title }
@@ -145,7 +146,4 @@ struct CustomStudy: Hashable, Identifiable {
         if up { return days < 7 ? days + 1 : min(365, days + 7) }
         return days > 7 ? max(7, days - 7) : max(1, days - 1)
     }
-
-    static func == (a: CustomStudy, b: CustomStudy) -> Bool { a.id == b.id }
-    func hash(into hasher: inout Hasher) { hasher.combine(id) }
 }
