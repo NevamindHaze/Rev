@@ -1,6 +1,6 @@
 <!--
-    The review screen: question → Show answer → rate. Minimal on purpose.
-    Keys: Space (or Enter) shows the answer, 1–4 rate it, Ctrl+Z undoes, E edits the card, Esc goes back.
+    Studying, beside the sidebar: question → Show answer → rate. The card sits at a reading width in the middle.
+    Keys: Space (or Enter) shows the answer, 1–4 rate it, Ctrl+Z undoes, E edits the card, Esc stops.
     Clicking works everywhere too: click the card to show the answer.
 -->
 <UserControl xmlns="https://github.com/avaloniaui"
@@ -9,42 +9,46 @@
              xmlns:controls="clr-namespace:Rev.Linux.Controls"
              x:Class="Rev.Linux.Views.ReviewView"
              Focusable="True">
-    <Grid MaxWidth="900" Margin="32,22,32,20" RowDefinitions="Auto,Auto,*,Auto,Auto">
+    <Grid Margin="20,14,20,18" RowDefinitions="Auto,*,Auto,Auto">
 
-        <!-- ←, the deck's name, Undo and Edit -->
+        <!-- What you're studying and how much is left, with Undo, Edit and Stop -->
         <Grid ColumnDefinitions="Auto,*,Auto">
-            <Button Classes="rev secondary round" Click="Back_Click" ToolTip.Tip="Back (Esc)"
-                    AutomationProperties.Name="Back" Focusable="False">
-                <mi:MaterialIcon Kind="ArrowLeft" Width="18" Height="18" />
-            </Button>
-            <TextBlock x:Name="TitleText" Grid.Column="1" Classes="heading" Margin="16,0,12,0"
+            <TextBlock x:Name="TitleText" Classes="heading" Margin="0,0,14,0" MaxWidth="420"
                        VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-            <StackPanel Grid.Column="2" Orientation="Horizontal">
-                <Button x:Name="UndoButton" Classes="rev secondary"
+            <!-- 3 new · 2 learning · 5 review -->
+            <StackPanel x:Name="CountsPanel" Grid.Column="1" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center" />
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+                <Button x:Name="UndoButton" Classes="rev toolbar"
                         Click="Undo_Click" ToolTip.Tip="Undo the last answer (Ctrl+Z)" AutomationProperties.Name="Undo" Focusable="False">
                     <StackPanel Orientation="Horizontal">
-                        <mi:MaterialIcon Kind="Undo" Width="16" Height="16" Margin="0,0,8,0" />
-                        <TextBlock Text="Undo" FontSize="16" />
+                        <mi:MaterialIcon Kind="Undo" Width="16" Height="16" Margin="0,0,6,0" />
+                        <TextBlock Text="Undo" />
                     </StackPanel>
                 </Button>
-                <Button x:Name="EditButton" Classes="rev secondary" Margin="10,0,0,0"
+                <Button x:Name="EditButton" Classes="rev toolbar"
                         Click="Edit_Click" ToolTip.Tip="Edit this card (E)" AutomationProperties.Name="Edit card" Focusable="False">
                     <StackPanel Orientation="Horizontal">
-                        <mi:MaterialIcon Kind="PencilOutline" Width="16" Height="16" Margin="0,0,8,0" />
-                        <TextBlock Text="Edit" FontSize="16" />
+                        <mi:MaterialIcon Kind="PencilOutline" Width="16" Height="16" Margin="0,0,6,0" />
+                        <TextBlock Text="Edit" />
+                    </StackPanel>
+                </Button>
+                <Button Classes="rev toolbar" Click="Back_Click" ToolTip.Tip="Stop studying (Esc)"
+                        AutomationProperties.Name="Stop" Focusable="False">
+                    <StackPanel Orientation="Horizontal">
+                        <mi:MaterialIcon Kind="Close" Width="16" Height="16" Margin="0,0,6,0" />
+                        <TextBlock Text="Stop" />
                     </StackPanel>
                 </Button>
             </StackPanel>
         </Grid>
 
-        <!-- 3 new · 2 learning · 5 review -->
-        <StackPanel x:Name="CountsPanel" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,16" />
-
         <!-- The card -->
-        <Border x:Name="CardFace" Grid.Row="2" Background="{DynamicResource SurfaceBrush}" CornerRadius="{StaticResource Corner}"
+        <!-- The card, at a comfortable reading width in the middle -->
+        <Border x:Name="CardFace" Grid.Row="1" Background="{DynamicResource SurfaceBrush}" CornerRadius="{StaticResource Corner}"
+                MaxWidth="640" Margin="0,18,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Top" MinHeight="240"
                 Cursor="Hand" PointerReleased="CardFace_PointerReleased">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Margin="36,30">
+                <StackPanel Margin="32,26">
                     <TextBlock Text="QUESTION" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource MutedInkBrush}" Margin="0,0,0,12" />
                     <controls:CardTextView x:Name="FrontView" TextSize="26" TextElement.FontWeight="SemiBold" />
 
@@ -66,7 +70,7 @@
         </Border>
 
         <!-- Nothing left to study -->
-        <StackPanel x:Name="FinishedPanel" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="False">
+        <StackPanel x:Name="FinishedPanel" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="False">
             <mi:MaterialIcon x:Name="FinishedIcon" Width="68" Height="68" Foreground="{DynamicResource TealBrush}" />
             <TextBlock x:Name="FinishedTitle" Classes="title" HorizontalAlignment="Center" Margin="0,18,0,8" />
             <TextBlock x:Name="FinishedMessage" Classes="muted" FontSize="16" TextAlignment="Center" />
@@ -82,13 +86,13 @@
         </StackPanel>
 
         <!-- Show answer, or the four answer buttons -->
-        <Panel Grid.Row="3" Margin="0,18,0,0">
-            <Button x:Name="ShowAnswerButton" Classes="rev" HorizontalAlignment="Stretch" Content="Show answer"
+        <Panel Grid.Row="2" Margin="0,16,0,0" HorizontalAlignment="Center">
+            <Button x:Name="ShowAnswerButton" Classes="rev primary" MinWidth="220" Content="Show answer"
                     Click="ShowAnswer_Click" ToolTip.Tip="Space" Focusable="False" />
-            <UniformGrid x:Name="RatingGrid" Columns="4" IsVisible="False" Margin="-5,0" />
+            <StackPanel x:Name="RatingGrid" Orientation="Horizontal" Spacing="8" IsVisible="False" />
         </Panel>
 
-        <TextBlock x:Name="KeysHint" Grid.Row="4" Classes="muted" FontSize="13" HorizontalAlignment="Center"
-                   Margin="0,12,0,0" Text="Space shows the answer · 1–4 rate · Ctrl+Z undo · E edit · Esc back" />
+        <TextBlock x:Name="KeysHint" Grid.Row="3" Classes="muted" FontSize="12" HorizontalAlignment="Center"
+                   Margin="0,10,0,0" Text="Space shows the answer · 1–4 rate · Ctrl+Z undo · E edit · Esc stops" />
     </Grid>
 </UserControl>

@@ -42,7 +42,8 @@ public partial class ReviewView : UserControl, IScreen
     {
         InitializeComponent();
         this.deck = deck;
-        TitleText.Text = custom?.Title() ?? deck?.Name ?? "Review";
+        // e.g. "Studying Pharmacology", or "Studying Pharmacology · More new cards" for custom study
+        TitleText.Text = $"Studying {deck?.Name ?? "all decks"}" + (custom is null ? "" : $" · {custom.Title()}");
         session = new ReviewSession(App.Database, deck?.Id, custom: custom);
         AddHandler(KeyDownEvent, Screen_KeyDown, RoutingStrategies.Tunnel);
         Loaded += (_, _) => ShowCurrent();
@@ -104,14 +105,14 @@ public partial class ReviewView : UserControl, IScreen
     /// <summary>A coloured dot with a count, e.g. "● 3 new".</summary>
     private static Border CountPill(string label, int count, string colour)
     {
-        var dot = new Ellipse { Width = 9, Height = 9, Margin = new Thickness(0, 0, 7, 0), VerticalAlignment = VerticalAlignment.Center }
+        var dot = new Ellipse { Width = 8, Height = 8, Margin = new Thickness(0, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center }
             .Colour(Shape.FillProperty, colour);
-        var text = new TextBlock { Text = $"{count} {label}", FontSize = 14, FontWeight = FontWeight.SemiBold };
+        var text = new TextBlock { Text = $"{count} {label}", FontSize = 13 };
+        text.Colour(TextBlock.ForegroundProperty, "MutedInkBrush");
         return new Border
         {
-            Padding = new Thickness(14, 8, 14, 8), Margin = new Thickness(4, 0, 4, 0), CornerRadius = new CornerRadius(17),
             Child = new StackPanel { Orientation = Orientation.Horizontal, Children = { dot, text } },
-        }.Colour(Border.BackgroundProperty, "SoftFillBrush").Named(text.Text);
+        }.Named(text.Text);
     }
 
     private void ShowFinished()
@@ -176,17 +177,18 @@ public partial class ReviewView : UserControl, IScreen
         RatingGrid.Children.Clear();
         foreach (var (rating, title, background, foreground) in Ratings)
         {
+            // e.g. "1 · Again  1m": the key, the answer, and when you'd see the card next
             var button = Ui.Button("rev rating", new StackPanel
             {
+                Orientation = Orientation.Horizontal,
                 Children =
                 {
-                    new TextBlock { Text = title, FontSize = 18, FontWeight = FontWeight.Bold, HorizontalAlignment = HorizontalAlignment.Center },
-                    new TextBlock { Text = previews.GetValueOrDefault(rating, " "), FontSize = 14, FontWeight = FontWeight.SemiBold,
-                                    Opacity = 0.85, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 3, 0, 0) },
+                    new TextBlock { Text = $"{(int)rating} · {title}", FontWeight = FontWeight.Bold, VerticalAlignment = VerticalAlignment.Center },
+                    new TextBlock { Text = previews.GetValueOrDefault(rating, ""), FontWeight = FontWeight.SemiBold,
+                                    Opacity = 0.8, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(10, 0, 0, 0) },
                 },
             }).Named(title);
-            button.Margin = new Thickness(5, 0, 5, 0);
-            button.HorizontalAlignment = HorizontalAlignment.Stretch;
+            button.MinWidth = 128;
             button.Focusable = false;
             button.Colour(BackgroundProperty, background).Colour(ForegroundProperty, foreground);
             ToolTip.SetTip(button, $"Key {(int)rating}");

@@ -204,13 +204,14 @@ public sealed class ScreenTests : ScreenTest
         Window.Open(new ReviewView(Pharmacology));
         Settle();
         var review = Assert.IsType<ReviewView>(CurrentScreen);
+        Assert.Contains("Studying Pharmacology", Texts(review));
         Assert.Contains("QUESTION", Texts(review));
         Assert.DoesNotContain("ANSWER", Texts(review));
         Picture(Window, "07-review-question");
 
         Press(Key.Space);
         Assert.Contains("ANSWER", Texts(review));
-        Assert.Contains("Again", Texts(review));
+        Assert.Contains("1 · Again", Texts(review));
         Picture(Window, "08-review-answer");
 
         int before = Db.ReviewsToday(DateTime.Now);
@@ -223,6 +224,19 @@ public sealed class ScreenTests : ScreenTest
 
         Press(Key.Escape);   // stops: back to the deck's page
         Assert.IsType<DeckView>(CurrentScreen);
+    }
+
+    [AvaloniaFact]
+    public void EscWithAQuestionOpenOnlyClosesTheQuestion()
+    {
+        AddSampleDecks();
+        Window.Open(new ReviewView(Pharmacology));
+        Settle();
+        _ = RevDialog.Confirm(Window, "Discard this card?", "You've typed a card that hasn't been saved.", "Discard", destructive: true);
+        Settle();
+        Press(Key.Escape);
+        Assert.Null(OpenDialog(Window));
+        Assert.IsType<ReviewView>(CurrentScreen);
     }
 
     [AvaloniaFact]
