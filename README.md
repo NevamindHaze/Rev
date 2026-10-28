@@ -39,6 +39,7 @@
 - **FSRS** scheduling with an adjustable memory target, or classic **SM-2**
 - Learning steps, overdue credit, interval fuzz, sibling burying and a 4 am day rollover, like Anki
 - Undo, edit-while-reviewing, leech detection with rewrite/suspend suggestions
+- **Custom study** (inside a deck, or when you're all caught up): more new cards, forgotten cards, review ahead, or study by tag
 
 **Cards**
 - Card types: **Basic**, **Basic + reversed**, **Cloze** (fill in the blank) and **Type the answer**

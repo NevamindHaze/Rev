@@ -10,6 +10,8 @@ struct DeckDetailView: View {
     @State private var search = ""
     @State private var showingAddCard = false
     @State private var showingBulkAdd = false
+    @State private var showingCustomStudy = false
+    @State private var customSession: CustomStudy?
     @State private var cardToEdit: Card?
     @State private var exportDocument: ExportFile?
     @State private var isExporting = false
@@ -34,6 +36,12 @@ struct DeckDetailView: View {
                     Label("Study now", systemImage: "play.fill")
                 }
                 .buttonStyle(PillButtonStyle(height: 64))
+
+                Button { showingCustomStudy = true } label: {
+                    Label("Custom study", systemImage: "slider.horizontal.3")
+                }
+                .buttonStyle(PillButtonStyle(background: Theme.softFill, foreground: Theme.ink))
+                .disabled(deck.cards.isEmpty)
 
                 HStack(spacing: 12) {
                     Button { showingAddCard = true } label: {
@@ -87,6 +95,12 @@ struct DeckDetailView: View {
         }
         .sheet(isPresented: $showingBulkAdd) {
             BulkAddView(deck: deck)
+        }
+        .sheet(isPresented: $showingCustomStudy) {
+            CustomStudyView(cards: deck.cards) { customSession = $0 }
+        }
+        .navigationDestination(item: $customSession) { session in
+            ReviewView(deck: deck, custom: session)
         }
         .fileExporter(isPresented: $isExporting, document: exportDocument, contentType: .apkg,
                       defaultFilename: deck.name) { result in

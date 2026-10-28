@@ -5,6 +5,8 @@ import SwiftData
 struct ReviewView: View {
     /// The deck to study, or `nil` to study all decks together.
     let deck: Deck?
+    /// Set for a custom study session; `nil` for the normal daily queue.
+    var custom: CustomStudy? = nil
 
     @Environment(\.modelContext) private var context
     @Query private var allCards: [Card]
@@ -22,6 +24,11 @@ struct ReviewView: View {
     /// What you typed on a "Type the answer" card.
     @State private var typedAnswer = ""
     @FocusState private var answerFieldFocused: Bool
+    /// Custom study: the cards picked when the session started, and which ones you've answered.
+    @State private var sessionCards: [Card]?
+    @State private var answeredInSession: Set<UUID> = []
+    @State private var showingCustomStudy = false
+    @State private var customSession: CustomStudy?
 
     private struct PastAnswer {
         let card: Card
@@ -56,7 +63,7 @@ struct ReviewView: View {
         .padding(.horizontal, Theme.padding)
         .padding(.bottom, 12)
         .background(Theme.background.ignoresSafeArea())
-        .navigationTitle(deck?.name ?? "Review")
+        .navigationTitle(custom?.title ?? deck?.name ?? "Review")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
@@ -77,6 +84,12 @@ struct ReviewView: View {
         .sheet(item: $cardToEdit) { card in
             CardEditorView(mode: .edit(card))
         }
+        .sheet(isPresented: $showingCustomStudy) {
+            CustomStudyView(cards: cards) { customSession = $0 }
+        }
+        .navigationDestination(item: $customSession) { session in
+            ReviewView(deck: deck, custom: session)
+        }
         .alert("This card is a leech",
                isPresented: Binding(get: { newLeech != nil }, set: { if !$0 { newLeech = nil } }),
                presenting: newLeech) { card in
@@ -86,7 +99,12 @@ struct ReviewView: View {
         } message: { card in
             Text("You've forgotten it \(card.lapses) times. Cards like this usually need rewriting: make them shorter, split them up, or add a memory hook. Suspending hides it from reviews until you unsuspend it in its deck.")
         }
-        .onAppear(perform: loadNext)
+        .onAppear {
+            if let custom, sessionCards == nil {
+                sessionCards = custom.pickCards(from: cards, context: context)
+            }
+            loadNext()
+        }
         .onChange(of: allCards.count) {
             if current == nil { loadNext() }
         }
@@ -188,10 +206,10 @@ struct ReviewView: View {
     private var finished: some View {
         VStack(spacing: 16) {
             Spacer()
-            Image(systemName: cards.isEmpty ? "tray" : "checkmark.seal.fill")
+            Image(systemName: isEmpty ? "tray" : "checkmark.seal.fill")
                 .font(.system(size: 70))
                 .foregroundStyle(Theme.teal)
-            Text(cards.isEmpty ? "No cards yet" : "All caught up!")
+            Text(isEmpty ? (custom == nil ? "No cards yet" : "No matching cards") : "All caught up!")
                 .font(Theme.title(30))
                 .foregroundStyle(Theme.ink)
             Text(finishedMessage)
@@ -203,17 +221,33 @@ struct ReviewView: View {
                     .buttonStyle(PillButtonStyle(background: Theme.teal, foreground: .white))
                     .padding(.top, 8)
             }
+            // Done for today, or want something different? Like Anki's Custom study.
+            if custom == nil && !cards.isEmpty {
+                Button { showingCustomStudy = true } label: {
+                    Label("Custom study", systemImage: "slider.horizontal.3")
+                }
+                .buttonStyle(PillButtonStyle(background: Theme.softFill, foreground: Theme.ink))
+                .padding(.top, queue.laterToday > 0 ? 0 : 8)
+            }
             Spacer()
         }
         .frame(maxWidth: .infinity)
     }
 
+    /// Nothing to study at all: an empty deck, or a custom session that matched no cards.
+    private var isEmpty: Bool {
+        custom == nil ? cards.isEmpty : (sessionCards ?? []).isEmpty
+    }
+
     private var finishedMessage: String {
+        if custom != nil && isEmpty { return "Nothing matches those choices. Go back and try different ones." }
         if cards.isEmpty { return "Add some cards to a deck, then come back here." }
         var lines: [String] = []
         if reviewedThisSession > 0 { lines.append("You reviewed \(reviewedThisSession.counted("card")) this session.") }
         if queue.laterToday > 0 {
             lines.append("\(queue.laterToday) learning cards come back later today.")
+        } else if custom != nil {
+            lines.append("That's the end of this custom study session.")
         } else {
             lines.append("Come back tomorrow for more.")
         }
@@ -259,6 +293,7 @@ struct ReviewView: View {
         }
 
         try? context.save()
+        answeredInSession.insert(card.id)
         reviewedThisSession += 1
         withAnimation(.snappy) { loadNext() }
     }
@@ -279,6 +314,9 @@ struct ReviewView: View {
         last.card.markScheduled()
         last.card.markEdited()
         context.delete(last.log)
+        if !history.contains(where: { $0.card.id == last.card.id }) {
+            answeredInSession.remove(last.card.id)
+        }
         try? context.save()
         reviewedThisSession = max(0, reviewedThisSession - 1)
         withAnimation(.snappy) {
@@ -298,6 +336,10 @@ struct ReviewView: View {
     }
 
     private func rebuildQueue() {
+        if let sessionCards {
+            queue = StudyQueue(sessionCards: sessionCards, answered: answeredInSession, now: Date())
+            return
+        }
         let newLeft = max(0, newCardsPerDay - StatsCalculator.newCardsStudiedToday(in: context))
         // Notes you already studied a card from today: their sibling cards wait until tomorrow.
         let studiedToday = StatsCalculator.cardIDsReviewedToday(in: context)
