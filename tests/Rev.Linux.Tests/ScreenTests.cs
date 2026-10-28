@@ -151,6 +151,9 @@ public sealed class ScreenTests : ScreenTest
         var deck = Assert.IsType<DeckView>(CurrentScreen);
         string text = Texts(deck);
         Assert.Contains("Parasitology", text);
+        Assert.Contains("3 cards · 0 due · 3 new", text);   // the cloze makes 2 cards, plus a basic one
+        Assert.True(Find<Button>(deck, "Study").IsEnabled);
+        Assert.True(Find<Button>(deck, "More").IsEnabled);
         Assert.Contains("Cloze", text);
         Assert.Contains("#flukes", text);
         Picture(Window, "05-deck");

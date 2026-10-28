@@ -1,6 +1,6 @@
 <!--
-    Inside a deck: its numbers, a big Study button, ways to add cards, and the card list.
-    Keys: Ctrl+N adds a card, Ctrl+F searches, Esc (or Alt+Left) goes back. Click a card to edit it.
+    A deck's page: its name and numbers with a toolbar (Study, Custom study, Add card, ⋯), then its cards.
+    Keys: Space studies, Ctrl+N adds a card, Ctrl+F searches.
 -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -8,69 +8,53 @@
              xmlns:controls="clr-namespace:Rev.Linux.Controls"
              x:Class="Rev.Linux.Views.DeckView">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel MaxWidth="900" Margin="{StaticResource PagePadding}">
+        <StackPanel MaxWidth="1200" Margin="{StaticResource PagePadding}">
 
-            <!-- The deck's name -->
+            <!-- The deck's name and numbers, then Study, Custom study, Add card and ⋯ (Paste many, Export to Anki) -->
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <TextBlock x:Name="DeckName" Grid.Column="1" Classes="title" Margin="0,0,12,0"
+                <TextBlock x:Name="DeckName" Classes="title" Margin="0,0,12,0" MaxWidth="360"
                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                <Button Grid.Column="2" Classes="rev secondary" VerticalAlignment="Center"
-                        Click="Export_Click" ToolTip.Tip="Save this deck as an Anki .apkg file"
-                        AutomationProperties.Name="Export to Anki">
-                    <StackPanel Orientation="Horizontal">
-                        <mi:MaterialIcon Kind="Export" Width="16" Height="16" Margin="0,0,8,0" />
-                        <TextBlock Text="Export to Anki" FontSize="16" />
-                    </StackPanel>
-                </Button>
+                <TextBlock x:Name="NumbersText" Grid.Column="1" Classes="muted" VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <Button Classes="rev primary" Click="Study_Click" ToolTip.Tip="Study this deck (Space)"
+                            AutomationProperties.Name="Study">
+                        <StackPanel Orientation="Horizontal">
+                            <mi:MaterialIcon Kind="Play" Width="16" Height="16" Margin="0,0,8,0" />
+                            <TextBlock Text="Study" />
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="rev toolbar" Click="CustomStudy_Click"
+                            ToolTip.Tip="More new cards, forgotten cards, review ahead, or study by tag"
+                            AutomationProperties.Name="Custom study">
+                        <StackPanel Orientation="Horizontal">
+                            <mi:MaterialIcon Kind="Tune" Width="16" Height="16" Margin="0,0,6,0" />
+                            <TextBlock Text="Custom study" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="AddCardButton" Classes="rev toolbar" Click="AddCard_Click"
+                            ToolTip.Tip="Add card (Ctrl+N)" AutomationProperties.Name="Add card">
+                        <StackPanel Orientation="Horizontal">
+                            <mi:MaterialIcon Kind="Plus" Width="16" Height="16" Margin="0,0,6,0" />
+                            <TextBlock Text="Add card" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="MoreButton" Classes="rev toolbar round" Click="More_Click"
+                            ToolTip.Tip="More" AutomationProperties.Name="More">
+                        <mi:MaterialIcon Kind="DotsHorizontal" Width="18" Height="18" />
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Paste many…" Click="PasteMany_Click" />
+                                <MenuItem Header="Export to Anki…" Click="Export_Click" />
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+                </StackPanel>
             </Grid>
 
-            <!-- The deck's numbers -->
-            <UniformGrid Columns="3" Margin="0,24,0,0">
-                <controls:StatTile x:Name="CardsTile" Margin="0,0,8,0" Label="Cards"
-                                   Icon="CardsOutline" Tint="{DynamicResource MustardBrush}" />
-                <controls:StatTile x:Name="DueTile" Margin="4,0,4,0" Label="Due today"
-                                   Icon="ClockOutline" Tint="{DynamicResource TealBrush}" />
-                <controls:StatTile x:Name="NewTile" Margin="8,0,0,0" Label="New"
-                                   Icon="StarOutline" Tint="{DynamicResource CoralBrush}" />
-            </UniformGrid>
-
-            <Button Classes="rev" Margin="0,14,0,0" HorizontalAlignment="Stretch" Click="Study_Click"
-                    AutomationProperties.Name="Study now">
-                <StackPanel Orientation="Horizontal">
-                    <mi:MaterialIcon Kind="Play" Width="20" Height="20" Margin="0,0,10,0" />
-                    <TextBlock Text="Study now" />
-                </StackPanel>
-            </Button>
-
-            <Button Classes="rev secondary" Margin="0,12,0,0" HorizontalAlignment="Stretch" Click="CustomStudy_Click"
-                    ToolTip.Tip="More new cards, forgotten cards, review ahead, or study by tag"
-                    AutomationProperties.Name="Custom study">
-                <StackPanel Orientation="Horizontal">
-                    <mi:MaterialIcon Kind="Tune" Width="18" Height="18" Margin="0,0,10,0" />
-                    <TextBlock Text="Custom study" />
-                </StackPanel>
-            </Button>
-
-            <UniformGrid Columns="2" Margin="0,12,0,0">
-                <Button x:Name="AddCardButton" Classes="rev teal" Margin="0,0,6,0" HorizontalAlignment="Stretch"
-                        Click="AddCard_Click" ToolTip.Tip="Add card (Ctrl+N)" AutomationProperties.Name="Add card">
-                    <StackPanel Orientation="Horizontal">
-                        <mi:MaterialIcon Kind="Plus" Width="18" Height="18" Margin="0,0,10,0" />
-                        <TextBlock Text="Add card" />
-                    </StackPanel>
-                </Button>
-                <Button Classes="rev mustard" Margin="6,0,0,0" HorizontalAlignment="Stretch" Click="PasteMany_Click"
-                        AutomationProperties.Name="Paste many">
-                    <StackPanel Orientation="Horizontal">
-                        <mi:MaterialIcon Kind="ContentPaste" Width="18" Height="18" Margin="0,0,10,0" />
-                        <TextBlock Text="Paste many" />
-                    </StackPanel>
-                </Button>
-            </UniformGrid>
-
-            <TextBlock Classes="heading" Text="Cards" Margin="4,32,0,12" />
-            <TextBlock x:Name="EmptyText" Classes="muted" Margin="4,0,0,0" Text="No cards yet. Click “Add card” to start." />
-            <controls:CardBrowser x:Name="Browser" />
+            
+            <TextBlock x:Name="EmptyText" Classes="muted" Margin="2,20,0,0" Text="No cards yet. Click “Add card” to start." />
+            <controls:CardBrowser x:Name="Browser" Margin="0,16,0,0" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

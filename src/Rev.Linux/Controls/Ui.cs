@@ -60,3 +60,14 @@ public static class Ui
         return button;
     }
 }
+
+public static class LayoutExtensions
+{
+    /// <summary>Centres a control in the space it's given.</summary>
+    public static T Center<T>(this T control) where T : Layoutable
+    {
+        control.HorizontalAlignment = HorizontalAlignment.Center;
+        control.VerticalAlignment = VerticalAlignment.Center;
+        return control;
+    }
+}
