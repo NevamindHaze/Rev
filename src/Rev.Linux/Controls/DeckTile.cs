@@ -18,14 +18,6 @@ namespace Rev.Linux.Controls;
 public sealed class DeckTile : Button
 {
     /// <summary>The tile colours take turns down the list: coral → teal → mustard → sage.</summary>
-    private static readonly (string Background, string Foreground)[] Palettes =
-    [
-        ("CoralBrush", "OnCoralBrush"),
-        ("TealBrush", "OnTealBrush"),
-        ("MustardBrush", "OnMustardBrush"),
-        ("SageBrush", "OnSageBrush"),
-    ];
-
     protected override Type StyleKeyOverride => typeof(Button);
 
     public Deck Deck { get; }
@@ -39,7 +31,7 @@ public sealed class DeckTile : Button
         Deck = deck;
         Classes.Add("rev");
         Classes.Add("tile");
-        var (background, foreground) = Palettes[index % Palettes.Length];
+        var (background, foreground) = Ui.DeckColours(index);
         this.Colour(BackgroundProperty, background);
         this.Colour(ForegroundProperty, foreground);
         this.Named(deck.Name);

@@ -10,11 +10,7 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel MaxWidth="900" Margin="{StaticResource PagePadding}">
             <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,22">
-                <Button Classes="rev secondary round" Click="Back_Click" ToolTip.Tip="Back (Esc)"
-                        AutomationProperties.Name="Back" VerticalAlignment="Center">
-                    <mi:MaterialIcon Kind="ArrowLeft" Width="18" Height="18" />
-                </Button>
-                <TextBlock Grid.Column="1" Classes="title" Text="All cards" Margin="16,0,0,0" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Classes="title" Text="All cards" VerticalAlignment="Center" />
             </Grid>
             <TextBlock x:Name="EmptyText" Classes="muted" Margin="4,0,0,0" Text="No cards yet." />
             <controls:CardBrowser x:Name="Browser" />

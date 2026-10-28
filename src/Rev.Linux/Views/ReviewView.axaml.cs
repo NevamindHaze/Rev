@@ -64,6 +64,7 @@ public partial class ReviewView : UserControl, IScreen
     {
         answerShown = false;
         UpdateCounts();
+        MainWindow.Current?.RefreshSidebar();   // the deck's count in the sidebar goes down as you study
         UndoButton.IsEnabled = session.CanUndo;
 
         var card = session.Current;
@@ -270,7 +271,7 @@ public partial class ReviewView : UserControl, IScreen
             case Key.D4 or Key.NumPad4: _ = Rate(Rating.Easy); break;
             case Key.Z when ctrl: Undo(); break;
             case Key.E when e.KeyModifiers == KeyModifiers.None: _ = EditCurrent(); break;
-            case Key.Escape: MainWindow.Current.GoBack(); break;
+            case Key.Escape: Stop(); break;
             default: return;
         }
         e.Handled = true;
@@ -288,7 +289,17 @@ public partial class ReviewView : UserControl, IScreen
 
     private void Edit_Click(object? sender, RoutedEventArgs e) => _ = EditCurrent();
 
-    private void Back_Click(object? sender, RoutedEventArgs e) => MainWindow.Current.GoBack();
+    private void Back_Click(object? sender, RoutedEventArgs e) => Stop();
+
+    /// <summary>Stops studying: back to the deck's page, or Home after studying all decks.</summary>
+    private void Stop()
+    {
+        if (deck is null) MainWindow.Current.ShowHome();
+        else MainWindow.Current.ShowDeck(deck);
+    }
+
+    /// <summary>The deck being studied (null when studying all decks).</summary>
+    public Deck? Deck => deck;
 
     private async void CustomStudy_Click(object? sender, RoutedEventArgs e)
     {

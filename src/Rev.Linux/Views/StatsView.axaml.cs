@@ -19,7 +19,6 @@ public partial class StatsView : UserControl, IScreen
     public StatsView()
     {
         InitializeComponent();
-        KeyBindings.Add(new KeyBinding { Gesture = new KeyGesture(Key.Escape), Command = new RelayCommand(() => MainWindow.Current.GoBack()) });
         Loaded += (_, _) => Refresh();
     }
 
@@ -86,5 +85,4 @@ public partial class StatsView : UserControl, IScreen
         }
     }
 
-    private void Back_Click(object? sender, RoutedEventArgs e) => MainWindow.Current.GoBack();
 }

@@ -1,30 +1,38 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Rev.Core.Models;
+using Rev.Linux.Controls;
 using Rev.Linux.Views;
 
 namespace Rev.Linux;
 
-/// <summary>The main window. Shows one screen at a time and remembers the way back.</summary>
+/// <summary>The main window: the sidebar and the page shown beside it.</summary>
 public partial class MainWindow : Window
 {
-    /// <summary>The screens you came through, so "back" knows where to go.</summary>
-    private readonly Stack<Control> history = new();
     private bool closingSynced;
 
     public MainWindow()
     {
         InitializeComponent();
         Current = this;
-        Show(new HomeView());
+        SidebarPanel.Refresh();
+        ShowHome();
 
-        // Coming back to Rev (e.g. the next morning) refreshes the screen's numbers.
+        // Coming back to Rev (e.g. the next morning) refreshes the numbers.
         Activated += (_, _) =>
         {
+            RefreshSidebar();
             if (Screen.Content is IScreen screen and Control { IsLoaded: true }) screen.Refresh();
         };
-        // Alt+Left goes back, like in a web browser.
-        KeyBindings.Add(new KeyBinding { Gesture = new KeyGesture(Key.Left, KeyModifiers.Alt), Command = new RelayCommand(GoBack) });
+        // Ctrl+1/2/3 Home, All cards, Stats; Ctrl+, Settings; Ctrl+B the sidebar; Ctrl+Shift+N a new deck.
+        Bind(Key.D1, KeyModifiers.Control, ShowHome);
+        Bind(Key.D2, KeyModifiers.Control, () => Open(new AllCardsView()));
+        Bind(Key.D3, KeyModifiers.Control, () => Open(new StatsView()));
+        Bind(Key.OemComma, KeyModifiers.Control, () => Open(new SettingsView()));
+        Bind(Key.B, KeyModifiers.Control, ToggleSidebar);
+        Bind(Key.N, KeyModifiers.Control | KeyModifiers.Shift, () => _ = DeckActions.New(this));
 
         // Sync with Anki (if it's set up): soon after opening, every few minutes, and when closing.
         Opened += (_, _) =>
@@ -32,7 +40,11 @@ public partial class MainWindow : Window
             FitOnScreen();
             SyncRunner.Start();
         };
-        SyncRunner.Synced += (_, _) => { if (Screen.Content is IScreen screen && !IsReviewing) screen.Refresh(); };
+        SyncRunner.Synced += (_, _) =>
+        {
+            RefreshSidebar();
+            if (Screen.Content is IScreen screen && !IsReviewing) screen.Refresh();
+        };
         Closing += (_, _) =>
         {
             if (closingSynced) return;
@@ -41,41 +53,47 @@ public partial class MainWindow : Window
         };
     }
 
-    /// <summary>The main window of the app, so any screen can open another one.</summary>
+    /// <summary>The main window of the app, so any page can show another one.</summary>
     public static MainWindow Current { get; private set; } = null!;
 
-    /// <summary>True while the review screen is open (automatic syncs wait until you leave it).</summary>
+    /// <summary>True while a review is shown (automatic syncs wait until you leave it).</summary>
     public bool IsReviewing => Screen.Content is ReviewView;
 
-    /// <summary>The screen shown now (for the automatic tests).</summary>
+    /// <summary>The page shown now (for the automatic tests).</summary>
     public Control? CurrentScreen => Screen.Content as Control;
 
-    /// <summary>Opens a new screen on top of the current one.</summary>
-    public void Open(Control screen)
-    {
-        if (Screen.Content is Control current) history.Push(current);
-        Show(screen);
-    }
+    public bool IsSidebarOpen => SidebarPanel.IsVisible;
 
-    /// <summary>Returns to the previous screen (and refreshes it, since things may have changed).</summary>
-    public void GoBack()
+    /// <summary>Shows a page beside the sidebar, in place of the one there now.</summary>
+    public void Open(Control page)
     {
-        if (history.Count == 0) return;
-        var previous = history.Pop();
-        Show(previous);
-        if (previous is IScreen screen) screen.Refresh();
-    }
-
-    private void Show(Control screen)
-    {
-        Screen.Content = screen;
-        // Give the keyboard to the new screen, so its shortcuts (Esc, Ctrl+N…) work at once.
-        screen.Focusable = true;
+        Screen.Content = page;
+        SidebarPanel.Highlight(page);
+        // Give the keyboard to the new page, so its shortcuts (Space, Ctrl+N…) work at once.
+        page.Focusable = true;
         Dispatcher.UIThread.Post(() =>
         {
-            if (!screen.IsKeyboardFocusWithin) screen.Focus();
+            if (!page.IsKeyboardFocusWithin) page.Focus();
         }, DispatcherPriority.Input);
     }
+
+    public void ShowHome() => Open(new HomeView());
+
+    public void ShowDeck(Deck deck) => Open(new DeckView(deck));
+
+    /// <summary>Reads the decks and their numbers again for the sidebar.</summary>
+    public void RefreshSidebar() => SidebarPanel.Refresh();
+
+    public void ToggleSidebar()
+    {
+        SidebarPanel.IsVisible = !SidebarPanel.IsVisible;
+        ShowSidebarButton.IsVisible = !SidebarPanel.IsVisible;
+    }
+
+    private void ShowSidebar_Click(object? sender, RoutedEventArgs e) => ToggleSidebar();
+
+    private void Bind(Key key, KeyModifiers modifiers, Action action) =>
+        KeyBindings.Add(new KeyBinding { Gesture = new KeyGesture(key, modifiers), Command = new RelayCommand(action) });
 
     /// <summary>On a small or zoomed-in screen, shrinks the window so all of it is visible.</summary>
     private void FitOnScreen()

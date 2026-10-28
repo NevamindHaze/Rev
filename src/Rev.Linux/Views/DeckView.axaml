@@ -10,13 +10,9 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel MaxWidth="900" Margin="{StaticResource PagePadding}">
 
-            <!-- ← and the deck's name -->
+            <!-- The deck's name -->
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <Button Classes="rev secondary round" Click="Back_Click" ToolTip.Tip="Back (Esc)"
-                        AutomationProperties.Name="Back" VerticalAlignment="Center">
-                    <mi:MaterialIcon Kind="ArrowLeft" Width="18" Height="18" />
-                </Button>
-                <TextBlock x:Name="DeckName" Grid.Column="1" Classes="title" Margin="16,0,12,0"
+                <TextBlock x:Name="DeckName" Grid.Column="1" Classes="title" Margin="0,0,12,0"
                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                 <Button Grid.Column="2" Classes="rev secondary" VerticalAlignment="Center"
                         Click="Export_Click" ToolTip.Tip="Save this deck as an Anki .apkg file"

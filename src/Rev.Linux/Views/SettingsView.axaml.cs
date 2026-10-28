@@ -23,7 +23,6 @@ public partial class SettingsView : UserControl, IScreen
     {
         InitializeComponent();
         settings = App.Database.GetSettings();
-        KeyBindings.Add(new KeyBinding { Gesture = new KeyGesture(Key.Escape), Command = new RelayCommand(() => MainWindow.Current.GoBack()) });
 
         ShowSettings();
         var version = typeof(App).Assembly.GetName().Version;
@@ -270,5 +269,4 @@ public partial class SettingsView : UserControl, IScreen
         catch (Exception) { /* no file manager: nothing to do */ }
     }
 
-    private void Back_Click(object? sender, RoutedEventArgs e) => MainWindow.Current.GoBack();
 }

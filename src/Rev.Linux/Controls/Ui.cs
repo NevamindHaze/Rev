@@ -41,6 +41,17 @@ public static class Ui
         return control;
     }
 
+    private static readonly (string Background, string Foreground)[] DeckPalette =
+    [
+        ("CoralBrush", "OnCoralBrush"),
+        ("TealBrush", "OnTealBrush"),
+        ("MustardBrush", "OnMustardBrush"),
+        ("SageBrush", "OnSageBrush"),
+    ];
+
+    /// <summary>A deck's colours (and the colour of text on them), taking turns down the list of decks.</summary>
+    public static (string Background, string Foreground) DeckColours(int index) => DeckPalette[index % DeckPalette.Length];
+
     /// <summary>A button in one of Rev's styles, e.g. Ui.Button("rev teal", "Save").</summary>
     public static Button Button(string classes, object content)
     {

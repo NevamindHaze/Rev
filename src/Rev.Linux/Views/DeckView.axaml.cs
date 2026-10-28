@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using Rev.Core.Models;
 using Rev.Core.Review;
 using Rev.Core.Scheduling;
+using Rev.Linux.Controls;
 
 namespace Rev.Linux.Views;
 
@@ -20,11 +21,13 @@ public partial class DeckView : UserControl, IScreen
         this.deck = deck;
         KeyBindings.Add(new KeyBinding { Gesture = new KeyGesture(Key.N, KeyModifiers.Control), Command = new RelayCommand(() => _ = AddCard()) });
         KeyBindings.Add(new KeyBinding { Gesture = new KeyGesture(Key.F, KeyModifiers.Control), Command = new RelayCommand(() => Browser.FocusSearch()) });
-        KeyBindings.Add(new KeyBinding { Gesture = new KeyGesture(Key.Escape), Command = new RelayCommand(() => MainWindow.Current.GoBack()) });
         Browser.Setup(() => App.Database.GetCards(deck.Id), withDeckNames: false);
         Browser.Changed += (_, _) => UpdateNumbers();
         Loaded += (_, _) => UpdateNumbers();
     }
+
+    /// <summary>The deck this page shows.</summary>
+    public Deck Deck => deck;
 
     public void Refresh()
     {
@@ -43,6 +46,7 @@ public partial class DeckView : UserControl, IScreen
         DueTile.Value = cards.DueCount(now).ToString();
         NewTile.Value = cards.NewCount().ToString();
         EmptyText.IsVisible = cards.Count == 0;
+        MainWindow.Current?.RefreshSidebar();
         Browser.IsVisible = cards.Count > 0;
     }
 
@@ -56,7 +60,6 @@ public partial class DeckView : UserControl, IScreen
 
     // ---- Actions ----
 
-    private void Back_Click(object? sender, RoutedEventArgs e) => MainWindow.Current.GoBack();
 
     private void Study_Click(object? sender, RoutedEventArgs e) => MainWindow.Current.Open(new ReviewView(deck));
 
@@ -66,12 +69,7 @@ public partial class DeckView : UserControl, IScreen
         if (custom != null) MainWindow.Current.Open(new ReviewView(deck, custom));
     }
 
-    private async void Export_Click(object? sender, RoutedEventArgs e)
-    {
-        var current = App.Database.GetDecks().FirstOrDefault(d => d.Id == deck.Id) ?? deck;
-        var cards = App.Database.GetCards(deck.Id).OrderBy(c => c.CreatedAt).ToList();
-        await AnkiExport.Run(this, [(current, cards)], current.Name);
-    }
+    private void Export_Click(object? sender, RoutedEventArgs e) => _ = DeckActions.Export(this, deck);
 
     private void AddCard_Click(object? sender, RoutedEventArgs e) => _ = AddCard();
 

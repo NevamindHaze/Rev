@@ -118,6 +118,29 @@
         <Setter Property="Opacity" Value="1" />
     </Style>
 
+    <!-- An item in the sidebar: plain until you point at it; the page you're on is teal on a light card. -->
+    <Style Selector="Button.nav">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Margin" Value="0,0,0,2" />
+    </Style>
+    <Style Selector="Button.nav:pointerover /template/ Border#Pill">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="Opacity" Value="0.7" />
+    </Style>
+    <Style Selector="Button.nav.selected">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TealBrush}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.nav.selected:pointerover /template/ Border#Pill">
+        <Setter Property="Opacity" Value="1" />
+    </Style>
+
     <!-- Sizes: a small menu button (the card browser's filters), a square button with just a symbol,
          and the four answer buttons on the review screen. -->
     <Style Selector="Button.chip">
