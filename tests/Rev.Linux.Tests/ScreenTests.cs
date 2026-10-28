@@ -439,9 +439,9 @@ public sealed class ScreenTests : ScreenTest
     public void Stats()
     {
         AddSampleDecks();
-        Window.Open(new StatsView());
-        Settle();
-        string text = Texts(CurrentScreen!);
+        _ = Window;
+        Press(Key.D3, KeyModifiers.Control);
+        string text = Texts(Assert.IsType<StatsView>(CurrentScreen));
         Assert.Contains("Your progress", text);
         Assert.Contains("Last 7 days", text);
         Assert.Contains("Today", text);
@@ -452,9 +452,11 @@ public sealed class ScreenTests : ScreenTest
     public void SettingsAreSavedAtOnce()
     {
         AddSampleDecks();
-        Window.Open(new SettingsView());
-        Settle();
-        var settings = CurrentScreen!;
+        _ = Window;
+        Press(Key.OemComma, KeyModifiers.Control);
+        var settings = Assert.IsType<SettingsView>(CurrentScreen);
+        foreach (var section in new[] { "Studying", "Sync with Anki", "Anki files", "Backups", "About" })
+            Assert.Contains(section, Texts(settings).Split(" | "));
         Find<TextBox>(settings, "Your name").Text = "Marshal";
         Find<TextBox>(settings, "New cards per day").Text = "35";
         Find<RadioButton>(settings, "SM-2 (classic)").IsChecked = true;

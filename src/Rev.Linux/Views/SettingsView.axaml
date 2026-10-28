@@ -1,6 +1,6 @@
 <!--
-    Settings: your name, new cards per day, the scheduling algorithm, sync with Anki, Anki import/export,
-    backups, and About. Every change is saved straight away. Esc goes back.
+    Settings, in sections: Studying, Sync with Anki, Anki files, Backups, About. Each setting is a row with
+    its name (and a short hint) on the left and its control on the right. Every change is saved straight away.
 -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -8,82 +8,87 @@
              x:Class="Rev.Linux.Views.SettingsView">
     <UserControl.Styles>
         <Style Selector="TextBlock.section">
-            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontSize" Value="16" />
             <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+        <!-- A setting: name and hint on the left (220 px), the control on the right -->
+        <Style Selector="Grid.setting">
             <Setter Property="Margin" Value="0,0,0,14" />
         </Style>
+        <Style Selector="Grid.setting > TextBlock.name">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,6,16,0" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
         <Style Selector="TextBlock.note">
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="Margin" Value="2,12,0,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Margin" Value="0,8,0,0" />
         </Style>
         <Style Selector="Border.card">
-            <Setter Property="Margin" Value="0,0,0,16" />
+            <Setter Property="Margin" Value="0,0,0,14" />
+            <Setter Property="Padding" Value="20,18,20,6" />
         </Style>
         <Style Selector="WrapPanel > Button">
-            <Setter Property="MinHeight" Value="48" />
-            <Setter Property="Margin" Value="0,0,10,10" />
+            <Setter Property="Margin" Value="0,0,8,8" />
         </Style>
     </UserControl.Styles>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel MaxWidth="760" Margin="{StaticResource PagePadding}">
-            <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,24">
-                <TextBlock Grid.Column="1" Classes="title" Text="Settings" VerticalAlignment="Center" />
-            </Grid>
+        <StackPanel MaxWidth="900" Margin="{StaticResource PagePadding}">
+            <TextBlock Classes="title" Text="Settings" Margin="0,0,0,16" />
 
-            <!-- You -->
+            <!-- Studying -->
             <Border Classes="card">
                 <StackPanel>
-                    <TextBlock Classes="section" Text="You" />
-                    <TextBox x:Name="NameBox" Classes="rev" Watermark="Your name" AutomationProperties.Name="Your name" />
-                    <TextBlock Classes="muted note" Text="Shown in the greeting on the Home screen." />
-                </StackPanel>
-            </Border>
-
-            <!-- Study -->
-            <Border Classes="card">
-                <StackPanel>
-                    <TextBlock Classes="section" Text="Study" />
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Classes="body" FontSize="17" VerticalAlignment="Center" Text="New cards per day" />
-                        <StackPanel Grid.Column="1" Orientation="Horizontal">
-                            <Button Classes="rev secondary round" Click="Fewer_Click" ToolTip.Tip="5 fewer"
-                                    AutomationProperties.Name="Fewer new cards">
-                                <mi:MaterialIcon Kind="Minus" Width="18" Height="18" />
-                            </Button>
-                            <TextBox x:Name="PerDayBox" Classes="rev" Width="86" Margin="10,0" TextAlignment="Center"
-                                     FontWeight="Bold" MaxLength="3" AutomationProperties.Name="New cards per day" />
-                            <Button Classes="rev secondary round" Click="More_Click" ToolTip.Tip="5 more"
-                                    AutomationProperties.Name="More new cards">
-                                <mi:MaterialIcon Kind="Plus" Width="18" Height="18" />
-                            </Button>
+                    <TextBlock Classes="section" Text="Studying" />
+                    <Grid Classes="setting" ColumnDefinitions="220,*">
+                        <TextBlock Classes="name" Text="Your name" />
+                        <StackPanel Grid.Column="1">
+                            <TextBox x:Name="NameBox" Classes="rev" MaxWidth="320" HorizontalAlignment="Left" MinWidth="240"
+                                     Watermark="Your name" AutomationProperties.Name="Your name" />
+                            <TextBlock Classes="muted note" Text="Shown in the greeting on the Home screen." />
                         </StackPanel>
                     </Grid>
-                    <TextBlock Classes="muted note" Text="How many never-seen cards to introduce each day (0–500)." />
-                </StackPanel>
-            </Border>
-
-            <!-- Scheduling -->
-            <Border Classes="card">
-                <StackPanel>
-                    <TextBlock Classes="section" Text="Scheduling" />
-                    <WrapPanel>
-                        <RadioButton x:Name="FsrsChoice" Classes="choice" GroupName="Scheduler"
-                                     Content="FSRS (recommended)" IsCheckedChanged="Scheduler_Changed" />
-                        <RadioButton x:Name="Sm2Choice" Classes="choice" GroupName="Scheduler"
-                                     Content="SM-2 (classic)" IsCheckedChanged="Scheduler_Changed" />
-                    </WrapPanel>
-                    <StackPanel x:Name="RetentionPanel" Margin="0,14,0,0">
-                        <TextBlock x:Name="RetentionText" Classes="body" FontSize="17" FontWeight="SemiBold" />
-                        <Slider x:Name="RetentionSlider" Margin="0,8,0,0" Minimum="80" Maximum="97" SmallChange="1" LargeChange="1"
-                                IsSnapToTickEnabled="True" TickFrequency="1" AutomationProperties.Name="Target memory" />
-                        <Grid Margin="4,2,4,0">
-                            <TextBlock Classes="muted" FontSize="13" Text="80% · fewer reviews" />
-                            <TextBlock Classes="muted" FontSize="13" Text="97% · remember more" HorizontalAlignment="Right" />
-                        </Grid>
-                    </StackPanel>
-                    <TextBlock Classes="muted note"
-                               Text="FSRS predicts when you're about to forget each card. A higher target means you remember more but review more often; 90% suits most people. Switching algorithms keeps all your cards and progress." />
+                    <Grid Classes="setting" ColumnDefinitions="220,*">
+                        <TextBlock Classes="name" Text="New cards per day" />
+                        <StackPanel Grid.Column="1">
+                            <StackPanel Orientation="Horizontal">
+                                <Button Classes="rev secondary round" Click="Fewer_Click" ToolTip.Tip="5 fewer"
+                                        AutomationProperties.Name="Fewer new cards">
+                                    <mi:MaterialIcon Kind="Minus" Width="16" Height="16" />
+                                </Button>
+                                <TextBox x:Name="PerDayBox" Classes="rev" Width="70" Margin="6,0" TextAlignment="Center"
+                                         FontWeight="Bold" MaxLength="3" AutomationProperties.Name="New cards per day" />
+                                <Button Classes="rev secondary round" Click="More_Click" ToolTip.Tip="5 more"
+                                        AutomationProperties.Name="More new cards">
+                                    <mi:MaterialIcon Kind="Plus" Width="16" Height="16" />
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Classes="muted note" Text="How many never-seen cards to introduce each day (0–500)." />
+                        </StackPanel>
+                    </Grid>
+                    <Grid Classes="setting" ColumnDefinitions="220,*">
+                        <TextBlock Classes="name" Text="Scheduling" />
+                        <StackPanel Grid.Column="1">
+                            <WrapPanel>
+                                <RadioButton x:Name="FsrsChoice" Classes="choice" GroupName="Scheduler"
+                                             Content="FSRS (recommended)" IsCheckedChanged="Scheduler_Changed" />
+                                <RadioButton x:Name="Sm2Choice" Classes="choice" GroupName="Scheduler"
+                                             Content="SM-2 (classic)" IsCheckedChanged="Scheduler_Changed" />
+                            </WrapPanel>
+                            <StackPanel x:Name="RetentionPanel" Margin="0,8,0,0" MaxWidth="420" HorizontalAlignment="Left">
+                                <TextBlock x:Name="RetentionText" Classes="body" FontWeight="SemiBold" />
+                                <Slider x:Name="RetentionSlider" Minimum="80" Maximum="97" SmallChange="1" LargeChange="1" MinWidth="320"
+                                        IsSnapToTickEnabled="True" TickFrequency="1" AutomationProperties.Name="Target memory" />
+                                <Grid Margin="2,0,2,0">
+                                    <TextBlock Classes="muted" FontSize="12" Text="80% · fewer reviews" />
+                                    <TextBlock Classes="muted" FontSize="12" Text="97% · remember more" HorizontalAlignment="Right" />
+                                </Grid>
+                            </StackPanel>
+                            <TextBlock Classes="muted note" Text="FSRS predicts when you're about to forget each card. A higher target means you remember more but review more often; 90% suits most people. Switching algorithms keeps all your cards and progress." />
+                        </StackPanel>
+                    </Grid>
                 </StackPanel>
             </Border>
 
@@ -91,72 +96,84 @@
             <Border Classes="card">
                 <StackPanel>
                     <TextBlock Classes="section" Text="Sync with Anki" />
-                    <TextBlock x:Name="SyncStatus" Classes="body" FontSize="16" />
-                    <TextBlock x:Name="SyncLast" Classes="muted" FontSize="14" Margin="0,4,0,12" />
-                    <WrapPanel>
-                        <Button x:Name="SyncNowButton" Classes="rev teal" Click="SyncNow_Click" AutomationProperties.Name="Sync now">
-                            <StackPanel Orientation="Horizontal">
-                                <mi:MaterialIcon Kind="Sync" Width="16" Height="16" Margin="0,0,10,0" />
-                                <TextBlock Text="Sync now" />
-                            </StackPanel>
-                        </Button>
-                        <Button Classes="rev secondary" Click="ChooseSyncFolder_Click" AutomationProperties.Name="Choose sync folder">
-                            <StackPanel Orientation="Horizontal">
-                                <mi:MaterialIcon Kind="FolderOutline" Width="16" Height="16" Margin="0,0,10,0" />
-                                <TextBlock Text="Choose folder…" />
-                            </StackPanel>
-                        </Button>
-                        <Button x:Name="SyncOffButton" Classes="rev secondary" Click="SyncOff_Click" Content="Turn off"
-                                AutomationProperties.Name="Turn off sync" />
-                    </WrapPanel>
-                    <TextBlock Classes="muted note" Margin="2,2,0,0"
-                               Text="Rev syncs with Anki through a &quot;Rev Sync&quot; folder on this computer, using the Rev Sync add-on in Anki: choose the same folder the add-on uses (on Linux, ~/Rev Sync unless you changed it). Rev on iPhone syncs with Anki over your home Wi-Fi (in Anki: Tools → Rev Sync Wi-Fi…), so Anki passes your changes between your iPhone and this computer. Each card's text and schedule go to whichever app changed them last; review history from every app is kept. Rev syncs when it opens, when it closes, every 10 minutes, within seconds of a change in Anki, and when you click Sync now." />
+                    <Grid Classes="setting" ColumnDefinitions="220,*">
+                        <TextBlock Classes="name" Text="Rev Sync folder" />
+                        <StackPanel Grid.Column="1">
+                            <TextBlock x:Name="SyncStatus" Classes="body" />
+                            <TextBlock x:Name="SyncLast" Classes="muted" Margin="0,2,0,8" />
+                            <WrapPanel>
+                                <Button x:Name="SyncNowButton" Classes="rev teal" Click="SyncNow_Click" AutomationProperties.Name="Sync now">
+                                    <StackPanel Orientation="Horizontal">
+                                        <mi:MaterialIcon Kind="Sync" Width="16" Height="16" Margin="0,0,8,0" />
+                                        <TextBlock Text="Sync now" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Classes="rev secondary" Click="ChooseSyncFolder_Click" AutomationProperties.Name="Choose sync folder">
+                                    <StackPanel Orientation="Horizontal">
+                                        <mi:MaterialIcon Kind="FolderOutline" Width="16" Height="16" Margin="0,0,8,0" />
+                                        <TextBlock Text="Choose folder…" />
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="SyncOffButton" Classes="rev secondary" Click="SyncOff_Click" Content="Turn off"
+                                        AutomationProperties.Name="Turn off sync" />
+                            </WrapPanel>
+                            <TextBlock Classes="muted note" Margin="0,0,0,0" Text="Rev syncs with Anki through a &quot;Rev Sync&quot; folder on this computer, using the Rev Sync add-on in Anki: choose the same folder the add-on uses (on Linux, ~/Rev Sync unless you changed it). Rev on iPhone syncs with Anki over your home Wi-Fi (in Anki: Tools → Rev Sync Wi-Fi…), so Anki passes your changes between your iPhone and this computer. Each card's text and schedule go to whichever app changed them last; review history from every app is kept. Rev syncs when it opens, when it closes, every 10 minutes, within seconds of a change in Anki, and when you click Sync now." />
+                        </StackPanel>
+                    </Grid>
                 </StackPanel>
             </Border>
 
-            <!-- Anki -->
+            <!-- Anki files -->
             <Border Classes="card">
                 <StackPanel>
-                    <TextBlock Classes="section" Text="Anki" />
-                    <WrapPanel>
-                        <Button x:Name="ImportButton" Classes="rev teal" Click="ImportAnki_Click" AutomationProperties.Name="Import Anki deck">
-                            <StackPanel Orientation="Horizontal">
-                                <mi:MaterialIcon Kind="Download" Width="16" Height="16" Margin="0,0,10,0" />
-                                <TextBlock Text="Import Anki deck (.apkg / .colpkg)…" />
-                            </StackPanel>
-                        </Button>
-                        <Button Classes="rev secondary" Click="ExportAnki_Click" AutomationProperties.Name="Export all decks to Anki">
-                            <StackPanel Orientation="Horizontal">
-                                <mi:MaterialIcon Kind="Export" Width="16" Height="16" Margin="0,0,10,0" />
-                                <TextBlock Text="Export all decks to Anki (.apkg)…" />
-                            </StackPanel>
-                        </Button>
-                    </WrapPanel>
-                    <TextBlock Classes="muted note" Margin="2,2,0,0"
-                               Text="Works with any .apkg or .colpkg from Anki, old or new. Text, images, study progress (with FSRS memory), tags, suspended cards and leeches come across; sounds are skipped. Importing the same deck again updates your cards instead of adding copies, and keeps your progress in Rev. Your Anki files are only read, never changed. Exporting makes a .apkg any Anki can open, with your schedules, tags, images, leeches and suspended cards (one deck at a time: use the export button inside the deck)." />
+                    <TextBlock Classes="section" Text="Anki files" />
+                    <Grid Classes="setting" ColumnDefinitions="220,*">
+                        <TextBlock Classes="name" Text="Import and export" />
+                        <StackPanel Grid.Column="1">
+                            <WrapPanel>
+                                <Button x:Name="ImportButton" Classes="rev teal" Click="ImportAnki_Click" AutomationProperties.Name="Import Anki deck">
+                                    <StackPanel Orientation="Horizontal">
+                                        <mi:MaterialIcon Kind="Download" Width="16" Height="16" Margin="0,0,8,0" />
+                                        <TextBlock Text="Import Anki deck (.apkg / .colpkg)…" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Classes="rev secondary" Click="ExportAnki_Click" AutomationProperties.Name="Export all decks to Anki">
+                                    <StackPanel Orientation="Horizontal">
+                                        <mi:MaterialIcon Kind="Export" Width="16" Height="16" Margin="0,0,8,0" />
+                                        <TextBlock Text="Export all decks to Anki (.apkg)…" />
+                                    </StackPanel>
+                                </Button>
+                            </WrapPanel>
+                            <TextBlock Classes="muted note" Margin="0,0,0,0" Text="Works with any .apkg or .colpkg from Anki, old or new. Text, images, study progress (with FSRS memory), tags, suspended cards and leeches come across; sounds are skipped. Importing the same deck again updates your cards instead of adding copies, and keeps your progress in Rev. Your Anki files are only read, never changed. Exporting makes a .apkg any Anki can open, with your schedules, tags, images, leeches and suspended cards (one deck at a time: use the export button inside the deck)." />
+                        </StackPanel>
+                    </Grid>
                 </StackPanel>
             </Border>
 
-            <!-- Backup -->
+            <!-- Backups -->
             <Border Classes="card">
                 <StackPanel>
-                    <TextBlock Classes="section" Text="Backup" />
-                    <WrapPanel>
-                        <Button Classes="rev teal" Click="ExportBackup_Click" AutomationProperties.Name="Export backup">
-                            <StackPanel Orientation="Horizontal">
-                                <mi:MaterialIcon Kind="ContentSaveOutline" Width="16" Height="16" Margin="0,0,10,0" />
-                                <TextBlock Text="Export backup (.json)…" />
-                            </StackPanel>
-                        </Button>
-                        <Button Classes="rev secondary" Click="RestoreBackup_Click" AutomationProperties.Name="Restore from backup">
-                            <StackPanel Orientation="Horizontal">
-                                <mi:MaterialIcon Kind="BackupRestore" Width="16" Height="16" Margin="0,0,10,0" />
-                                <TextBlock Text="Restore from backup…" />
-                            </StackPanel>
-                        </Button>
-                    </WrapPanel>
-                    <TextBlock Classes="muted note" Margin="2,2,0,0"
-                               Text="Save a backup somewhere safe (e.g. a cloud folder or a USB stick) now and then. Restoring replaces everything in Rev; your current data is saved first in the Backups folder, just in case. Backups from Rev for Windows and Rev on iPhone work here too. Images aren't inside the backup file: import your Anki decks again to bring them back (your progress is kept)." />
+                    <TextBlock Classes="section" Text="Backups" />
+                    <Grid Classes="setting" ColumnDefinitions="220,*">
+                        <TextBlock Classes="name" Text="Backup file" />
+                        <StackPanel Grid.Column="1">
+                            <WrapPanel>
+                                <Button Classes="rev teal" Click="ExportBackup_Click" AutomationProperties.Name="Export backup">
+                                    <StackPanel Orientation="Horizontal">
+                                        <mi:MaterialIcon Kind="ContentSaveOutline" Width="16" Height="16" Margin="0,0,8,0" />
+                                        <TextBlock Text="Export backup (.json)…" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Classes="rev secondary" Click="RestoreBackup_Click" AutomationProperties.Name="Restore from backup">
+                                    <StackPanel Orientation="Horizontal">
+                                        <mi:MaterialIcon Kind="BackupRestore" Width="16" Height="16" Margin="0,0,8,0" />
+                                        <TextBlock Text="Restore from backup…" />
+                                    </StackPanel>
+                                </Button>
+                            </WrapPanel>
+                            <TextBlock Classes="muted note" Margin="0,0,0,0" Text="Save a backup somewhere safe (e.g. a cloud folder or a USB stick) now and then. Restoring replaces everything in Rev; your current data is saved first in the Backups folder, just in case. Backups from Rev for Windows and Rev on iPhone work here too. Images aren't inside the backup file: import your Anki decks again to bring them back (your progress is kept)." />
+                        </StackPanel>
+                    </Grid>
                 </StackPanel>
             </Border>
 
@@ -164,10 +181,17 @@
             <Border Classes="card">
                 <StackPanel>
                     <TextBlock Classes="section" Text="About" />
-                    <TextBlock x:Name="VersionText" Classes="body" FontSize="16" />
-                    <TextBlock x:Name="FolderText" Classes="muted" FontSize="14" Margin="0,8,0,0" />
-                    <Button Classes="rev secondary" HorizontalAlignment="Left" Margin="0,14,0,0"
-                            Click="OpenFolder_Click" Content="Open data folder" />
+                    <Grid Classes="setting" ColumnDefinitions="220,*">
+                        <TextBlock Classes="name" Text="Version" />
+                        <TextBlock x:Name="VersionText" Grid.Column="1" Classes="body" Margin="0,6,0,0" />
+                    </Grid>
+                    <Grid Classes="setting" ColumnDefinitions="220,*">
+                        <TextBlock Classes="name" Text="Your data" />
+                        <StackPanel Grid.Column="1">
+                            <TextBlock x:Name="FolderText" Classes="muted" Margin="0,6,0,8" TextWrapping="Wrap" />
+                            <Button Classes="rev secondary" HorizontalAlignment="Left" Click="OpenFolder_Click" Content="Open data folder" />
+                        </StackPanel>
+                    </Grid>
                 </StackPanel>
             </Border>
         </StackPanel>
