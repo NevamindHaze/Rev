@@ -72,8 +72,8 @@ public partial class CardEditorWindow : Window
             Hide(Cloze.NextNumber(FrontBox.Text ?? ""));
             e.Handled = true;
         };
-        FrontBox.GotFocus += (_, _) => lastTextBox = FrontBox;
-        BackBox.GotFocus += (_, _) => lastTextBox = BackBox;
+        FrontBox.TypingStarted += (_, _) => lastTextBox = FrontBox;
+        BackBox.TypingStarted += (_, _) => lastTextBox = BackBox;
 
         UpdateForKind();
         UpdateTagChips();
@@ -202,6 +202,31 @@ public partial class CardEditorWindow : Window
         var box = lastTextBox;
         var (text, newStart, newLength) = TextTools.ToggleFormat(box.Text, marker, box.SelectionStart, box.SelectionLength);
         box.ReplaceText(text, newStart, newLength);
+        box.Focus();
+    }
+
+    // ---- Pictures ----
+
+    private async void Image_Click(object? sender, RoutedEventArgs e)
+    {
+        var box = lastTextBox;
+        var path = await FileDialogs.OpenFile(this, "Add a picture", "Pictures",
+            "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp", "*.bmp");
+        if (path is null) return;
+        lastTextBox = box;
+        AddImageFile(path);
+    }
+
+    /// <summary>Copies a picture into Rev and puts it in the box you were typing in, at the cursor.</summary>
+    public void AddImageFile(string path)
+    {
+        var box = lastTextBox;
+        if (CardImages.AddFile(path) is not { } name)
+        {
+            _ = RevDialog.Tell(this, "That isn't a picture", "Rev can add .png, .jpg, .gif, .webp and .bmp pictures.");
+            return;
+        }
+        box.InsertImage(name);
         box.Focus();
     }
 

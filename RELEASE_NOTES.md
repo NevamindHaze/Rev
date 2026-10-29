@@ -1,5 +1,6 @@
 What's new
 
+• On Linux you can put pictures in a card: paste a screenshot with Ctrl+V while typing the front or back, or click the picture button next to B / I. Pictures sync to Anki and your iPhone with the card.
 • Rev for Linux is laid out for a desktop: your decks are always in a sidebar, cards are in a sortable table, studying happens in the window, and buttons and text are desktop-sized. Ctrl+1/2/3 open Home, All cards and Stats; Ctrl+B hides the sidebar.
 • On Linux, bold and italic show while you edit a card: select words, press Ctrl+B or Ctrl+I, and they turn bold or italic right away, with the stars hidden. The arrow keys, Backspace and Delete step over the hidden stars, and Ctrl+Z undoes.
 • Pressing Italic on a bold word (or Bold on an italic one) no longer swaps one for the other.

@@ -2,8 +2,10 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Media;
 using Avalonia.Media.TextFormatting;
+using Avalonia.Platform.Storage;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
@@ -16,6 +18,7 @@ namespace Rev.Linux.Controls;
 /// The text box for a card's text in the editor. **bold** and *italic* words show as real bold and italic
 /// while you type, and their stars are hidden (they're still in the text, which is what gets saved).
 /// The arrow keys, Backspace and Delete step over the hidden stars, so they never get in the way.
+/// Ctrl+V pastes a screenshot (or a copied picture file) as a picture on its own line.
 /// Looks like Rev's other text boxes: a soft rounded field with a teal ring while you type.
 /// </summary>
 public sealed class CardTextBox : Border
@@ -52,12 +55,19 @@ public sealed class CardTextBox : Border
         editor.TextArea.AddHandler(KeyDownEvent, TextArea_KeyDown, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         editor.TextChanged += (_, e) => TextChanged?.Invoke(this, e);
 
-        // The teal ring while you type in it.
-        editor.TextArea.GotFocus += (_, _) => BorderThickness = new Thickness(2);
+        // The teal ring while you type in it, and telling the window which box you're in.
+        editor.TextArea.GotFocus += (_, _) =>
+        {
+            BorderThickness = new Thickness(2);
+            TypingStarted?.Invoke(this, EventArgs.Empty);
+        };
         editor.TextArea.LostFocus += (_, _) => BorderThickness = new Thickness(0);
     }
 
     public event EventHandler? TextChanged;
+
+    /// <summary>The keyboard came to this box (so Bold, Italic and pictures know where to go).</summary>
+    public event EventHandler? TypingStarted;
 
     public string Text
     {
@@ -80,6 +90,40 @@ public sealed class CardTextBox : Border
     {
         editor.Document.Replace(0, editor.Document.TextLength, text);
         editor.Select(selectionStart, selectionLength);
+    }
+
+    /// <summary>
+    /// Puts a picture's [img:…] marker at the cursor, on a line of its own (that's how cards show pictures),
+    /// replacing any selected text. The cursor ends up on the line after it.
+    /// </summary>
+    public void InsertImage(string name)
+    {
+        int start = editor.SelectionStart;
+        int length = editor.SelectionLength;
+        var line = Document.GetLineByOffset(start);
+        string before = start > line.Offset ? "\n" : "";
+        string after = start + length < Document.GetLineByOffset(start + length).EndOffset ? "\n" : "";
+        string text = before + CardImages.Marker(name) + after;
+        Document.Replace(start, length, text);
+        editor.Select(start + text.Length, 0);
+    }
+
+    /// <summary>Ctrl+V: a picture on the clipboard (a screenshot, or a copied image file) goes in as a picture; text as text.</summary>
+    private async Task Paste()
+    {
+        if (TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard) return;
+        if (await clipboard.TryGetBitmapAsync() is { } bitmap)
+        {
+            InsertImage(CardImages.AddBitmap(bitmap));
+            return;
+        }
+        if (await clipboard.TryGetFileAsync() is { } file && file.TryGetLocalPath() is { } path && CardImages.AddFile(path) is { } name)
+        {
+            InsertImage(name);
+            return;
+        }
+        if (await clipboard.TryGetTextAsync() is { Length: > 0 } text)
+            editor.TextArea.Selection.ReplaceSelectionWithText(text);
     }
 
     // ---- Stepping over the hidden stars ----
@@ -118,6 +162,12 @@ public sealed class CardTextBox : Border
 
     private void TextArea_KeyDown(object? sender, KeyEventArgs e)
     {
+        if ((e.Key == Key.V && e.KeyModifiers == KeyModifiers.Control) || (e.Key == Key.Insert && e.KeyModifiers == KeyModifiers.Shift))
+        {
+            e.Handled = true;
+            _ = Paste();
+            return;
+        }
         // Word jumps, Up/Down, Home/End and the rest work as usual.
         if ((e.KeyModifiers & ~KeyModifiers.Shift) != KeyModifiers.None) return;
         bool shift = e.KeyModifiers == KeyModifiers.Shift;

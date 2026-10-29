@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Rev.Core.Models;
 using Rev.Core.Scheduling;
 using Rev.Linux.Controls;
@@ -629,5 +630,49 @@ public sealed class ScreenTests : ScreenTest
         var review = CurrentScreen!;
         var easy = Find<Button>(review, "Easy");
         Assert.True(easy.TranslatePoint(new Point(easy.Bounds.Width, 0), review)!.Value.X <= review.Bounds.Width, "Easy is cut off");
+    }
+
+    /// <summary>A tiny real PNG, like a screenshot.</summary>
+    private static Avalonia.Media.Imaging.WriteableBitmap TinyPicture() =>
+        new(new PixelSize(4, 3), new Vector(96, 96), Avalonia.Platform.PixelFormat.Bgra8888, Avalonia.Platform.AlphaFormat.Premul);
+
+    [AvaloniaFact]
+    public void PastingAScreenshotPutsItInTheCard()
+    {
+        AddSampleDecks();
+        var editor = new CardEditorWindow(Parasitology, null);
+        editor.Show(Window);
+        Settle();
+        var front = Find<CardTextBox>(editor, "Front");
+        front.Focus();
+        Type("Toxocara egg", editor);
+        editor.Clipboard!.SetBitmapAsync(TinyPicture()).GetAwaiter().GetResult();
+        Press(Key.V, KeyModifiers.Control, editor);
+        Wait(300);   // reading the clipboard takes a moment
+        var match = System.Text.RegularExpressions.Regex.Match(front.Text, @"^Toxocara egg\n\[img:(pasted-[^\]]+\.png)\]$");
+        Assert.True(match.Success, front.Text);
+        Assert.NotNull(Rev.Core.Media.MediaStore.PathFor(match.Groups[1].Value));   // saved with Rev's pictures
+    }
+
+    [AvaloniaFact]
+    public void AddingAnImageFileGoesOnItsOwnLineAtTheCursor()
+    {
+        AddSampleDecks();
+        var editor = new CardEditorWindow(Parasitology, null);
+        editor.Show(Window);
+        Settle();
+        var back = Find<CardTextBox>(editor, "Back");
+        back.Focus();
+        Type("Eggs in faeces", editor);
+        back.Select(4, 0);   // after "Eggs"
+        string file = Path.Combine(Folder, "egg photo.png");
+        TinyPicture().Save(file);
+        editor.AddImageFile(file);
+        editor.AddImageFile(file);   // the same picture again gets its own name, not a copy over the first
+        var names = System.Text.RegularExpressions.Regex.Matches(back.Text, @"\[img:([^\]]+)\]").Select(m => m.Groups[1].Value).ToList();
+        Assert.Equal(2, names.Distinct().Count());
+        Assert.StartsWith("Eggs\n[img:", back.Text);
+        Assert.EndsWith("]\n in faeces", back.Text);
+        Assert.All(names, n => Assert.NotNull(Rev.Core.Media.MediaStore.PathFor(n)));
     }
 }

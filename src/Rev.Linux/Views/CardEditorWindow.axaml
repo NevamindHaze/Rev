@@ -40,6 +40,11 @@
                                     Click="Italic_Click" ToolTip.Tip="Italic (Ctrl+I)" AutomationProperties.Name="Italic">
                                 <mi:MaterialIcon Kind="FormatItalic" Width="20" Height="20" />
                             </Button>
+                            <Button Classes="rev secondary round" Margin="8,0,0,0" Focusable="False"
+                                    Click="Image_Click" ToolTip.Tip="Add a picture (or paste a screenshot with Ctrl+V)"
+                                    AutomationProperties.Name="Add image">
+                                <mi:MaterialIcon Kind="ImageOutline" Width="20" Height="20" />
+                            </Button>
                         </StackPanel>
                     </Grid>
                     <controls:CardTextBox x:Name="FrontBox" MinHeight="100" MaxHeight="260" AutomationProperties.Name="Front" />
@@ -59,7 +64,7 @@
                     <TextBlock x:Name="BackLabel" Classes="label" Text="Back" Margin="4,20,0,8" />
                     <controls:CardTextBox x:Name="BackBox" MinHeight="150" MaxHeight="320" AutomationProperties.Name="Back" />
                     <TextBlock Classes="muted" FontSize="13" Margin="4,8,0,0"
-                               Text="Select words, then press Ctrl+B or Ctrl+I (or click B / I) for bold or italic. Start a line with • or 1. for a list." />
+                               Text="Select words, then press Ctrl+B or Ctrl+I (or click B / I) for bold or italic. Paste a screenshot with Ctrl+V, or click the picture button to add an image. Start a line with • or 1. for a list." />
 
                     <!-- Tags -->
                     <TextBlock Classes="label" Text="Tags" Margin="4,22,0,8" />
