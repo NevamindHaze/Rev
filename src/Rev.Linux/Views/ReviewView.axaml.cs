@@ -22,6 +22,7 @@ public partial class ReviewView : UserControl, IScreen
 {
     private readonly ReviewSession session;
     private readonly Deck? deck;
+    private readonly CustomStudy? custom;
     private bool answerShown;
     private bool busy;   // a dialog or the editor is open: keys wait
 
@@ -42,15 +43,25 @@ public partial class ReviewView : UserControl, IScreen
     {
         InitializeComponent();
         this.deck = deck;
-        TitleText.Text = custom?.Title() ?? deck?.Name ?? "Review";
+        this.custom = custom;
+        UpdateTitle();
         session = new ReviewSession(App.Database, deck?.Id, custom: custom);
         AddHandler(KeyDownEvent, Screen_KeyDown, RoutingStrategies.Tunnel);
         Loaded += (_, _) => ShowCurrent();
     }
 
     /// <summary>Coming back to the screen (e.g. the next morning): pick up any newly due cards.</summary>
+    /// <summary>e.g. "Studying Pharmacology", or "Studying Pharmacology · More new cards" for custom study.
+    /// Reads the deck's name again, so a rename shows here too.</summary>
+    private void UpdateTitle()
+    {
+        string? name = deck is null ? null : App.Database.GetDecks().FirstOrDefault(d => d.Id == deck.Id)?.Name ?? deck.Name;
+        TitleText.Text = $"Studying {name ?? "all decks"}" + (custom is null ? "" : $" · {custom.Title()}");
+    }
+
     public void Refresh()
     {
+        UpdateTitle();
         if (session.Current is null)
         {
             session.LoadNext();
@@ -103,14 +114,14 @@ public partial class ReviewView : UserControl, IScreen
     /// <summary>A coloured dot with a count, e.g. "● 3 new".</summary>
     private static Border CountPill(string label, int count, string colour)
     {
-        var dot = new Ellipse { Width = 9, Height = 9, Margin = new Thickness(0, 0, 7, 0), VerticalAlignment = VerticalAlignment.Center }
+        var dot = new Ellipse { Width = 8, Height = 8, Margin = new Thickness(0, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center }
             .Colour(Shape.FillProperty, colour);
-        var text = new TextBlock { Text = $"{count} {label}", FontSize = 14, FontWeight = FontWeight.SemiBold };
+        var text = new TextBlock { Text = $"{count} {label}", FontSize = 13 };
+        text.Colour(TextBlock.ForegroundProperty, "MutedInkBrush");
         return new Border
         {
-            Padding = new Thickness(14, 8, 14, 8), Margin = new Thickness(4, 0, 4, 0), CornerRadius = new CornerRadius(17),
             Child = new StackPanel { Orientation = Orientation.Horizontal, Children = { dot, text } },
-        }.Colour(Border.BackgroundProperty, "SoftFillBrush").Named(text.Text);
+        }.Named(text.Text);
     }
 
     private void ShowFinished()
@@ -175,17 +186,18 @@ public partial class ReviewView : UserControl, IScreen
         RatingGrid.Children.Clear();
         foreach (var (rating, title, background, foreground) in Ratings)
         {
+            // e.g. "1 · Again  1m": the key, the answer, and when you'd see the card next
             var button = Ui.Button("rev rating", new StackPanel
             {
+                Orientation = Orientation.Horizontal,
                 Children =
                 {
-                    new TextBlock { Text = title, FontSize = 18, FontWeight = FontWeight.Bold, HorizontalAlignment = HorizontalAlignment.Center },
-                    new TextBlock { Text = previews.GetValueOrDefault(rating, " "), FontSize = 14, FontWeight = FontWeight.SemiBold,
-                                    Opacity = 0.85, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 3, 0, 0) },
+                    new TextBlock { Text = $"{(int)rating} · {title}", FontWeight = FontWeight.Bold, VerticalAlignment = VerticalAlignment.Center },
+                    new TextBlock { Text = previews.GetValueOrDefault(rating, ""), FontWeight = FontWeight.SemiBold,
+                                    Opacity = 0.8, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(10, 0, 0, 0) },
                 },
             }).Named(title);
-            button.Margin = new Thickness(5, 0, 5, 0);
-            button.HorizontalAlignment = HorizontalAlignment.Stretch;
+            button.MinWidth = 128;
             button.Focusable = false;
             button.Colour(BackgroundProperty, background).Colour(ForegroundProperty, foreground);
             ToolTip.SetTip(button, $"Key {(int)rating}");
@@ -270,7 +282,7 @@ public partial class ReviewView : UserControl, IScreen
             case Key.D4 or Key.NumPad4: _ = Rate(Rating.Easy); break;
             case Key.Z when ctrl: Undo(); break;
             case Key.E when e.KeyModifiers == KeyModifiers.None: _ = EditCurrent(); break;
-            case Key.Escape: MainWindow.Current.GoBack(); break;
+            case Key.Escape: Stop(); break;
             default: return;
         }
         e.Handled = true;
@@ -288,7 +300,17 @@ public partial class ReviewView : UserControl, IScreen
 
     private void Edit_Click(object? sender, RoutedEventArgs e) => _ = EditCurrent();
 
-    private void Back_Click(object? sender, RoutedEventArgs e) => MainWindow.Current.GoBack();
+    private void Back_Click(object? sender, RoutedEventArgs e) => Stop();
+
+    /// <summary>Stops studying: back to the deck's page, or Home after studying all decks.</summary>
+    private void Stop()
+    {
+        if (deck is null) MainWindow.Current.ShowHome();
+        else MainWindow.Current.ShowDeck(deck);
+    }
+
+    /// <summary>The deck being studied (null when studying all decks).</summary>
+    public Deck? Deck => deck;
 
     private async void CustomStudy_Click(object? sender, RoutedEventArgs e)
     {

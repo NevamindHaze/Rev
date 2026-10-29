@@ -32,11 +32,11 @@
                     <Grid ColumnDefinitions="*,Auto">
                         <TextBlock x:Name="FrontLabel" Classes="label" Text="Front" />
                         <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,8">
-                            <Button Classes="rev secondary round" Width="40" Height="40" Focusable="False"
+                            <Button Classes="rev secondary round" Focusable="False"
                                     Click="Bold_Click" ToolTip.Tip="Bold (Ctrl+B)" AutomationProperties.Name="Bold">
                                 <mi:MaterialIcon Kind="FormatBold" Width="20" Height="20" />
                             </Button>
-                            <Button Classes="rev secondary round" Width="40" Height="40" Margin="8,0,0,0" Focusable="False"
+                            <Button Classes="rev secondary round" Margin="8,0,0,0" Focusable="False"
                                     Click="Italic_Click" ToolTip.Tip="Italic (Ctrl+I)" AutomationProperties.Name="Italic">
                                 <mi:MaterialIcon Kind="FormatItalic" Width="20" Height="20" />
                             </Button>
@@ -48,9 +48,9 @@
                     <StackPanel x:Name="ClozeTools" Margin="0,12,0,0" IsVisible="False">
                         <Grid ColumnDefinitions="*,Auto,Auto">
                             <TextBox x:Name="HideWordBox" Classes="rev" Watermark="Word to hide" AutomationProperties.Name="Word to hide" />
-                            <Button x:Name="HideButton" Grid.Column="1" Classes="rev danger" MinHeight="48" Margin="10,0,0,0"
+                            <Button x:Name="HideButton" Grid.Column="1" Classes="rev danger" Margin="10,0,0,0"
                                     Click="Hide_Click" IsEnabled="False" />
-                            <Button x:Name="AddToButton" Grid.Column="2" Classes="rev secondary" MinHeight="48" Margin="8,0,0,0"
+                            <Button x:Name="AddToButton" Grid.Column="2" Classes="rev secondary" Margin="8,0,0,0"
                                     Click="AddTo_Click" IsEnabled="False" />
                         </Grid>
                         <TextBlock x:Name="ClozeCountText" FontSize="14" FontWeight="SemiBold" Margin="4,8,0,0" />
@@ -75,8 +75,8 @@
                 <Grid MaxWidth="700" ColumnDefinitions="*,Auto">
                     <TextBlock x:Name="AddedText" Classes="muted" VerticalAlignment="Center" FontWeight="SemiBold" />
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button x:Name="SecondaryButton" Classes="rev secondary" MinHeight="54" Content="Done" Click="Secondary_Click" />
-                        <Button x:Name="PrimaryButton" Classes="rev teal" MinHeight="54" Margin="12,0,0,0"
+                        <Button x:Name="SecondaryButton" Classes="rev secondary" Content="Done" Click="Secondary_Click" />
+                        <Button x:Name="PrimaryButton" Classes="rev teal primary" Margin="12,0,0,0"
                                 Content="Save &amp; next" Click="Primary_Click" ToolTip.Tip="Ctrl+Enter" />
                     </StackPanel>
                 </Grid>

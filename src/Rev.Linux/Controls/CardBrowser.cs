@@ -14,8 +14,9 @@ using Rev.Linux.Views;
 namespace Rev.Linux.Controls;
 
 /// <summary>
-/// A searchable, filterable, sortable list of cards, used inside a deck and on the "All cards" screen.
-/// Click a card to edit it; right-click it (or its ⋯ button) for tags, suspend, leech and delete.
+/// A searchable, filterable, sortable table of cards, used inside a deck and on the "All cards" page.
+/// Columns: Front, Back, Type, Due (and Deck on "All cards"); click Front or Due to sort by it.
+/// Double-click a card (or Enter) to edit it, Delete deletes, ↑ / ↓ move; right-click for tags, suspend and more.
 /// The screen that holds it calls <see cref="Setup"/> once (saying where the cards come from) and
 /// <see cref="Refresh"/> when it comes back. <see cref="Changed"/> fires after any edit.
 /// </summary>
@@ -38,9 +39,12 @@ public sealed class CardBrowser : StackPanel
     private readonly Button stateChip = Ui.Button("rev secondary chip", "");
     private readonly Button tagChip = Ui.Button("rev secondary chip", "");
     private readonly Button sortChip = Ui.Button("rev secondary chip", "");
-    private readonly TextBlock countText = new() { FontSize = 13, FontWeight = FontWeight.SemiBold, Margin = new Thickness(4, 4, 0, 10) };
+    private readonly TextBlock countText = new() { FontSize = 13, FontWeight = FontWeight.SemiBold, Margin = new Thickness(2, 10, 0, 6) };
+    private readonly Grid heading = new() { Margin = new Thickness(10, 2, 10, 4) };
     private readonly StackPanel cardList = new();
     private readonly Button moreButton = Ui.Button("rev secondary", "");
+    private readonly Button frontHeading = SortHeading("Front");
+    private readonly Button dueHeading = SortHeading("Due");
 
     /// <summary>Waits a moment after you stop typing before searching, so typing stays smooth.</summary>
     private readonly DispatcherTimer searchDelay = new() { Interval = TimeSpan.FromMilliseconds(200) };
@@ -52,7 +56,6 @@ public sealed class CardBrowser : StackPanel
         searchBox.Classes.Add("rev");
         searchBox.Named("Search cards");
         countText.Classes.Add("muted");
-        moreButton.MinHeight = 48;
         moreButton.HorizontalAlignment = HorizontalAlignment.Center;
         moreButton.Margin = new Thickness(0, 6, 0, 0);
         moreButton.IsVisible = false;
@@ -60,11 +63,18 @@ public sealed class CardBrowser : StackPanel
         ToolTip.SetTip(tagChip, "Show only cards with a tag");
         ToolTip.SetTip(sortChip, "Change the order");
 
-        Children.Add(searchBox);
-        Children.Add(new WrapPanel { Margin = new Thickness(0, 12, 0, 0), Children = { stateChip, tagChip, sortChip } });
+        // The search box and the three menus on one row, then the count, then the table.
+        var tools = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+        tools.Children.Add(searchBox);
+        var chips = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(8, 0, -6, 0), Children = { stateChip, tagChip, sortChip } };
+        Grid.SetColumn(chips, 1);
+        tools.Children.Add(chips);
+        Children.Add(tools);
         Children.Add(countText);
-        Children.Add(cardList);
-        Children.Add(moreButton);
+        Children.Add(new Border { Classes = { "table" }, Child = new StackPanel { Children = { heading, cardList, moreButton } } });
+
+        frontHeading.Click += (_, _) => SortBy(CardSort.AToZ);
+        dueHeading.Click += (_, _) => SortBy(CardSort.DueSoonest);
 
         searchDelay.Tick += (_, _) =>
         {
@@ -105,6 +115,7 @@ public sealed class CardBrowser : StackPanel
     {
         loadCards = load;
         showDeckNames = withDeckNames;
+        BuildHeading();
         Refresh();
     }
 
@@ -137,6 +148,8 @@ public sealed class CardBrowser : StackPanel
         SetChip(stateChip, MaterialIconKind.FilterVariant, state.Title(), state != CardStateFilter.All, "Show");
         SetChip(tagChip, MaterialIconKind.TagOutline, tag is null ? "Any tag" : "#" + tag, tag is not null, "Tag");
         SetChip(sortChip, MaterialIconKind.SortVariant, sort.Title(), false, "Sort");
+        frontHeading.Classes.Set("selected", sort == CardSort.AToZ);
+        dueHeading.Classes.Set("selected", sort == CardSort.DueSoonest);
 
         countText.Text = visible.Count == cards.Count
             ? visible.Count.Counted("card")
@@ -168,86 +181,109 @@ public sealed class CardBrowser : StackPanel
         chip.Named($"{what}: {text}");
     }
 
-    /// <summary>One card: badges, question, answer, tags, and a ⋯ button for its actions.</summary>
+    // ---- The table ----
+
+    /// <summary>The table's columns: Deck (on "All cards"), Front, Back, Type, Due.</summary>
+    private string Columns => showDeckNames ? "140,2*,1.5*,130,110" : "2*,1.5*,130,110";
+
+    private void BuildHeading()
+    {
+        heading.ColumnDefinitions = new ColumnDefinitions(Columns);
+        heading.Children.Clear();
+        int column = 0;
+        if (showDeckNames) AddCell(heading, column++, new TextBlock { Classes = { "columnhead" }, Text = "Deck" });
+        AddCell(heading, column++, frontHeading);
+        AddCell(heading, column++, new TextBlock { Classes = { "columnhead" }, Text = "Back" });
+        AddCell(heading, column++, new TextBlock { Classes = { "columnhead" }, Text = "Type" });
+        AddCell(heading, column, dueHeading);
+    }
+
+    /// <summary>A column heading you can click to sort by that column.</summary>
+    private static Button SortHeading(string title)
+    {
+        var button = Ui.Button("rev toolbar columnsort", title).Named(title);
+        ToolTip.SetTip(button, $"Sort by {title.ToLowerInvariant()}");
+        return button;
+    }
+
+    private void SortBy(CardSort newSort)
+    {
+        sort = newSort;
+        shown = PageSize;
+        Render();
+    }
+
+    private static void AddCell(Grid grid, int column, Control cell)
+    {
+        Grid.SetColumn(cell, column);
+        grid.Children.Add(cell);
+    }
+
+    /// <summary>One card as a table row. Its tags (and the whole question) show when you point at it.</summary>
     private Button Row(Card card, DateTime now)
     {
-        var badges = new WrapPanel { Margin = new Thickness(0, 0, 0, 6) };
-        var (stateBg, stateFg) = card.Phase switch
+        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions(Columns) };
+        int column = 0;
+        if (showDeckNames)
+            AddCell(grid, column++, Cell(deckNames.GetValueOrDefault(card.DeckId, ""), "MutedInkBrush"));
+        AddCell(grid, column++, Cell(card.Front, null, FontWeight.SemiBold, rich: true));
+        AddCell(grid, column++, Cell(card.Back, "MutedInkBrush", rich: true));
+        string type = DeckView.KindName(card.Kind)
+                      + (card.IsLeech ? " · Leech" : "") + (card.IsSuspended ? " · Suspended" : "");
+        AddCell(grid, column++, Cell(type, card.IsLeech ? "CoralBrush" : "MutedInkBrush"));
+        string dueColour = card.Phase switch
         {
-            Rev.Core.Scheduling.CardPhase.New => ("CoralBrush", "OnCoralBrush"),
-            Rev.Core.Scheduling.CardPhase.Review => ("TealBrush", "OnTealBrush"),
-            _ => ("MustardBrush", "OnMustardBrush"),
+            Rev.Core.Scheduling.CardPhase.New => "CoralBrush",
+            Rev.Core.Scheduling.CardPhase.Review => "TealBrush",
+            _ => "MustardBrush",
         };
-        badges.Children.Add(Badge(CardQuery.StateText(card, now), stateBg, stateFg));
-        if (card.Kind != CardKind.Basic) badges.Children.Add(Badge(DeckView.KindName(card.Kind), "MustardBrush", "OnMustardBrush"));
-        if (card.IsLeech) badges.Children.Add(Badge("Leech", "CoralBrush", "OnCoralBrush"));
-        if (card.IsSuspended) badges.Children.Add(Badge("Suspended", "MutedInkBrush", "SurfaceBrush"));
-        if (showDeckNames && deckNames.TryGetValue(card.DeckId, out var deckName))
-            badges.Children.Add(new TextBlock
-            {
-                Text = deckName, FontSize = 12, FontWeight = FontWeight.SemiBold,
-                VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 0, 0, 0),
-            }.Colour(TextBlock.ForegroundProperty, "MutedInkBrush"));
+        AddCell(grid, column, Cell(CardQuery.StateText(card, now), dueColour));
 
-        var text = new StackPanel { Children = { badges, Lines(card.Front, 17, FontWeight.SemiBold, null) } };
-        if (card.Back.Length > 0) text.Children.Add(Lines(card.Back, 15, FontWeight.Normal, "MutedInkBrush"));
-        var tags = Tags.Parse(card.TagsText);
-        if (tags.Count > 0)
-            text.Children.Add(new TextBlock
-            {
-                Text = string.Join("  ", tags.Select(t => "#" + t)), FontSize = 13, FontWeight = FontWeight.SemiBold,
-                Margin = new Thickness(0, 4, 0, 0), TextTrimming = TextTrimming.CharacterEllipsis,
-            }.Colour(TextBlock.ForegroundProperty, "TealBrush"));
-
-        var more = Ui.Button("rev secondary round", Ui.Icon(MaterialIconKind.DotsHorizontal, 18)).Named("Actions");
-        more.Width = more.Height = 38;
-        more.VerticalAlignment = VerticalAlignment.Top;
-        more.Margin = new Thickness(12, 0, 0, 0);
-        more.Focusable = false;
-        ToolTip.SetTip(more, "More actions");
-
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
-        grid.Children.Add(text);
-        Grid.SetColumn(more, 1);
-        grid.Children.Add(more);
-
-        var row = Ui.Button("rev cardrow", grid).Named(CardText.Preview(card.Front));
+        var row = Ui.Button("rev tablerow", grid).Named(CardText.Preview(card.Front));
         row.Opacity = card.IsSuspended ? 0.6 : 1;
         row.Tag = card.Id;
+        var tags = Tags.Parse(card.TagsText);
+        ToolTip.SetTip(row, CardText.Preview(card.Front).Replace("*", "")
+                            + (tags.Count > 0 ? "\n" + string.Join("  ", tags.Select(t => "#" + t)) : ""));
         var menu = new ContextMenu();
         menu.Opening += (_, _) => FillMenu(menu, card);
         row.ContextMenu = menu;
-        row.Click += (_, _) => _ = Edit(card);
-        row.KeyDown += (_, e) =>
+        row.DoubleTapped += (_, _) => _ = Edit(card);
+        // Tunnel, so Enter edits instead of "clicking" the row.
+        row.AddHandler(KeyDownEvent, (_, e) =>
         {
-            if (e.Key != Key.Delete) return;
+            switch (e.Key)
+            {
+                case Key.Enter: _ = Edit(card); break;
+                case Key.Delete: _ = Delete(card); break;
+                case Key.Down: MoveFocus(row, +1); break;
+                case Key.Up: MoveFocus(row, -1); break;
+                default: return;
+            }
             e.Handled = true;
-            _ = Delete(card);
-        };
-        more.Click += (_, e) =>
-        {
-            e.Handled = true;
-            menu.Open(more);
-        };
+        }, RoutingStrategies.Tunnel);
         return row;
     }
 
-    private static Border Badge(string label, string background, string foreground) => new Border
+    private void MoveFocus(Button from, int step)
     {
-        Padding = new Thickness(10, 3, 10, 3), Margin = new Thickness(0, 0, 6, 0), CornerRadius = new CornerRadius(11),
-        Child = new TextBlock { Text = label, FontSize = 12, FontWeight = FontWeight.Bold }.Colour(TextBlock.ForegroundProperty, foreground),
-    }.Colour(Border.BackgroundProperty, background);
+        var rows = Rows.ToList();
+        int next = rows.IndexOf(from) + step;
+        if (next >= 0 && next < rows.Count) rows[next].Focus(NavigationMethod.Directional);
+    }
 
-    /// <summary>Up to two lines of a card's text, with bold and italic shown.</summary>
-    private static TextBlock Lines(string value, double size, FontWeight weight, string? colour)
+    /// <summary>One line of text ending in "…" when it doesn't fit; card text shows its bold and italic.</summary>
+    private static TextBlock Cell(string value, string? colour, FontWeight? weight = null, bool rich = false)
     {
         var block = new TextBlock
         {
-            FontSize = size, FontWeight = weight, TextWrapping = TextWrapping.Wrap, TextTrimming = TextTrimming.CharacterEllipsis,
-            MaxLines = 2, Margin = new Thickness(0, 1, 0, 1),
+            TextTrimming = TextTrimming.CharacterEllipsis, TextWrapping = TextWrapping.NoWrap,
+            VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 12, 0),
         };
+        if (weight is { } w) block.FontWeight = w;
         if (colour != null) block.Colour(TextBlock.ForegroundProperty, colour);
-        RichText.Fill(block, CardText.Preview(value));
+        if (rich) RichText.Fill(block, CardText.Preview(value));
+        else block.Text = value;
         return block;
     }
 

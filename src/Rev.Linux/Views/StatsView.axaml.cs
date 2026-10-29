@@ -19,7 +19,16 @@ public partial class StatsView : UserControl, IScreen
     public StatsView()
     {
         InitializeComponent();
-        KeyBindings.Add(new KeyBinding { Gesture = new KeyGesture(Key.Escape), Command = new RelayCommand(() => MainWindow.Current.GoBack()) });
+        // Side by side when there's room, one above the other when narrow.
+        Columns.SizeChanged += (_, e) =>
+        {
+            bool wide = e.NewSize.Width >= 900;
+            Grid.SetColumn(WeekColumn, wide ? 2 : 0);
+            Grid.SetRow(WeekColumn, wide ? 0 : 1);
+            Grid.SetColumnSpan(WeekColumn, wide ? 1 : 3);
+            Grid.SetColumnSpan(TodayColumn, wide ? 1 : 3);
+            WeekColumn.Margin = new Thickness(0, wide ? 0 : 14, 0, 0);
+        };
         Loaded += (_, _) => Refresh();
     }
 
@@ -86,5 +95,4 @@ public partial class StatsView : UserControl, IScreen
         }
     }
 
-    private void Back_Click(object? sender, RoutedEventArgs e) => MainWindow.Current.GoBack();
 }

@@ -1,7 +1,11 @@
+using Avalonia;
+using Avalonia.Automation;
+using Avalonia.VisualTree;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Rev.Core.Models;
 using Rev.Core.Scheduling;
 using Rev.Linux.Controls;
 using Rev.Linux.Views;
@@ -19,17 +23,77 @@ public sealed class ScreenTests : ScreenTest
         var home = Assert.IsType<HomeView>(CurrentScreen);
         string text = Texts(home);
         Assert.Contains("Hi, Marshal 👋", text);
-        Assert.Contains("Your decks", text);
-        var tiles = All<DeckTile>(home).ToList();
-        Assert.Equal(["Pharmacology", "Parasitology"], tiles.Select(t => t.Deck.Name));
-        Assert.Contains("4 cards", Texts(tiles[0]));   // basic + reversed (2) + type-in
+        Assert.Contains("0 due · 7 new · 0 done today", text);
+        var rows = All<DeckListRow>(home).ToList();
+        Assert.Equal(["Pharmacology", "Parasitology"], rows.Select(r => r.Deck.Name));
+        Assert.Contains("4", Texts(rows[0]).Split(" | "));   // Total: basic + reversed (2) + type-in
         Picture(Window, "01-home");
+    }
+
+    [AvaloniaFact]
+    public void ControlsAreDesktopSized()
+    {
+        AddSampleDecks();
+        var buttons = All<Button>(Window).Where(b => b.Classes.Contains("rev") && !b.Classes.Contains("tile") && b.IsEffectivelyVisible).ToList();
+        Assert.NotEmpty(buttons);
+        Assert.All(buttons, b => Assert.InRange(b.Bounds.Height, 24, 38));
+    }
+
+    [AvaloniaFact]
+    public void TheSidebarListsDecksWithWhatsDue()
+    {
+        AddSampleDecks();
+        var rows = All<SidebarDeckRow>(Window).ToList();
+        Assert.Equal(["Pharmacology", "Parasitology"], rows.Select(r => r.Deck.Name));
+        Click(rows[1]);
+        Assert.IsType<DeckView>(CurrentScreen);
+        Assert.Contains("Parasitology", Texts(CurrentScreen!));
+    }
+
+    [AvaloniaFact]
+    public void ShortcutsOpenEachPage()
+    {
+        AddSampleDecks();
+        _ = Window;
+        Press(Key.D2, KeyModifiers.Control); Assert.IsType<AllCardsView>(CurrentScreen);
+        Press(Key.D3, KeyModifiers.Control); Assert.IsType<StatsView>(CurrentScreen);
+        Press(Key.OemComma, KeyModifiers.Control); Assert.IsType<SettingsView>(CurrentScreen);
+        Press(Key.D1, KeyModifiers.Control); Assert.IsType<HomeView>(CurrentScreen);
+        Press(Key.B, KeyModifiers.Control); Assert.False(Window.IsSidebarOpen);
+        Press(Key.B, KeyModifiers.Control); Assert.True(Window.IsSidebarOpen);
+    }
+
+    [AvaloniaFact]
+    public void DeletingTheOpenDeckFromTheSidebarGoesHome()
+    {
+        AddSampleDecks();
+        Window.ShowDeck(Pharmacology);
+        Settle();
+        var row = All<SidebarDeckRow>(Window).First(r => r.Deck.Name == "Pharmacology");
+        row.Focus();
+        Press(Key.Delete);
+        Click(Find<Button>(OpenDialog(Window)!, "Delete"));
+        Assert.IsType<HomeView>(CurrentScreen);
+        Assert.DoesNotContain(All<SidebarDeckRow>(Window), r => r.Deck.Name == "Pharmacology");
+    }
+
+    [AvaloniaFact]
+    public void TheSidebarsDueCountsFollowChanges()
+    {
+        AddSampleDecks();
+        var before = All<SidebarDeckRow>(Window).First(r => r.Deck.Name == "Parasitology").ToStudyCount;
+        Db.AddNote(Parasitology.Id, CardKind.Basic, "Host of *Dipylidium*?", "Flea", []);
+        Window.RefreshSidebar();   // what SyncRunner.Synced and closing the editor call
+        Settle();
+        Assert.Equal(before + 1, All<SidebarDeckRow>(Window).First(r => r.Deck.Name == "Parasitology").ToStudyCount);
     }
 
     [AvaloniaFact]
     public void AnEmptyRevInvitesYouToMakeADeck()
     {
         Assert.Contains("No decks yet", Texts(Window));
+        Assert.Empty(All<SidebarDeckRow>(Window));
+        Assert.True(Find<Button>(Window, "New deck").IsEnabled);
         Picture(Window, "02-home-empty");
     }
 
@@ -47,7 +111,8 @@ public sealed class ScreenTests : ScreenTest
         Press(Key.Enter);
         Assert.Null(OpenDialog(Window));
         Assert.Contains(Db.GetDecks(), d => d.Name == "Microbiology");
-        Assert.Contains(All<DeckTile>(Window), t => t.Deck.Name == "Microbiology");
+        Assert.Contains(All<SidebarDeckRow>(Window), r => r.Deck.Name == "Microbiology");
+        Assert.IsType<DeckView>(CurrentScreen);   // the new deck opens, ready for cards
     }
 
     [AvaloniaFact]
@@ -66,16 +131,16 @@ public sealed class ScreenTests : ScreenTest
     public void DeletingADeckAsksFirstAndEnterMeansCancel()
     {
         AddSampleDecks();
-        var tile = All<DeckTile>(Window).First(t => t.Deck.Name == "Pharmacology");
-        tile.Focus();
+        var row = All<SidebarDeckRow>(Window).First(r => r.Deck.Name == "Pharmacology");
+        row.Focus();
         Press(Key.Delete);
         Assert.Contains("Delete “Pharmacology”?", Texts(OpenDialog(Window)!));
         Picture(Window, "04-delete-deck-dialog");
         Press(Key.Enter);   // the keyboard starts on Cancel, so Enter can never delete by accident
         Assert.Equal(2, Db.GetDecks().Count);
 
-        tile = All<DeckTile>(Window).First(t => t.Deck.Name == "Pharmacology");
-        tile.Focus();
+        row = All<SidebarDeckRow>(Window).First(r => r.Deck.Name == "Pharmacology");
+        row.Focus();
         Press(Key.Delete);
         Click(Find<Button>(OpenDialog(Window)!, "Delete"));
         Assert.Equal(["Parasitology"], Db.GetDecks().Select(d => d.Name));
@@ -85,15 +150,18 @@ public sealed class ScreenTests : ScreenTest
     public void ADeckShowsItsNumbersAndCards()
     {
         AddSampleDecks();
-        All<DeckTile>(Window).First(t => t.Deck.Name == "Parasitology").RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
-        Settle();
+        Click(All<SidebarDeckRow>(Window).First(r => r.Deck.Name == "Parasitology"));
         var deck = Assert.IsType<DeckView>(CurrentScreen);
         string text = Texts(deck);
         Assert.Contains("Parasitology", text);
+        Assert.Contains("3 cards · 0 due · 3 new", text);   // the cloze makes 2 cards, plus a basic one
+        Assert.True(Find<Button>(deck, "Study").IsEnabled);
+        Assert.True(Find<Button>(deck, "More").IsEnabled);
         Assert.Contains("Cloze", text);
-        Assert.Contains("#flukes", text);
+        var cloze = All<Button>(deck).First(b => b.Tag is Guid && ToolTip.GetTip(b) is string tip && tip.Contains("#flukes"));
+        Assert.NotNull(cloze);   // tags show in the row's tooltip
         Picture(Window, "05-deck");
-        Press(Key.Escape);
+        Press(Key.D1, KeyModifiers.Control);
         Assert.IsType<HomeView>(CurrentScreen);
     }
 
@@ -115,19 +183,37 @@ public sealed class ScreenTests : ScreenTest
     }
 
     [AvaloniaFact]
+    public void TheCardTableSortsByAColumnAndEnterEdits()
+    {
+        AddSampleDecks();
+        Window.Open(new AllCardsView());
+        Settle();
+        var browser = All<CardBrowser>(Window).Single();
+        Click(Find<Button>(browser, "Front"));
+        var rows = All<Button>(browser).Where(b => b.Tag is Guid).ToList();
+        var fronts = rows.Select(r => AutomationProperties.GetName(r)!.Replace("*", "")).ToList();
+        Assert.Equal(fronts.OrderBy(f => f, StringComparer.CurrentCultureIgnoreCase), fronts);
+        Assert.Contains("A to Z", Texts(browser));   // the sort menu shows the sort the heading chose
+        rows[0].Focus();
+        Press(Key.Enter);
+        Assert.NotNull(Opened<CardEditorWindow>());
+    }
+
+    [AvaloniaFact]
     public void ReviewingWithTheKeyboard()
     {
         AddSampleDecks();
         Window.Open(new ReviewView(Pharmacology));
         Settle();
         var review = Assert.IsType<ReviewView>(CurrentScreen);
+        Assert.Contains("Studying Pharmacology", Texts(review));
         Assert.Contains("QUESTION", Texts(review));
         Assert.DoesNotContain("ANSWER", Texts(review));
         Picture(Window, "07-review-question");
 
         Press(Key.Space);
         Assert.Contains("ANSWER", Texts(review));
-        Assert.Contains("Again", Texts(review));
+        Assert.Contains("1 · Again", Texts(review));
         Picture(Window, "08-review-answer");
 
         int before = Db.ReviewsToday(DateTime.Now);
@@ -138,8 +224,21 @@ public sealed class ScreenTests : ScreenTest
         Press(Key.Z, KeyModifiers.Control);   // undo
         Assert.Equal(before, Db.ReviewsToday(DateTime.Now));
 
+        Press(Key.Escape);   // stops: back to the deck's page
+        Assert.IsType<DeckView>(CurrentScreen);
+    }
+
+    [AvaloniaFact]
+    public void EscWithAQuestionOpenOnlyClosesTheQuestion()
+    {
+        AddSampleDecks();
+        Window.Open(new ReviewView(Pharmacology));
+        Settle();
+        _ = RevDialog.Confirm(Window, "Discard this card?", "You've typed a card that hasn't been saved.", "Discard", destructive: true);
+        Settle();
         Press(Key.Escape);
-        Assert.IsType<HomeView>(CurrentScreen);
+        Assert.Null(OpenDialog(Window));
+        Assert.IsType<ReviewView>(CurrentScreen);
     }
 
     [AvaloniaFact]
@@ -342,9 +441,9 @@ public sealed class ScreenTests : ScreenTest
     public void Stats()
     {
         AddSampleDecks();
-        Window.Open(new StatsView());
-        Settle();
-        string text = Texts(CurrentScreen!);
+        _ = Window;
+        Press(Key.D3, KeyModifiers.Control);
+        string text = Texts(Assert.IsType<StatsView>(CurrentScreen));
         Assert.Contains("Your progress", text);
         Assert.Contains("Last 7 days", text);
         Assert.Contains("Today", text);
@@ -355,9 +454,11 @@ public sealed class ScreenTests : ScreenTest
     public void SettingsAreSavedAtOnce()
     {
         AddSampleDecks();
-        Window.Open(new SettingsView());
-        Settle();
-        var settings = CurrentScreen!;
+        _ = Window;
+        Press(Key.OemComma, KeyModifiers.Control);
+        var settings = Assert.IsType<SettingsView>(CurrentScreen);
+        foreach (var section in new[] { "Studying", "Sync with Anki", "Anki files", "Backups", "About" })
+            Assert.Contains(section, Texts(settings).Split(" | "));
         Find<TextBox>(settings, "Your name").Text = "Marshal";
         Find<TextBox>(settings, "New cards per day").Text = "35";
         Find<RadioButton>(settings, "SM-2 (classic)").IsChecked = true;
@@ -387,10 +488,146 @@ public sealed class ScreenTests : ScreenTest
             Settle();
             Press(Key.Space);
             Picture(Window, "18-review-dark");
+            Window.ShowDeck(Parasitology);
+            Settle();
+            Picture(Window, "18a-deck-dark");
+            Press(Key.D3, KeyModifiers.Control);
+            Picture(Window, "18b-stats-dark");
+            Press(Key.OemComma, KeyModifiers.Control);
+            Picture(Window, "18c-settings-dark");
         }
         finally
         {
             Avalonia.Application.Current!.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Light;
         }
+    }
+
+    [AvaloniaFact]
+    public void NarrowWindowFitsEverything()
+    {
+        AddSampleDecks();
+        Db.AddDeck("Clinical pathology and laboratory diagnostics", DateTime.Now);
+        Window.Width = 900;
+        Window.Height = 600;
+        Settle();
+        var sidebar = All<Sidebar>(Window).Single();
+        foreach (var text in All<TextBlock>(sidebar).Where(t => t.IsEffectivelyVisible))
+        {
+            var right = text.TranslatePoint(new Point(text.Bounds.Width, 0), sidebar)!.Value.X;
+            Assert.True(right <= sidebar.Bounds.Width + 0.5, $"“{text.Text}” runs past the sidebar");
+        }
+        Picture(Window, "30-narrow-home");
+        Press(Key.D2, KeyModifiers.Control); Picture(Window, "31-narrow-all-cards");
+        Press(Key.D3, KeyModifiers.Control); Picture(Window, "32-narrow-stats");
+        Press(Key.OemComma, KeyModifiers.Control); Picture(Window, "33-narrow-settings");
+        Window.ShowDeck(Pharmacology); Settle(); Picture(Window, "34-narrow-deck");
+        Window.Open(new ReviewView(Pharmacology)); Settle(); Press(Key.Space); Picture(Window, "35-narrow-review");
+        // The "4 new · 0 learning · 0 review" counts stop before the Undo button instead of running under it.
+        var review = CurrentScreen!;
+        var undo = Find<Button>(review, "Undo");
+        var undoLeft = undo.TranslatePoint(new Point(0, 0), review)!.Value.X;
+        foreach (var count in All<TextBlock>(review).Where(t => t.IsEffectivelyVisible && t.Text is { } x && x.EndsWith(" review")))
+        {
+            var clip = count.GetVisualAncestors().OfType<Control>().First(c => c.ClipToBounds);
+            var visibleRight = Math.Min(count.TranslatePoint(new Point(count.Bounds.Width, 0), review)!.Value.X,
+                                        clip.TranslatePoint(new Point(clip.Bounds.Width, 0), review)!.Value.X);
+            Assert.True(visibleRight <= undoLeft, $"“{count.Text}” runs under Undo");
+        }
+    }
+
+    private const string LongName = "Clinical pathology and laboratory diagnostics for the final year exams";
+
+    [AvaloniaFact]
+    public void ALongDeckNameKeepsTheToolbarAndColumnsInView()
+    {
+        AddSampleDecks();
+        Db.RenameDeck(Pharmacology.Id, LongName);
+        Window.Width = 900;
+        Window.Height = 600;
+        Settle();
+        // Home: the name ends in "…" before the Due column
+        var row = All<DeckListRow>(Window).First(r => r.Deck.Id == Pharmacology.Id);
+        var name = All<TextBlock>(row).First(t => t.Text == LongName);
+        var due = All<TextBlock>(row).Where(t => t.Text != LongName).First();
+        Assert.True(name.TranslatePoint(new Point(name.Bounds.Width, 0), row)!.Value.X <= due.TranslatePoint(new Point(0, 0), row)!.Value.X,
+            "the deck name runs into the Due column");
+        // The deck page: the toolbar's ⋯ stays inside the page
+        Window.ShowDeck(Db.GetDecks().First(d => d.Id == Pharmacology.Id));
+        Settle();
+        var page = CurrentScreen!;
+        var more = Find<Button>(page, "More");
+        Assert.True(more.TranslatePoint(new Point(more.Bounds.Width, 0), page)!.Value.X <= page.Bounds.Width, "⋯ is pushed off the page");
+        Picture(Window, "36-narrow-long-name");
+    }
+
+    [AvaloniaFact]
+    public void ARenameShowsInTheReviewTitle()
+    {
+        AddSampleDecks();
+        Window.ShowDeck(Pharmacology);
+        Settle();
+        Db.RenameDeck(Pharmacology.Id, "Pharma 2");
+        ((IScreen)CurrentScreen!).Refresh();
+        Click(Find<Button>(CurrentScreen!, "Study"));
+        Assert.Contains("Studying Pharma 2", Texts(CurrentScreen!));
+        Db.RenameDeck(Pharmacology.Id, "Pharma 3");   // renamed while studying
+        ((IScreen)CurrentScreen!).Refresh();
+        Assert.Contains("Studying Pharma 3", Texts(CurrentScreen!));
+    }
+
+    [AvaloniaFact]
+    public void DeletingADeckDuringReviewAllTakesItsCardsOut()
+    {
+        AddSampleDecks();
+        Window.Open(new ReviewView(null));
+        Settle();
+        All<SidebarDeckRow>(Window).First(r => r.Deck.Name == "Pharmacology").Focus();
+        Press(Key.Delete);
+        Click(Find<Button>(OpenDialog(Window)!, "Delete"));
+        var review = Assert.IsType<ReviewView>(CurrentScreen);
+        Assert.Contains("3 new", Texts(review));   // only Parasitology's cards are left
+    }
+
+    [AvaloniaFact]
+    public void WindowShortcutsWaitWhileAQuestionIsOpen()
+    {
+        AddSampleDecks();
+        Window.ShowDeck(Pharmacology);
+        Settle();
+        All<SidebarDeckRow>(Window).First(r => r.Deck.Name == "Pharmacology").Focus();
+        Press(Key.F2);   // Rename deck
+        Assert.NotNull(OpenDialog(Window));
+        Press(Key.D1, KeyModifiers.Control);
+        Press(Key.B, KeyModifiers.Control);
+        Assert.IsType<DeckView>(CurrentScreen);
+        Assert.True(Window.IsSidebarOpen);
+    }
+
+    [AvaloniaFact]
+    public void StudyingDoesntRedrawTheSidebarAfterEveryAnswer()
+    {
+        AddSampleDecks();
+        Window.Open(new ReviewView(Pharmacology));
+        Settle();
+        var before = All<SidebarDeckRow>(Window).First(r => r.Deck.Name == "Parasitology");
+        Press(Key.Space);
+        Press(Key.D3);
+        Assert.Same(before, All<SidebarDeckRow>(Window).First(r => r.Deck.Name == "Parasitology"));
+        Press(Key.Escape);   // stopping brings the numbers up to date
+        Assert.NotSame(before, All<SidebarDeckRow>(Window).First(r => r.Deck.Name == "Parasitology"));
+    }
+
+    [AvaloniaFact]
+    public void TheSmallestWindowStillFitsTheRatingButtons()
+    {
+        AddSampleDecks();
+        Window.Width = 600;   // below the smallest size: the window stops at its minimum
+        Settle();
+        Window.Open(new ReviewView(Pharmacology));
+        Settle();
+        Press(Key.Space);
+        var review = CurrentScreen!;
+        var easy = Find<Button>(review, "Easy");
+        Assert.True(easy.TranslatePoint(new Point(easy.Bounds.Width, 0), review)!.Value.X <= review.Bounds.Width, "Easy is cut off");
     }
 }

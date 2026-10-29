@@ -68,7 +68,7 @@ public sealed class RevDialog : Border
     private Button AddButton(string text, string classes, int number)
     {
         var button = Ui.Button("rev " + classes, text);
-        button.MinHeight = 50;
+        button.MinHeight = 34;
         button.Margin = new Thickness(buttons.Children.Count == 0 ? 0 : 12, 0, 0, 0);
         button.Command = new RelayCommand(() => Answer(number));
         buttons.Children.Add(button);

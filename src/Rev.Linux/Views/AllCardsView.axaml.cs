@@ -11,7 +11,6 @@ public partial class AllCardsView : UserControl, IScreen
     {
         InitializeComponent();
         KeyBindings.Add(new KeyBinding { Gesture = new KeyGesture(Key.F, KeyModifiers.Control), Command = new RelayCommand(() => Browser.FocusSearch()) });
-        KeyBindings.Add(new KeyBinding { Gesture = new KeyGesture(Key.Escape), Command = new RelayCommand(() => MainWindow.Current.GoBack()) });
         Browser.Setup(() => App.Database.GetCards(), withDeckNames: true);
         Browser.Changed += (_, _) => UpdateEmpty();
         Loaded += (_, _) =>
@@ -34,5 +33,4 @@ public partial class AllCardsView : UserControl, IScreen
         Browser.IsVisible = !empty;
     }
 
-    private void Back_Click(object? sender, RoutedEventArgs e) => MainWindow.Current.GoBack();
 }
