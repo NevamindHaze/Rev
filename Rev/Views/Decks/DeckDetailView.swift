@@ -47,7 +47,7 @@ struct DeckDetailView: View {
                     Button { showingAddCard = true } label: {
                         Label("Add card", systemImage: "plus")
                     }
-                    .buttonStyle(PillButtonStyle(background: Theme.teal, foreground: .white))
+                    .buttonStyle(PillButtonStyle(background: Theme.teal, foreground: Theme.onAccent))
 
                     Button { showingBulkAdd = true } label: {
                         Label("Paste many", systemImage: "text.badge.plus")

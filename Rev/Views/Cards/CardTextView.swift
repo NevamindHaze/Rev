@@ -52,7 +52,7 @@ struct CardImageView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(maxWidth: .infinity, maxHeight: maxHeight)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: Theme.radius(16), style: .continuous))
                 .onTapGesture { isZoomed = true }
                 .fullScreenCover(isPresented: $isZoomed) {
                     ZoomableImageView(image: image)

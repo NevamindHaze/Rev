@@ -171,7 +171,7 @@ struct ReviewView: View {
                 .onSubmit(reveal)
                 .font(Theme.body(19))
                 .padding(14)
-                .background(Theme.softFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background(Theme.softFill, in: RoundedRectangle(cornerRadius: Theme.radius(16), style: .continuous))
         }
     }
 
@@ -218,7 +218,7 @@ struct ReviewView: View {
                 .multilineTextAlignment(.center)
             if queue.laterToday > 0 {
                 Button("Check again", action: loadNext)
-                    .buttonStyle(PillButtonStyle(background: Theme.teal, foreground: .white))
+                    .buttonStyle(PillButtonStyle(background: Theme.teal, foreground: Theme.onAccent))
                     .padding(.top, 8)
             }
             // Done for today, or want something different? Like Anki's Custom study.

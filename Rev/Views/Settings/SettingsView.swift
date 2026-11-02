@@ -124,7 +124,7 @@ struct SettingsView: View {
                 ProgressView()
                     .controlSize(.large)
                     .padding(30)
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20))
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.radius(20)))
             }
         }
         .fileImporter(isPresented: $isImporting,

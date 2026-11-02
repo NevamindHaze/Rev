@@ -31,10 +31,22 @@ enum Theme {
     /// Always-dark text, for bright backgrounds like mustard.
     static let darkText = Color(light: 0x1F1B16, dark: 0x1F1B16)
 
+    /// Text on a bright colour like `teal` or `coral`.
+    static var onAccent: Color { isSignal ? .black : .white }
+
     // MARK: Shapes and spacing
 
     static var corner: CGFloat { isSignal ? 12 : 30 }
     static let padding: CGFloat = 20
+
+    /// A corner size that's sharper in Signal. Original keeps each place's own size.
+    static func radius(_ original: CGFloat, signal: CGFloat = 12) -> CGFloat {
+        isSignal ? signal : original
+    }
+
+    static var pillShape: AnyShape {
+        isSignal ? AnyShape(RoundedRectangle(cornerRadius: 10, style: .continuous)) : AnyShape(Capsule())
+    }
 
     // MARK: Fonts
 

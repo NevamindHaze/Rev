@@ -22,7 +22,7 @@ struct StatsView: View {
                     TimelineView(.periodic(from: .now, by: 30)) { context in
                         VStack(alignment: .leading, spacing: 2) {
                             Text("\(cards.toReviewCount(now: context.date))")
-                                .font(.system(size: 84, weight: .bold, design: .rounded))
+                                .font(Theme.title(84))
                                 .foregroundStyle(Theme.ink)
                             Text("cards to review")
                                 .font(Theme.body(17, weight: .medium))
@@ -69,7 +69,7 @@ struct StatsView: View {
             Text(streak == 1 ? "day" : "days")
                 .font(Theme.body(13, weight: .semibold))
         }
-        .foregroundStyle(.white)
+        .foregroundStyle(Theme.onAccent)
         .frame(width: 112, height: 112)
         .background(Theme.coral, in: Circle())
     }

@@ -28,10 +28,10 @@ struct BulkAddView: View {
                     .font(Theme.body(17))
                     .scrollContentBackground(.hidden)
                     .padding(12)
-                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.radius(22), style: .continuous))
 
                 Button("Add \(parsed.count.counted("card"))", action: add)
-                    .buttonStyle(PillButtonStyle(background: Theme.teal, foreground: .white, height: 64))
+                    .buttonStyle(PillButtonStyle(background: Theme.teal, foreground: Theme.onAccent, height: 64))
                     .disabled(parsed.isEmpty)
             }
             .padding(Theme.padding)

@@ -159,7 +159,7 @@ struct CardBrowser: View {
             .lineLimit(1)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .foregroundStyle(active ? .white : Theme.ink)
+            .foregroundStyle(active ? Theme.onAccent : Theme.ink)
             .background(active ? Theme.teal : Theme.softFill, in: Capsule())
     }
 
@@ -256,7 +256,7 @@ struct CardRow: View {
         .multilineTextAlignment(.leading)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(18)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.radius(22), style: .continuous))
         .opacity(card.isSuspended ? 0.6 : 1)
     }
 
@@ -279,7 +279,7 @@ struct CardRow: View {
     private func badge(_ text: String, color: Color, dark: Bool = false) -> some View {
         Text(text)
             .font(Theme.body(12, weight: .bold))
-            .foregroundStyle(dark ? Theme.darkText : .white)
+            .foregroundStyle(dark ? Theme.darkText : Theme.onAccent)
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
             .background(color, in: Capsule())
