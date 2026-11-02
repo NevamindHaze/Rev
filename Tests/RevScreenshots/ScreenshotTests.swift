@@ -10,11 +10,40 @@ final class ScreenshotTests: XCTestCase {
         let looks: [(prefix: String, appearance: XCUIDevice.Appearance, theme: String?)] = [
             ("original-light", .light, nil),
             ("original-dark", .dark, nil),
+            ("signal", .dark, "signal"),
         ]
         for look in looks {
             XCUIDevice.shared.appearance = look.appearance
             capture(look.prefix, theme: look.theme)
         }
+    }
+
+    /// With the phone in light mode, Signal and back to Original must land on the light look.
+    func testSwitchingThemeSticksAndGoesBack() {
+        XCUIDevice.shared.appearance = .light
+        var app = launch(data: "standard", theme: nil)
+        tapTab("Settings", in: app)
+        tap(themePicker(in: app))
+        tap(app.buttons["Signal"])
+        tapTab("Decks", in: app)
+        shoot("switch-signal")
+
+        app.terminate()
+        app = launch(data: "standard", theme: nil)
+        tapTab("Settings", in: app)
+        let picker = themePicker(in: app)
+        XCTAssertTrue(picker.waitForExistence(timeout: 20))
+        XCTAssertTrue("\(picker.label) \(picker.value ?? "")".contains("Signal"), "The choice wasn't remembered")
+
+        tap(picker)
+        tap(app.buttons["Original"])
+        tapTab("Decks", in: app)
+        shoot("switch-back-original-light")
+        app.terminate()
+    }
+
+    private func themePicker(in app: XCUIApplication) -> XCUIElement {
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Theme'")).firstMatch
     }
 
     private func capture(_ prefix: String, theme: String?) {

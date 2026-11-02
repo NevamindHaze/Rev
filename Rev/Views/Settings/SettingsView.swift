@@ -10,6 +10,7 @@ struct SettingsView: View {
     @AppStorage("newCardsPerDay") private var newCardsPerDay = 20
     @AppStorage("scheduler") private var scheduler = SchedulerKind.fsrs.rawValue
     @AppStorage("desiredRetention") private var desiredRetention = 0.9
+    @AppStorage(AppTheme.storageKey) private var appTheme = AppTheme.original.rawValue
 
     // Saving a file
     @State private var exportDocument: ExportFile?
@@ -37,6 +38,14 @@ struct SettingsView: View {
         Form {
             Section("You") {
                 TextField("Your name", text: $userName)
+            }
+
+            Section("Appearance") {
+                Picker("Theme", selection: $appTheme) {
+                    ForEach(AppTheme.allCases) { theme in
+                        Text(theme.title).tag(theme.rawValue)
+                    }
+                }
             }
 
             Section {
