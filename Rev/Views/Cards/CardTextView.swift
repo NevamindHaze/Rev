@@ -43,6 +43,7 @@ extension CardTextView {
 /// One image on a card. Tap it to see it full screen.
 struct CardImageView: View {
     let name: String
+    var maxHeight: CGFloat = 380
     @State private var isZoomed = false
 
     var body: some View {
@@ -50,7 +51,7 @@ struct CardImageView: View {
             Image(uiImage: image)
                 .resizable()
                 .scaledToFit()
-                .frame(maxWidth: .infinity, maxHeight: 380)
+                .frame(maxWidth: .infinity, maxHeight: maxHeight)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .onTapGesture { isZoomed = true }
                 .fullScreenCover(isPresented: $isZoomed) {
