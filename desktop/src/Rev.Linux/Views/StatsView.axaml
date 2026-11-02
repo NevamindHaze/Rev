@@ -1,0 +1,60 @@
+<!--
+    Your progress: cards due today, your streak, today's numbers, and a chart of the last 7 days
+    (side by side on a wide window).
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:controls="clr-namespace:Rev.Linux.Controls"
+             x:Class="Rev.Linux.Views.StatsView">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="1200" Margin="{StaticResource PagePadding}">
+            <TextBlock Classes="title" Text="Your progress" />
+
+            <!-- Two columns on a wide window (today on the left, the last 7 days on the right), one when narrow -->
+            <Grid x:Name="Columns" Margin="0,16,0,0" ColumnDefinitions="*,18,*" RowDefinitions="Auto,Auto">
+                <StackPanel x:Name="TodayColumn">
+                    <!-- The big number, and the streak badge -->
+                    <Border Classes="card" Padding="24,20">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock x:Name="DueNumber" FontSize="56" FontWeight="ExtraBold" Foreground="{DynamicResource InkBrush}"
+                                           Margin="0,-8,0,-6" />
+                                <TextBlock x:Name="DueLabel" Classes="muted" FontSize="14" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <Border x:Name="StreakBadge" Grid.Column="1" Width="96" Height="96" CornerRadius="48"
+                                    Background="{DynamicResource CoralBrush}">
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <!-- A little flame, drawn as a shape -->
+                                    <Path Width="18" Height="22" Stretch="Uniform" Fill="{DynamicResource OnCoralBrush}" HorizontalAlignment="Center"
+                                          Data="M12,1 C13,5 18,8 18,14 C18,18 15.5,21 12,21 C8.5,21 6,18 6,14.5 C6,11.5 7.5,9.5 9,8.5 C9,11 10,12.5 11.5,13 C11,9 11,5 12,1 Z" />
+                                    <TextBlock x:Name="StreakNumber" FontSize="26" FontWeight="ExtraBold" HorizontalAlignment="Center"
+                                               Foreground="{DynamicResource OnCoralBrush}" Margin="0,-2,0,-4" />
+                                    <TextBlock x:Name="StreakLabel" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                               Foreground="{DynamicResource OnCoralBrush}" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <UniformGrid Columns="3" Margin="0,14,0,0">
+                        <controls:StatTile x:Name="ReviewedTile" Margin="0,0,6,0" Label="Reviewed today"
+                                           Icon="Check" Tint="{DynamicResource TealBrush}" />
+                        <controls:StatTile x:Name="NewTile" Margin="3,0,3,0" Label="New cards"
+                                           Icon="StarOutline" Tint="{DynamicResource CoralBrush}" />
+                        <controls:StatTile x:Name="TotalTile" Margin="6,0,0,0" Label="Total cards"
+                                           Icon="CardsOutline" Tint="{DynamicResource MustardBrush}" />
+                    </UniformGrid>
+                </StackPanel>
+
+                <!-- Last 7 days -->
+                <Border x:Name="WeekColumn" Grid.Column="2" Classes="card" Padding="24,20">
+                    <StackPanel>
+                        <TextBlock Classes="heading" Text="Last 7 days" />
+                        <UniformGrid x:Name="Chart" Columns="7" Rows="1" Height="200" Margin="0,14,0,0" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

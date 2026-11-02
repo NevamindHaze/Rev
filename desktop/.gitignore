@@ -1,0 +1,23 @@
+# Files the build makes. They're re-created every time, so git doesn't need to keep them.
+bin/
+obj/
+publish/
+dist/
+artifacts/
+TestResults/
+
+# Editor settings
+.vs/
+.vscode/
+*.user
+
+# Never commit Anki collections or test copies of them.
+*.apkg
+*.colpkg
+*.anki2
+*.anki21
+*.anki21b
+
+# ...except the small made-up test files in tests/Fixtures (made by tools/make-anki-fixtures.py).
+!tests/Fixtures/*.apkg
+!tests/Fixtures/*.colpkg

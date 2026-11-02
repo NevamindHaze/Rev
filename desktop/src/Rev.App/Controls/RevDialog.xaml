@@ -1,0 +1,31 @@
+<!--
+    A clear, centred question box, used for "New deck", "Rename deck", "Delete deck?" and more.
+    Use it from code with RevDialog.Confirm(...) or RevDialog.Prompt(...).
+-->
+<Window x:Class="Rev.App.Controls.RevDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Style="{StaticResource RevWindow}"
+        Background="Transparent" WindowStyle="None" AllowsTransparency="True" ResizeMode="NoResize"
+        ShowInTaskbar="False" WindowStartupLocation="CenterOwner" SizeToContent="Height" Width="500">
+
+    <!-- The margin leaves room for the soft shadow around the card. -->
+    <Border Margin="24" Padding="30,28" Background="{DynamicResource SurfaceBrush}" CornerRadius="{StaticResource Corner}">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="28" ShadowDepth="4" Opacity="0.25" />
+        </Border.Effect>
+        <StackPanel>
+            <TextBlock x:Name="TitleText" Style="{StaticResource HeadingText}" FontSize="22" TextWrapping="Wrap" />
+            <TextBlock x:Name="MessageText" Style="{StaticResource MutedText}" Margin="0,8,0,0" FontSize="16" />
+            <TextBox x:Name="InputBox" Style="{StaticResource RevTextBox}" Margin="0,18,0,0" Visibility="Collapsed"
+                     TextChanged="InputBox_TextChanged" />
+
+            <StackPanel x:Name="ButtonRow" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
+                <Button x:Name="CancelButton" Style="{StaticResource SecondaryPillButton}" MinHeight="50"
+                        Content="Cancel" IsCancel="True" Click="Cancel_Click" />
+                <Button x:Name="ConfirmButton" Style="{StaticResource PillButton}" MinHeight="50" Margin="12,0,0,0"
+                        Click="Confirm_Click" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

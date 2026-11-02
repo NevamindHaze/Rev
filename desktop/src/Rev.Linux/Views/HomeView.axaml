@@ -1,0 +1,61 @@
+<!--
+    The Home page: a greeting with today's numbers in one line, "Review all decks", and your decks in a table.
+    In the table: click or Enter opens a deck, Space studies it, F2 renames, Delete deletes (or right-click).
+    Ctrl+N makes a new deck, Ctrl+F searches every card.
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:controls="clr-namespace:Rev.Linux.Controls"
+             x:Class="Rev.Linux.Views.HomeView">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="960" Margin="{StaticResource PagePadding}">
+
+            <!-- Greeting, date and today's numbers, with Review all decks on the right -->
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel>
+                    <TextBlock x:Name="GreetingText" Classes="title" Text="Hi there 👋" />
+                    <TextBlock x:Name="SummaryText" Classes="muted" Margin="0,4,0,0" />
+                </StackPanel>
+                <Button x:Name="ReviewAllButton" Grid.Column="1" Classes="rev primary" VerticalAlignment="Center"
+                        Click="ReviewAll_Click" ToolTip.Tip="Study every deck" AutomationProperties.Name="Review all decks">
+                    <StackPanel Orientation="Horizontal">
+                        <mi:MaterialIcon Kind="Play" Width="16" Height="16" Margin="0,0,8,0" />
+                        <TextBlock Text="Review all decks" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- Decks -->
+            <Grid ColumnDefinitions="*,Auto" Margin="0,24,0,8">
+                <TextBlock Classes="heading" Text="Your decks" VerticalAlignment="Center" />
+                <Button x:Name="NewDeckButton" Grid.Column="1" Classes="rev secondary"
+                        Click="NewDeck_Click" ToolTip.Tip="New deck (Ctrl+N)" AutomationProperties.Name="New deck">
+                    <StackPanel Orientation="Horizontal">
+                        <mi:MaterialIcon Kind="Plus" Width="14" Height="14" Margin="0,0,6,0" />
+                        <TextBlock Text="New deck" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+            <Border x:Name="DeckTable" Classes="table">
+                <StackPanel>
+                    <Grid x:Name="DeckHeading" Margin="10,4,10,6">
+                        <TextBlock Classes="columnhead" Text="Deck" />
+                        <TextBlock Grid.Column="1" Classes="columnhead" Text="Due" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Column="2" Classes="columnhead" Text="New" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Column="3" Classes="columnhead" Text="Total" HorizontalAlignment="Right" />
+                    </Grid>
+                    <StackPanel x:Name="DeckRows" />
+                </StackPanel>
+            </Border>
+            <Border x:Name="EmptyState" Classes="card">
+                <StackPanel HorizontalAlignment="Center">
+                    <mi:MaterialIcon Kind="Bookshelf" Width="36" Height="36" Foreground="{DynamicResource TealBrush}" />
+                    <TextBlock Classes="heading" Text="No decks yet" HorizontalAlignment="Center" Margin="0,10,0,0" />
+                    <TextBlock Classes="muted" TextAlignment="Center" Margin="0,4,0,0"
+                               Text="Click New deck to make your first one, or import an Anki deck in Settings." />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

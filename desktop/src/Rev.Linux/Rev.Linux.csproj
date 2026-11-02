@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Rev for Linux: the same screens as Rev for Windows, drawn with Avalonia (which runs on Linux).
+       All the "thinking" (scheduling, sync, Anki files, backups) is shared with Windows in Rev.Core. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\Rev.Core\Rev.Core.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Rev</AssemblyName>
+    <RootNamespace>Rev.Linux</RootNamespace>
+    <Product>Rev</Product>
+    <Version>1.5.0</Version>
+    <ApplicationIcon>..\Rev.App\Assets\AppIcon.ico</ApplicationIcon>
+    <!-- Dates and numbers the same everywhere, and no extra system library (ICU) needed on Linux. -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.22" />
+    <!-- Icons drawn as shapes, so they look the same on every Linux (Windows' icon font isn't there). -->
+    <PackageReference Include="Material.Icons.Avalonia" Version="2.4.0" />
+    <!-- The card text boxes in the editor, which show bold and italic as you type. -->
+    <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The same font and icon as Rev for Windows, baked into the program. -->
+    <AvaloniaResource Include="..\Rev.App\Assets\Fonts\*.ttf" Link="Assets\Fonts\%(Filename)%(Extension)" />
+    <AvaloniaResource Include="..\Rev.App\Assets\AppIcon.png" Link="Assets\AppIcon.png" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,106 @@
+<!--
+    The review screen: question → Show answer → rate. Minimal on purpose.
+    Keys: Space (or Enter) shows the answer, 1–4 rate it, Ctrl+Z undoes, E edits the card, Esc goes back.
+    Clicking works everywhere too: click the card to show the answer.
+-->
+<UserControl x:Class="Rev.App.Views.ReviewView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:Rev.App.Controls"
+             Focusable="True" FocusVisualStyle="{x:Null}">
+
+    <Grid MaxWidth="900" Margin="32,22,32,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ←, the deck's name, Undo and Edit -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button Style="{StaticResource RoundIconButton}" Click="Back_Click" ToolTip="Back (Esc)"
+                    AutomationProperties.Name="Back" Focusable="False">
+                <TextBlock Style="{StaticResource IconText}" Text="&#xE72B;" />
+            </Button>
+            <TextBlock x:Name="TitleText" Grid.Column="1" Style="{StaticResource HeadingText}" Margin="16,0,12,0"
+                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <Button x:Name="UndoButton" Style="{StaticResource SecondaryPillButton}" MinHeight="46" Padding="20,0"
+                        Click="Undo_Click" ToolTip="Undo the last answer (Ctrl+Z)" AutomationProperties.Name="Undo" Focusable="False">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource IconText}" FontSize="14" Text="&#xE7A7;" Margin="0,0,8,0" />
+                        <TextBlock Text="Undo" FontSize="16" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="EditButton" Style="{StaticResource SecondaryPillButton}" MinHeight="46" Padding="20,0" Margin="10,0,0,0"
+                        Click="Edit_Click" ToolTip="Edit this card (E)" AutomationProperties.Name="Edit card" Focusable="False">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource IconText}" FontSize="14" Text="&#xE70F;" Margin="0,0,8,0" />
+                        <TextBlock Text="Edit" FontSize="16" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- 3 new · 2 learning · 5 review -->
+        <StackPanel x:Name="CountsPanel" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,16" />
+
+        <!-- The card -->
+        <Border x:Name="CardFace" Grid.Row="2" Background="{DynamicResource SurfaceBrush}" CornerRadius="{StaticResource Corner}"
+                MouseLeftButtonUp="CardFace_Click" Cursor="Hand">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+                <StackPanel Margin="36,30">
+                    <TextBlock Text="QUESTION" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource MutedInkBrush}" Margin="0,0,0,12" />
+                    <controls:CardTextView x:Name="FrontView" TextSize="26" TextElement.FontWeight="SemiBold" />
+
+                    <!-- Type the answer: a box before revealing, the result after -->
+                    <TextBox x:Name="TypeBox" Style="{StaticResource RevTextBox}" Tag="Type your answer, then press Enter"
+                             Margin="0,16,0,0" FontSize="19" Visibility="Collapsed" AutomationProperties.Name="Your answer" />
+                    <StackPanel x:Name="TypedResult" Orientation="Horizontal" Margin="0,16,0,0" Visibility="Collapsed">
+                        <TextBlock x:Name="TypedIcon" Style="{StaticResource IconText}" FontSize="18" Margin="0,0,10,0" />
+                        <TextBlock x:Name="TypedText" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="AnswerPanel" Visibility="Collapsed">
+                        <Border Height="3" CornerRadius="2" Background="{DynamicResource SoftFillBrush}" Margin="0,24,0,20" />
+                        <TextBlock Text="ANSWER" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource MutedInkBrush}" Margin="0,0,0,12" />
+                        <controls:CardTextView x:Name="BackView" TextSize="22" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Nothing left to study -->
+        <StackPanel x:Name="FinishedPanel" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed">
+            <TextBlock x:Name="FinishedIcon" Style="{StaticResource IconText}" FontSize="64" Foreground="{DynamicResource TealBrush}" />
+            <TextBlock x:Name="FinishedTitle" Style="{StaticResource TitleText}" HorizontalAlignment="Center" Margin="0,18,0,8" />
+            <TextBlock x:Name="FinishedMessage" Style="{StaticResource MutedText}" FontSize="16" TextAlignment="Center" />
+            <Button x:Name="CheckAgainButton" Style="{StaticResource TealPillButton}" Content="Check again" Margin="0,22,0,0"
+                    HorizontalAlignment="Center" Click="CheckAgain_Click" />
+            <Button x:Name="CustomStudyButton" Style="{StaticResource SecondaryPillButton}" Margin="0,12,0,0"
+                    HorizontalAlignment="Center" Click="CustomStudy_Click" AutomationProperties.Name="Custom study">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource IconText}" FontSize="15" Text="&#xE71C;" Margin="0,0,10,0" />
+                    <TextBlock Text="Custom study" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <!-- Show answer, or the four answer buttons -->
+        <Grid Grid.Row="3" Margin="0,18,0,0">
+            <Button x:Name="ShowAnswerButton" Style="{StaticResource PillButton}" MinHeight="76" Content="Show answer"
+                    Click="ShowAnswer_Click" ToolTip="Space" Focusable="False" />
+            <UniformGrid x:Name="RatingGrid" Columns="4" Visibility="Collapsed" Margin="-5,0" />
+        </Grid>
+
+        <TextBlock x:Name="KeysHint" Grid.Row="4" Style="{StaticResource MutedText}" FontSize="13" HorizontalAlignment="Center"
+                   Margin="0,12,0,0" Text="Space shows the answer · 1–4 rate · Ctrl+Z undo · E edit · Esc back" />
+    </Grid>
+</UserControl>

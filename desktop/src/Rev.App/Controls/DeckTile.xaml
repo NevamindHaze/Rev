@@ -1,0 +1,88 @@
+<!--
+    One deck on the Home screen: a big coloured card with its name and "N cards · N due · N new" chips.
+    Click (or Enter) opens it, F2 renames, Delete deletes; right-click shows the same choices.
+-->
+<UserControl x:Class="Rev.App.Controls.DeckTile"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <!-- A small rounded label. Its see-through background takes the tile's text colour. -->
+        <Style x:Key="Chip" TargetType="Grid">
+            <Setter Property="Margin" Value="0,0,8,6" />
+        </Style>
+    </UserControl.Resources>
+
+    <Button x:Name="TileButton" Click="TileButton_Click" KeyDown="TileButton_KeyDown" Cursor="Hand"
+            FocusVisualStyle="{x:Null}" RenderTransformOrigin="0.5,0.5"
+            ToolTipService.ShowsToolTipOnKeyboardFocus="False">
+        <Button.ContextMenu>
+            <ContextMenu>
+                <MenuItem Header="Rename" InputGestureText="F2" Click="Rename_Click" />
+                <MenuItem Header="Delete" InputGestureText="Del" Click="Delete_Click" />
+            </ContextMenu>
+        </Button.ContextMenu>
+        <Button.RenderTransform>
+            <ScaleTransform />
+        </Button.RenderTransform>
+        <Button.Template>
+            <ControlTemplate TargetType="Button">
+                <Border x:Name="Card" Background="{TemplateBinding Background}" CornerRadius="{StaticResource Corner}"
+                        Padding="24,22" BorderBrush="{DynamicResource InkBrush}" BorderThickness="0">
+                    <ContentPresenter />
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="Card" Property="Opacity" Value="0.93" />
+                    </Trigger>
+                    <Trigger Property="IsKeyboardFocused" Value="True">
+                        <Setter TargetName="Card" Property="BorderThickness" Value="3" />
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter Property="RenderTransform">
+                            <Setter.Value>
+                                <ScaleTransform ScaleX="0.97" ScaleY="0.97" />
+                            </Setter.Value>
+                        </Setter>
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+        </Button.Template>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock x:Name="NameText" FontSize="24" FontWeight="Bold" TextWrapping="Wrap" VerticalAlignment="Top" />
+
+            <!-- The little arrow in a circle -->
+            <Grid Grid.Column="1" Width="42" Height="42" Margin="12,0,0,0" VerticalAlignment="Top">
+                <Ellipse Fill="{Binding Foreground, ElementName=TileButton}" Opacity="0.15" />
+                <TextBlock Style="{StaticResource IconText}" FontSize="14" Text="&#xE8AD;" />
+            </Grid>
+
+            <WrapPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,18,0,-6">
+                <Grid Style="{StaticResource Chip}">
+                    <Border Background="{Binding Foreground, ElementName=TileButton}" Opacity="0.16"
+                            CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource Self}, Converter={StaticResource PillCorners}}" />
+                    <TextBlock x:Name="CardsChip" FontSize="14" FontWeight="SemiBold" Margin="12,5" />
+                </Grid>
+                <Grid Style="{StaticResource Chip}">
+                    <Border Background="{Binding Foreground, ElementName=TileButton}" Opacity="0.16"
+                            CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource Self}, Converter={StaticResource PillCorners}}" />
+                    <TextBlock x:Name="DueChip" FontSize="14" FontWeight="SemiBold" Margin="12,5" />
+                </Grid>
+                <Grid Style="{StaticResource Chip}">
+                    <Border Background="{Binding Foreground, ElementName=TileButton}" Opacity="0.16"
+                            CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource Self}, Converter={StaticResource PillCorners}}" />
+                    <TextBlock x:Name="NewChip" FontSize="14" FontWeight="SemiBold" Margin="12,5" />
+                </Grid>
+            </WrapPanel>
+        </Grid>
+    </Button>
+</UserControl>
