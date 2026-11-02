@@ -6,15 +6,11 @@ final class ScreenshotTests: XCTestCase {
         continueAfterFailure = false
     }
 
+    /// The workflow sets the simulator to light or dark, then runs this once per look.
+    private var look: String { ProcessInfo.processInfo.environment["LOOK"] ?? "original-light" }
+
     func testCaptureAll() {
-        let looks: [(prefix: String, appearance: XCUIDevice.Appearance, theme: String?)] = [
-            ("original-light", .light, nil),
-            ("original-dark", .dark, nil),
-        ]
-        for look in looks {
-            XCUIDevice.shared.appearance = look.appearance
-            capture(look.prefix, theme: look.theme)
-        }
+        capture(look, theme: look == "signal" ? "signal" : nil)
     }
 
     private func capture(_ prefix: String, theme: String?) {
