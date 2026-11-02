@@ -72,14 +72,32 @@ Rev for Linux runs on Linux Mint, Ubuntu, Debian and most other 64-bit Linux.
 
 **Linux Mint, Ubuntu or Debian**
 
-1. Download **rev-flashcards_x.y.z_amd64.deb** from the [newest Windows and Linux release](https://github.com/NevamindHaze/Rev/releases?q=%22for+Windows+and+Linux%22&expanded=true).
-2. Double-click it in your Downloads folder and choose **Install package**. Or use a terminal, with the version you downloaded in place of `x.y.z`:
-   ```bash
-   cd ~/Downloads && sudo apt install ./rev-flashcards_x.y.z_amd64.deb
-   ```
-3. Open Rev from the menu, or run `rev-cards` in a terminal. (Not `rev`: Linux already has a command with that name.)
+Run these once. They add Rev's signed package source and install Rev:
 
-To update, install a newer `.deb` the same way. To uninstall, run `sudo apt remove rev-flashcards`. Either way, your decks stay in `~/.local/share/Rev`.
+```bash
+sudo mkdir -p /etc/apt/keyrings
+```
+```bash
+curl -fsSL https://nevamindhaze.github.io/Rev/rev.gpg | sudo tee /etc/apt/keyrings/rev.gpg > /dev/null
+```
+```bash
+echo 'deb [signed-by=/etc/apt/keyrings/rev.gpg] https://nevamindhaze.github.io/Rev ./' | sudo tee /etc/apt/sources.list.d/rev.list
+```
+```bash
+sudo apt update && sudo apt install rev-flashcards
+```
+
+Open Rev from the menu, or run `rev-cards` in a terminal. (Not `rev`: Linux already has a command with that name.)
+
+From then on, Rev updates along with everything else:
+
+```bash
+sudo apt update && sudo apt upgrade
+```
+
+To uninstall, run `sudo apt remove rev-flashcards`. Your decks stay in `~/.local/share/Rev`.
+
+Prefer not to add a package source? Download **rev-flashcards_x.y.z_amd64.deb** from the [newest Windows and Linux release](https://github.com/NevamindHaze/Rev/releases?q=%22for+Windows+and+Linux%22&expanded=true) and double-click it. You'll need to repeat that for each new version.
 
 **Any other 64-bit Linux**
 

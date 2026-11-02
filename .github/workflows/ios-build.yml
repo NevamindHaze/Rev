@@ -20,10 +20,12 @@ on:
     paths-ignore:   # Rev for Windows and Linux has its own build, desktop-build.yml
       - "desktop/**"
       - ".github/workflows/desktop-build.yml"
+      - ".github/workflows/apt-repo.yml"
   pull_request:
     paths-ignore:
       - "desktop/**"
       - ".github/workflows/desktop-build.yml"
+      - ".github/workflows/apt-repo.yml"
   workflow_dispatch:
 
 # Allows this workflow to create Releases in your repo.

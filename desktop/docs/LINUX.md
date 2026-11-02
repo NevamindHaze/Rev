@@ -5,15 +5,29 @@ Linux Mint 21 and 22 (and Ubuntu, Debian and most other 64-bit Linux).
 
 ## 1. Install Rev
 
-1. From the [latest release](https://github.com/NevamindHaze/Rev/releases?q=%22for+Windows+and+Linux%22&expanded=true), download
-   **rev-flashcards_<version>_amd64.deb**.
-2. Double-click it in your Downloads folder. Mint's package installer opens: click **Install package** and type
-   your password.
-3. Open Rev from the menu (it's under **Education**, or type "Rev" in the menu's search).
+Run these in a terminal, once. They add Rev's signed package source and install Rev:
 
-To update later, download the new `.deb` and double-click it the same way: your decks stay.
-To uninstall: Menu → Software Manager isn't needed; in a terminal, `sudo apt remove rev-flashcards`
-(your decks stay in `~/.local/share/Rev`).
+```bash
+sudo mkdir -p /etc/apt/keyrings
+```
+```bash
+curl -fsSL https://nevamindhaze.github.io/Rev/rev.gpg | sudo tee /etc/apt/keyrings/rev.gpg > /dev/null
+```
+```bash
+echo 'deb [signed-by=/etc/apt/keyrings/rev.gpg] https://nevamindhaze.github.io/Rev ./' | sudo tee /etc/apt/sources.list.d/rev.list
+```
+```bash
+sudo apt update && sudo apt install rev-flashcards
+```
+
+Then open Rev from the menu (it's under **Education**, or type "Rev" in the menu's search).
+
+From then on, `sudo apt update && sudo apt upgrade` updates Rev along with everything else, and your decks stay.
+To uninstall: `sudo apt remove rev-flashcards` (your decks stay in `~/.local/share/Rev`).
+
+Prefer not to add a package source? Download **rev-flashcards_<version>_amd64.deb** from the
+[latest release](https://github.com/NevamindHaze/Rev/releases?q=%22for+Windows+and+Linux%22&expanded=true) and
+double-click it, then click **Install package**. You'll need to repeat that for each new version.
 
 Not a Mint/Ubuntu/Debian Linux? Download **Rev-<version>-linux-x64.tar.gz** instead, unpack it anywhere, and run
 `./Rev` inside the `Rev` folder.
