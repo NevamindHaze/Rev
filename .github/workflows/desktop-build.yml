@@ -19,11 +19,13 @@ on:
       - "desktop/**"
       - "anki-addon/**"
       - ".github/workflows/desktop-build.yml"
+      - ".github/workflows/apt-repo.yml"
   pull_request:
     paths:
       - "desktop/**"
       - "anki-addon/**"
       - ".github/workflows/desktop-build.yml"
+      - ".github/workflows/apt-repo.yml"
   workflow_dispatch:
 
 permissions:
@@ -116,8 +118,11 @@ jobs:
       - name: Make the .deb and the .tar.gz
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq imagemagick xvfb xauth > /dev/null
+          sudo apt-get install -y -qq imagemagick xvfb xauth apt-utils > /dev/null
           bash packaging/linux/build-packages.sh "${{ steps.version.outputs.version }}" publish-linux dist
+
+      - name: Check the APT repository (a computer with an old Rev is offered the new one)
+        run: bash packaging/linux/test-apt-repo.sh dist/rev-flashcards_*_amd64.deb
 
       - name: Install the .deb and start Rev on a virtual screen
         run: |
@@ -166,3 +171,8 @@ jobs:
             --title "Rev ${GITHUB_REF_NAME#desktop-v} for Windows and Linux" \
             --notes-file desktop/RELEASE_NOTES.md \
             --latest=false  # SideStore reads source.json from the latest release, which must stay the iPhone one
+
+  apt-repository:
+    needs: [release]
+    uses: ./.github/workflows/apt-repo.yml
+    secrets: inherit

@@ -1,0 +1,56 @@
+# Publishes the APT repository on GitHub Pages, so "sudo apt upgrade" can update Rev for Linux.
+#
+# It runs after every desktop release (desktop-build.yml calls it), and you can also start it by hand:
+# Actions tab → "APT Repository" → "Run workflow". It publishes the .deb from the newest desktop release.
+#
+# The signing key is the APT_SIGNING_KEY secret. If it's ever lost or replaced, everyone has to repeat the
+# one-time setup in desktop/docs/LINUX.md to get the new public key.
+
+name: APT Repository
+
+on:
+  workflow_call:
+    secrets:
+      APT_SIGNING_KEY:
+        required: true
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to push the gh-pages branch
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Get the .deb from the newest desktop release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh release list --limit 100 --exclude-drafts --json tagName --jq '[.[].tagName | select(startswith("desktop-v"))][0]')
+          echo "Publishing $tag"
+          gh release download "$tag" -p 'rev-flashcards_*_amd64.deb' -D downloads
+
+      - name: Make the signed repository
+        env:
+          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+        run: |
+          sudo apt-get install -y -qq apt-utils > /dev/null
+          export GNUPGHOME="$(mktemp -d)"
+          chmod 700 "$GNUPGHOME"
+          gpg --batch --quiet --import <<< "$APT_SIGNING_KEY"
+          bash desktop/packaging/linux/build-apt-repo.sh downloads/rev-flashcards_*_amd64.deb site
+
+      # One commit, replaced each time, so old .debs don't pile up in the repository's history.
+      - name: Publish on GitHub Pages
+        working-directory: site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "APT repository"
+          git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
