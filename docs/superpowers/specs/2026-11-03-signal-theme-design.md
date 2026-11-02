@@ -69,14 +69,17 @@ The tab bar's tint comes from `Theme.teal`, so it turns lime on its own.
 
 `HomeView` keeps its data, toolbar, alerts, long-press menu and pull to sync. Only the content inside its `ScrollView` branches on the theme. Signal's layout goes in a new file, `Rev/Views/Decks/SignalHomeContent.swift`.
 
-From top to bottom:
+The screen is compact, so more decks fit without scrolling. From top to bottom:
 
 1. **Date line:** small lime capitals, such as `TUESDAY · 3 NOV`. It replaces the greeting.
-2. **Huge number:** the same to-review count as Original, updated by the same 30-second timer. Size around 96 points, heavy, and scales down if it doesn't fit.
-3. **Caption:** `cards due · 7 done`, plus the new-card count when above zero.
-4. **"Coming back" label:** the existing `ComingBackLabel`, shown only when it has something to say.
-5. **Start review button:** lime with black text, opening `ReviewView(deck: nil)` as today. It shows at zero due too, as Original's button does.
-6. **Deck rows:** deck name on the left, due count large on the right with the total small beside it. A thin divider separates rows. The name truncates on one line, and the count never wraps. Each row is a `NavigationLink` with the same long-press menu as today.
+2. **Due count and caption, on one line:** the same to-review count as Original, updated by the same 30-second timer, at about 56 points and heavy, scaling down if it doesn't fit. Beside it, `cards due · 7 done`, plus the new-card count when above zero.
+3. **"Coming back" label:** the existing `ComingBackLabel`, shown only when it has something to say.
+4. **Start review button:** lime with black text, 44 points tall, opening `ReviewView(deck: nil)` as today. It shows at zero due too, as Original's button does.
+5. **Deck rows:** one line each and 44 points tall. Deck name at about 16 points on the left, due count at about 17 points and heavy on the right, with the total small beside it. A thin divider separates rows. The name truncates on one line, and the count never wraps. Each row is a `NavigationLink` with the same long-press menu as today.
+
+Spacing between these parts stays tight, with no gaps larger than 12 points apart from the screen's side margins.
+
+Compact applies to Signal only. Original's Decks screen doesn't change.
 
 The empty state is the existing one, in Signal's colors.
 
@@ -96,6 +99,7 @@ Deck page, Stats, Settings, card editor, bulk add, card browser and custom study
 
 ## Differences from the mockup
 
+- The Decks screen is more compact: the due count is about 56 points rather than 96 and shares a line with its caption, and deck rows are shorter with smaller counts.
 - The real iOS tab bar stays, tinted lime, rather than the drawn one. It keeps Apple's accessibility and behavior.
 - The `new · learning · review` line, the new-card count and the "coming back" label are added, so no information is lost.
 
