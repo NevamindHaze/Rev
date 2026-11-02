@@ -1,0 +1,58 @@
+# Opens Rev in an iPhone simulator with sample cards and takes a picture of each main screen.
+# Only for pull requests: it publishes nothing. The pictures are under "screenshots" on the run's page.
+
+name: iOS Screenshots
+
+on:
+  pull_request:
+    paths-ignore:
+      - "desktop/**"
+      - ".github/workflows/desktop-build.yml"
+      - ".github/workflows/apt-repo.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  screenshots:
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Generate the Xcode project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Start an iPhone simulator
+        run: |
+          UDID=$(xcrun simctl list devices available -j | jq -r '
+            [.devices | to_entries | sort_by(.key) | reverse | .[].value[] | select(.name | startswith("iPhone"))][0].udid')
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time 9:41 --dataNetwork wifi --batteryState charged --batteryLevel 100
+
+      - name: Take the screenshots
+        run: |
+          set -o pipefail
+          mkdir screenshots
+          TEST_RUNNER_SCREENSHOT_DIR="$PWD/screenshots" xcodebuild test \
+            -project Rev.xcodeproj \
+            -scheme Rev \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            -parallel-testing-enabled NO \
+            -quiet \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots
+          retention-days: 30

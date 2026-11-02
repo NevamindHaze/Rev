@@ -81,6 +81,13 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             build
 
+      - name: Check the screenshot samples aren't in the app
+        run: |
+          if strings build/Build/Products/Release-iphoneos/Rev.app/Rev | grep -q screenshotData; then
+            echo "The Release build contains the screenshot samples."
+            exit 1
+          fi
+
       - name: Package the .ipa
         run: |
           mkdir -p Payload
