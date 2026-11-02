@@ -57,8 +57,9 @@ Original's rounded fonts stay rounded.
 
 ### New tokens for things the current tokens miss
 
-- `Theme.onTeal`: text on the main accent. White in Original, black in Signal, because white on lime is unreadable. It replaces the hardcoded white wherever it sits on `Theme.teal`: `PillButtonStyle` uses at `ReviewView:221`, `DeckDetailView:50`, `BulkAddView:34` and `CardEditorView:65`, plus `CardBrowser:162`, `CardBrowser:282` and `StatsView:72`. Each is checked against what's actually behind it, because not all may be on teal.
-- `Theme.smallCorner`, `Theme.tileCorner`: replace hardcoded corner sizes in `RatingButtons`, `ReviewView`, `SettingsView`, `CardBrowser`, `CardEditorView`, `BulkAddView`, `CardTextView` and `Components`. In Original they return the sizes used today, per place. If a place needs its own size, it keeps a per-theme value rather than losing its current size.
+- `Theme.onAccent`: text on a bright accent. White in Original, black in Signal, because white on lime is unreadable. It replaces the hardcoded white on teal and coral: `PillButtonStyle` uses at `ReviewView:221`, `DeckDetailView:50`, `BulkAddView:34` and `CardEditorView:65`, plus `CardBrowser:162`, `CardBrowser:282` and `StatsView:72`.
+- `Theme.radius(_ original:, signal: = 12)`: replaces hardcoded corner sizes in `RatingButtons`, `ReviewView`, `SettingsView`, `CardBrowser`, `CardEditorView`, `BulkAddView`, `CardTextView` and `Components`. Original keeps each place's current size.
+- `Theme.pillShape`: `PillButtonStyle`'s shape. A capsule in Original, and a rectangle with a corner of 10 in Signal.
 - `Rating.color` and `Rating.textColor` in `RatingButtons.swift` return Signal's values when it's active. See the Review section.
 
 Colors meant to stay fixed are left alone: the full-screen image viewer's black background and white close button, and the picture ✕ in the card editor.
@@ -116,7 +117,7 @@ I can't run an iPhone app on the computer used for this work, so this is done on
 
 **Screenshots.** A new UI test target, `RevScreenshots`, runs in the iPhone simulator on pull requests and uploads the images as a build artifact.
 
-- It starts the app with a launch argument, compiled only in Debug builds, that uses an in-memory database with sample decks and cards, sets the theme, and turns sync off. Release builds, which are what SideStore installs, don't contain this code.
+- It starts the app with a launch argument, compiled only in Debug builds, that uses an in-memory database with sample decks and cards, and with another that sets the theme. Sync never runs, because a fresh simulator isn't paired with anything. Release builds, which are what SideStore installs, don't contain this code.
 - It captures Decks, Review question, Review answer, a card with a picture, deck page, Stats, Settings and card editor. It does this for Original in light and dark, and for Signal.
 
 **Original unchanged.** The screenshot test lands first, before any theme code, to capture how Original looks today. The final Original screenshots are compared against those. Differences caused by the date or clock are ignored, and any other difference must be explained or fixed.
