@@ -24,7 +24,7 @@ Success means:
 - **Settings → Appearance** gets a new section with a picker: Original or Signal.
 - The choice is saved on the phone under the `UserDefaults` key `appTheme`. It never syncs. A missing or unknown value means Original, so everyone starts on Original after updating.
 - The change applies straight away. `RootTabView` reads the setting and sets `.id(theme)` on the tab view, which redraws the whole app. This may return you to the Decks tab, which is accepted.
-- An open study session can't be affected, because the picker is on the Settings tab and the redraw only resets what's on screen. Answers are saved as you give them.
+- The redraw closes any study session left open on the Review tab. Answers already given stay saved, and reopening Review carries on with the cards still due.
 - Signal is always dark: `.preferredColorScheme(.dark)` while it's active. Original passes `nil` and keeps following the phone's setting.
 
 ## How the theme is built
@@ -48,7 +48,7 @@ The tokens in `Rev/Theme/Theme.swift` are already used by every screen, and none
 | `teal` (main accent) | `#C8FF3D` lime |
 | `coral` (Again, warnings) | `#FF5C5C` |
 | `mustard` (Hard, learning) | `#FFB647` |
-| `sage` (Easy) | `#2A2A2A` |
+| `sage` (Easy) | `#1B1B1B` |
 | `corner` | `12` |
 | `title` font | system default design, weight heavy |
 | `body` font | system default design, same weights as requested |
