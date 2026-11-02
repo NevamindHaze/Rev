@@ -51,6 +51,11 @@ jobs:
           swiftc Rev/Utilities/CardText.swift Tests/CardTextCheck/main.swift -o "$RUNNER_TEMP/card-text-check"
           "$RUNNER_TEMP/card-text-check"
 
+      - name: Check the theme rules
+        run: |
+          swiftc Rev/Theme/AppTheme.swift Tests/ThemeCheck/main.swift -o "$RUNNER_TEMP/theme-check"
+          "$RUNNER_TEMP/theme-check"
+
       - name: Show Xcode version
         run: xcodebuild -version
 
