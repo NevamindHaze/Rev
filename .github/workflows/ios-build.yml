@@ -53,7 +53,7 @@ jobs:
 
       - name: Check the theme rules
         run: |
-          swiftc Rev/Theme/AppTheme.swift Tests/ThemeCheck/main.swift -o "$RUNNER_TEMP/theme-check"
+          swiftc Rev/Theme/AppTheme.swift Rev/Utilities/ReviewProgress.swift Tests/ThemeCheck/main.swift -o "$RUNNER_TEMP/theme-check"
           "$RUNNER_TEMP/theme-check"
 
       - name: Show Xcode version
