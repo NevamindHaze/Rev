@@ -6,21 +6,16 @@ final class ScreenshotTests: XCTestCase {
         continueAfterFailure = false
     }
 
+    /// The workflow sets the simulator to light or dark, then runs this once per look.
+    private var look: String { ProcessInfo.processInfo.environment["LOOK"] ?? "original-light" }
+
     func testCaptureAll() {
-        let looks: [(prefix: String, appearance: XCUIDevice.Appearance, theme: String?)] = [
-            ("original-light", .light, nil),
-            ("original-dark", .dark, nil),
-            ("signal", .dark, "signal"),
-        ]
-        for look in looks {
-            XCUIDevice.shared.appearance = look.appearance
-            capture(look.prefix, theme: look.theme)
-        }
+        capture(look, theme: look == "signal" ? "signal" : nil)
     }
 
     /// With the phone in light mode, Signal and back to Original must land on the light look.
-    func testSwitchingThemeSticksAndGoesBack() {
-        XCUIDevice.shared.appearance = .light
+    func testSwitchingThemeSticksAndGoesBack() throws {
+        try XCTSkipUnless(look == "original-light", "Needs the phone in light mode")
         var app = launch(data: "standard", theme: nil)
         tapTab("Settings", in: app)
         tap(themePicker(in: app))

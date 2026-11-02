@@ -37,17 +37,35 @@ jobs:
           xcrun simctl bootstatus "$UDID" -b
           xcrun simctl status_bar "$UDID" override --time 9:41 --dataNetwork wifi --batteryState charged --batteryLevel 100
 
+      - name: Build the tests
+        run: |
+          set -o pipefail
+          xcodebuild build-for-testing \
+            -project Rev.xcodeproj \
+            -scheme Rev \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            -derivedDataPath build \
+            -quiet \
+            CODE_SIGNING_ALLOWED=NO
+
+      # The phone's own light or dark setting, then one run per look.
       - name: Take the screenshots
         run: |
           set -o pipefail
           mkdir screenshots
-          TEST_RUNNER_SCREENSHOT_DIR="$PWD/screenshots" xcodebuild test \
-            -project Rev.xcodeproj \
-            -scheme Rev \
-            -destination "platform=iOS Simulator,id=$UDID" \
-            -parallel-testing-enabled NO \
-            -quiet \
-            CODE_SIGNING_ALLOWED=NO
+          run_look() {
+            xcrun simctl ui "$UDID" appearance "$1"
+            TEST_RUNNER_SCREENSHOT_DIR="$PWD/screenshots" TEST_RUNNER_LOOK="$2" xcodebuild test-without-building \
+              -project Rev.xcodeproj \
+              -scheme Rev \
+              -destination "platform=iOS Simulator,id=$UDID" \
+              -derivedDataPath build \
+              -parallel-testing-enabled NO \
+              -quiet
+          }
+          run_look light original-light
+          run_look dark original-dark
+          run_look dark signal
 
       - name: Upload the screenshots
         if: always()
