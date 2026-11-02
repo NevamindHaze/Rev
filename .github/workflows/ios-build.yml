@@ -46,6 +46,11 @@ jobs:
       - name: Get the code
         uses: actions/checkout@v4
 
+      - name: Check the card text rules
+        run: |
+          swiftc Rev/Utilities/CardText.swift Tests/CardTextCheck/main.swift -o "$RUNNER_TEMP/card-text-check"
+          "$RUNNER_TEMP/card-text-check"
+
       - name: Show Xcode version
         run: xcodebuild -version
 

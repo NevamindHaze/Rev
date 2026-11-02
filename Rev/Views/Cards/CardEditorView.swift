@@ -207,12 +207,13 @@ struct CardEditorView: View {
             Text(title)
                 .font(Theme.body(15, weight: .semibold))
                 .foregroundStyle(Theme.mutedInk)
+            imagePreviews(of: text)
             Group {
                 // iOS 26 can show bold and italic while you type; before that, the box shows the ** / * markers.
                 if #available(iOS 26.0, *) {
-                    RichCardTextEditor(text: text, formatRequest: format, fontSize: 19)
+                    RichCardTextEditor(text: withoutImages(text), formatRequest: format, fontSize: 19)
                 } else {
-                    TextEditor(text: text, selection: selection)
+                    TextEditor(text: withoutImages(text), selection: selection)
                 }
             }
                 .focused($focusedField, equals: field)
@@ -223,6 +224,41 @@ struct CardEditorView: View {
                 .padding(10)
                 .background(Theme.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
+    }
+
+    // MARK: - Pictures
+
+    /// The pictures on this side of the card, each with a button to take it off the card.
+    private func imagePreviews(of text: Binding<String>) -> some View {
+        let images = CardText.separatingImages(text.wrappedValue).images
+        return ForEach(Array(images.enumerated()), id: \.offset) { index, image in
+            CardImageView(name: image.name, maxHeight: 200)
+                .overlay(alignment: .topTrailing) {
+                    Button { removeImage(at: index, from: text) } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 26))
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(.white, .black.opacity(0.6))
+                            .frame(minWidth: 44, minHeight: 44)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Remove picture")
+                }
+        }
+    }
+
+    private func removeImage(at index: Int, from text: Binding<String>) {
+        var parts = CardText.separatingImages(text.wrappedValue)
+        parts.images.remove(at: index)
+        text.wrappedValue = CardText.joiningImages(parts.images, text: parts.text)
+    }
+
+    /// The card's text for the box: pictures show above it, and their [img:…] lines stay in the card.
+    private func withoutImages(_ text: Binding<String>) -> Binding<String> {
+        Binding(
+            get: { CardText.separatingImages(text.wrappedValue).text },
+            set: { text.wrappedValue = CardText.joiningImages(CardText.separatingImages(text.wrappedValue).images, text: $0) }
+        )
     }
 
     // MARK: - Bold and italic
@@ -238,14 +274,20 @@ struct CardEditorView: View {
             return
         }
         switch focusedField {
-        case .front: Self.toggle(format.marker, text: &front, selection: &frontSelection)
-        case .back: Self.toggle(format.marker, text: &back, selection: &backSelection)
+        case .front: Self.toggle(format.marker, text: withoutImages($front), selection: &frontSelection)
+        case .back: Self.toggle(format.marker, text: withoutImages($back), selection: &backSelection)
         default: break
         }
     }
 
     /// Wraps the selected words in a marker (** for bold, * for italic),
     /// or removes the marker if the words already have it. Cards show the markers as real formatting.
+    static func toggle(_ marker: String, text: Binding<String>, selection: inout TextSelection?) {
+        var edited = text.wrappedValue
+        toggle(marker, text: &edited, selection: &selection)
+        text.wrappedValue = edited
+    }
+
     static func toggle(_ marker: String, text: inout String, selection: inout TextSelection?) {
         guard let current = selection, case .selection(let range) = current.indices else { return }
         var characters = Array(text)
