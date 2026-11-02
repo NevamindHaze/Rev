@@ -66,6 +66,31 @@ Rev is a personal app distributed as an unsigned build for sideloading.
    ```
 2. Open **Rev** in the source and tap **Install**. New versions appear as updates, with release notes.
 
+## Install on Linux
+
+Rev for Linux runs on Linux Mint, Ubuntu, Debian and most other 64-bit Linux.
+
+**Linux Mint, Ubuntu or Debian**
+
+1. Download **rev-flashcards_x.y.z_amd64.deb** from the [newest Windows and Linux release](https://github.com/NevamindHaze/Rev/releases?q=%22for+Windows+and+Linux%22&expanded=true).
+2. Double-click it in your Downloads folder and choose **Install package**. Or use a terminal, with the version you downloaded in place of `x.y.z`:
+   ```bash
+   cd ~/Downloads && sudo apt install ./rev-flashcards_x.y.z_amd64.deb
+   ```
+3. Open Rev from the menu, or run `rev-cards` in a terminal. (Not `rev`: Linux already has a command with that name.)
+
+To update, install a newer `.deb` the same way. To uninstall, run `sudo apt remove rev-flashcards`. Either way, your decks stay in `~/.local/share/Rev`.
+
+**Any other 64-bit Linux**
+
+Download **Rev-x.y.z-linux-x64.tar.gz** from the same release, unpack it anywhere, then run Rev from the folder it made:
+
+```bash
+tar xzf Rev-x.y.z-linux-x64.tar.gz && ./Rev/Rev
+```
+
+For moving your decks from Windows and syncing with Anki and your iPhone, see the [full Linux guide](desktop/docs/LINUX.md).
+
 ## Sync with Anki
 
 ```
