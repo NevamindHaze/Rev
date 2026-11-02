@@ -11,8 +11,9 @@ enum ScreenshotMode {
     static func makeContainer() throws -> ModelContainer {
         let memoryOnly = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: Deck.self, Card.self, ReviewLog.self, configurations: memoryOnly)
-        seed(container.mainContext)
-        try container.mainContext.save()
+        let context = ModelContext(container)
+        seed(context)
+        try context.save()
         return container
     }
 
