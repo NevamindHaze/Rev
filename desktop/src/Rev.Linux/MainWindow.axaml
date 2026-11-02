@@ -1,0 +1,28 @@
+<!--
+    The main window: the sidebar (Home, All cards, Stats, your decks, Settings) on the left and one page
+    beside it. Clicking in the sidebar shows another page; there's no "back". Ctrl+B hides the sidebar.
+    Questions like "Delete this deck?" appear on the dialog layer on top of both.
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:controls="clr-namespace:Rev.Linux.Controls"
+        x:Class="Rev.Linux.MainWindow"
+        Icon="avares://Rev/Assets/AppIcon.png"
+        Title="Rev" Width="1280" Height="800" MinWidth="880" MinHeight="520"
+        WindowStartupLocation="CenterScreen">
+    <Panel>
+        <Grid ColumnDefinitions="Auto,*">
+            <controls:Sidebar x:Name="SidebarPanel" />
+            <Panel Grid.Column="1">
+                <ContentControl x:Name="Screen" Focusable="False" />
+                <Button x:Name="ShowSidebarButton" Classes="rev toolbar round" IsVisible="False" Focusable="False"
+                        HorizontalAlignment="Left" VerticalAlignment="Top" Margin="6,6,0,0"
+                        Click="ShowSidebar_Click" ToolTip.Tip="Show the sidebar (Ctrl+B)" AutomationProperties.Name="Show sidebar">
+                    <mi:MaterialIcon Kind="DockLeft" Width="16" Height="16" />
+                </Button>
+            </Panel>
+        </Grid>
+        <controls:DialogLayer />
+    </Panel>
+</Window>

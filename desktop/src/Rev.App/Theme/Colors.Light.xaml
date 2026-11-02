@@ -1,0 +1,35 @@
+<!--
+    Rev's colours for LIGHT mode. Colors.Dark.xaml has the same names with dark-mode values.
+    Screens never use a colour directly: they ask for a name like "InkBrush",
+    and ThemeManager swaps this whole file for the dark one when Windows switches to dark mode.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Cream page, slightly lighter cards, and soft tiles -->
+    <SolidColorBrush x:Key="BackgroundBrush" Color="#FBF6E3" />
+    <SolidColorBrush x:Key="SurfaceBrush"    Color="#FFFDF4" />
+    <SolidColorBrush x:Key="SoftFillBrush"   Color="#EEEFD8" />
+
+    <!-- Text: main ("ink") and secondary ("muted") -->
+    <SolidColorBrush x:Key="InkBrush"        Color="#1F1B16" />
+    <SolidColorBrush x:Key="MutedInkBrush"   Color="#6F695C" />
+
+    <!-- Accent colours -->
+    <SolidColorBrush x:Key="CoralBrush"      Color="#E96F8A" />
+    <SolidColorBrush x:Key="TealBrush"       Color="#4A9886" />
+    <SolidColorBrush x:Key="MustardBrush"    Color="#F4B53F" />
+    <SolidColorBrush x:Key="SageBrush"       Color="#D3E4C8" />
+
+    <!-- Always-dark text, for bright backgrounds like mustard -->
+    <SolidColorBrush x:Key="DarkTextBrush"   Color="#1F1B16" />
+    <!-- Text on top of coloured tiles: white on coral and teal, dark on mustard, ink on sage -->
+    <SolidColorBrush x:Key="OnCoralBrush"    Color="#FFFFFF" />
+    <SolidColorBrush x:Key="OnTealBrush"     Color="#FFFFFF" />
+    <SolidColorBrush x:Key="OnMustardBrush"  Color="#1F1B16" />
+    <SolidColorBrush x:Key="OnSageBrush"     Color="#1F1B16" />
+
+    <!-- The same background as a plain colour, for the window's title bar -->
+    <Color x:Key="TitleBarColor">#FBF6E3</Color>
+    <Color x:Key="TitleTextColor">#1F1B16</Color>
+</ResourceDictionary>

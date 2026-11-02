@@ -1,0 +1,154 @@
+# Builds Rev for Windows and Rev for Linux on GitHub's computers.
+#
+# - Every push to main (and every pull request): runs the automatic checks on Windows and on Linux, then
+#   builds the downloads (kept for 30 days under the run's "Artifacts"):
+#     Windows: the installer and the portable Rev.exe
+#     Linux:   a .deb for Linux Mint / Ubuntu (installed and started on a virtual screen as a check) and a .tar.gz
+#   The Linux job also keeps pictures of every screen ("Rev-screens"), drawn by the screen tests on Linux.
+# - Pushing a version tag such as v1.3.0: does the same, then publishes one GitHub Release with all the files,
+#   using RELEASE_NOTES.md as the text. The tag must match <Version> in src/Rev.App/Rev.App.csproj and
+#   src/Rev.Linux/Rev.Linux.csproj.
+
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to publish releases
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Run the automatic checks
+        run: dotnet test -c Release
+
+      - name: Find the version
+        id: version
+        shell: pwsh
+        run: |
+          $version = (Select-Xml -Path src/Rev.App/Rev.App.csproj -XPath "//Version").Node.InnerText
+          "version=$version" >> $env:GITHUB_OUTPUT
+          if ("${{ github.ref_type }}" -eq "tag" -and "${{ github.ref_name }}" -ne "v$version") {
+            throw "The tag ${{ github.ref_name }} doesn't match the version $version in Rev.App.csproj."
+          }
+
+      - name: Build the portable Rev.exe (one file, nothing else to install)
+        run: >
+          dotnet publish src/Rev.App/Rev.App.csproj -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true -o publish
+
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup --yes --no-progress }
+          & $iscc /Qp "/DAppVersion=${{ steps.version.outputs.version }}" installer\Rev.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed" }
+          Copy-Item publish\Rev.exe "dist\Rev-${{ steps.version.outputs.version }}-portable.exe"
+          Get-ChildItem dist | Format-Table Name, Length
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Rev-Windows
+          path: dist/*
+          retention-days: 30
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Run the automatic checks on Linux
+        run: |
+          dotnet test tests/Rev.Core.Tests -c Release
+          REV_SCREENSHOTS="$PWD/screens" dotnet test tests/Rev.Linux.Tests -c Release
+
+      - name: Check the sync on Linux (Rev's sync code, the real Rev Sync add-on, a pretend iPhone)
+        run: |
+          git clone -q --depth 1 https://github.com/NevamindHaze/Rev.git rev-addon
+          python3 -m venv venv
+          venv/bin/pip install -q anki
+          dotnet build tools/Rev.Demo -c Release -v q
+          venv/bin/python -I tools/check-sync.py rev-addon/anki-addon/rev_sync tools/Rev.Demo/bin/Release/net8.0/Rev.Demo
+
+      - name: Find the version
+        id: version
+        run: |
+          version=$(grep -oP '(?<=<Version>)[^<]+' src/Rev.Linux/Rev.Linux.csproj)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.ref_type }}" = "tag" ] && [ "${{ github.ref_name }}" != "v$version" ]; then
+            echo "The tag ${{ github.ref_name }} doesn't match the version $version in Rev.Linux.csproj."; exit 1
+          fi
+
+      - name: Build Rev for Linux (nothing else to install)
+        run: dotnet publish src/Rev.Linux/Rev.Linux.csproj -c Release -r linux-x64 --self-contained true -o publish-linux
+
+      - name: Make the .deb and the .tar.gz
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq imagemagick xvfb xauth > /dev/null
+          bash packaging/linux/build-packages.sh "${{ steps.version.outputs.version }}" publish-linux dist
+
+      - name: Install the .deb and start Rev on a virtual screen
+        run: |
+          sudo apt-get install -y ./dist/rev-flashcards_*_amd64.deb
+          test -x /usr/bin/rev-cards && test -f /usr/share/applications/rev.desktop
+          export REV_DATA_DIR="$(mktemp -d)"
+          xvfb-run -a -s "-screen 0 1280x900x24" bash -c '
+            rev-cards & pid=$!
+            sleep 15
+            import -window root screens/00-linux-desktop.png
+            if kill -0 $pid; then echo "Rev is running"; kill $pid; else echo "Rev stopped by itself"; exit 1; fi'
+          test -f "$REV_DATA_DIR/rev.db" && echo "Rev made its database"
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: Rev-screens
+          path: screens/*.png
+          retention-days: 30
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Rev-Linux
+          path: dist/*
+          retention-days: 30
+
+  release:
+    if: github.ref_type == 'tag'
+    needs: [windows, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          path: downloads
+          pattern: Rev-{Windows,Linux}
+          merge-multiple: true
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -l downloads
+          gh release create "${{ github.ref_name }}" downloads/* \
+            --title "Rev ${GITHUB_REF_NAME#v} for Windows and Linux" \
+            --notes-file RELEASE_NOTES.md

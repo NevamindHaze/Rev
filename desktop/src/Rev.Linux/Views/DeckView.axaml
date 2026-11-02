@@ -1,0 +1,61 @@
+<!--
+    A deck's page: its name and numbers with a toolbar (Study, Custom study, Add card, ⋯), then its cards.
+    Keys: Space studies, Ctrl+N adds a card, Ctrl+F searches.
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:controls="clr-namespace:Rev.Linux.Controls"
+             x:Class="Rev.Linux.Views.DeckView">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="1200" Margin="{StaticResource PagePadding}">
+
+            <!-- The deck's name and numbers, then Study, Custom study, Add card and ⋯ (Paste many, Export to Anki) -->
+            <!-- The name shrinks (ending in "…") so the toolbar always fits -->
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Margin="0,0,12,0" VerticalAlignment="Center">
+                    <TextBlock x:Name="DeckName" Classes="title" TextTrimming="CharacterEllipsis" />
+                    <TextBlock x:Name="NumbersText" Classes="muted" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <Button Classes="rev primary" Click="Study_Click" ToolTip.Tip="Study this deck (Space)"
+                            AutomationProperties.Name="Study">
+                        <StackPanel Orientation="Horizontal">
+                            <mi:MaterialIcon Kind="Play" Width="16" Height="16" Margin="0,0,8,0" />
+                            <TextBlock Text="Study" />
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="rev toolbar" Click="CustomStudy_Click"
+                            ToolTip.Tip="More new cards, forgotten cards, review ahead, or study by tag"
+                            AutomationProperties.Name="Custom study">
+                        <StackPanel Orientation="Horizontal">
+                            <mi:MaterialIcon Kind="Tune" Width="16" Height="16" Margin="0,0,6,0" />
+                            <TextBlock Text="Custom study" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="AddCardButton" Classes="rev toolbar" Click="AddCard_Click"
+                            ToolTip.Tip="Add card (Ctrl+N)" AutomationProperties.Name="Add card">
+                        <StackPanel Orientation="Horizontal">
+                            <mi:MaterialIcon Kind="Plus" Width="16" Height="16" Margin="0,0,6,0" />
+                            <TextBlock Text="Add card" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="MoreButton" Classes="rev toolbar round" Click="More_Click"
+                            ToolTip.Tip="More" AutomationProperties.Name="More">
+                        <mi:MaterialIcon Kind="DotsHorizontal" Width="18" Height="18" />
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Paste many…" Click="PasteMany_Click" />
+                                <MenuItem Header="Export to Anki…" Click="Export_Click" />
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            
+            <TextBlock x:Name="EmptyText" Classes="muted" Margin="2,20,0,0" Text="No cards yet. Click “Add card” to start." />
+            <controls:CardBrowser x:Name="Browser" Margin="0,16,0,0" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
