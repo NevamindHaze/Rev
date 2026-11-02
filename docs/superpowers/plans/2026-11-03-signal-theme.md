@@ -20,6 +20,7 @@
 - All text on Signal's colors reaches 4.5:1. Tap targets stay at least 44 points.
 - Windows and Linux code under `desktop/` isn't touched.
 - Commits use the noreply identity and end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+- CI can only check what's pushed, so every "Push" step commits first, using the task's named message. A task's final "Commit" step only covers fixes made after that check. Never amend or force-push.
 - One pull request. The user merges it.
 
 ## Review Focus
