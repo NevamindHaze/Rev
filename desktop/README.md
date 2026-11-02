@@ -12,7 +12,7 @@
 
 ## Install
 
-Download **Rev-Setup-x.y.z.exe** from the [latest release](https://github.com/NevamindHaze/Rev-Windows/releases/latest)
+Download **Rev-Setup-x.y.z.exe** from the [latest release](https://github.com/NevamindHaze/Rev/releases?q=%22for+Windows+and+Linux%22&expanded=true)
 and open it. It installs Rev just for you (no administrator needed) and adds it to the Start menu.
 Prefer no installer? **Rev-x.y.z-portable.exe** is the whole app in one file: put it anywhere and open it.
 

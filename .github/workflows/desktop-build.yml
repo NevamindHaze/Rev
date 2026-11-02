@@ -5,17 +5,25 @@
 #     Windows: the installer and the portable Rev.exe
 #     Linux:   a .deb for Linux Mint / Ubuntu (installed and started on a virtual screen as a check) and a .tar.gz
 #   The Linux job also keeps pictures of every screen ("Rev-screens"), drawn by the screen tests on Linux.
-# - Pushing a version tag such as v1.3.0: does the same, then publishes one GitHub Release with all the files,
-#   using RELEASE_NOTES.md as the text. The tag must match <Version> in src/Rev.App/Rev.App.csproj and
-#   src/Rev.Linux/Rev.Linux.csproj.
+# - Pushing a version tag such as desktop-v1.3.0: does the same, then publishes one GitHub Release with all the
+#   files, using desktop/RELEASE_NOTES.md as the text. The tag must match <Version> in
+#   desktop/src/Rev.App/Rev.App.csproj and desktop/src/Rev.Linux/Rev.Linux.csproj.
 
-name: Build
+name: Desktop Build
 
 on:
   push:
     branches: [main]
-    tags: ["v*"]
+    tags: ["desktop-v*"]
+    paths:
+      - "desktop/**"
+      - "anki-addon/**"
+      - ".github/workflows/desktop-build.yml"
   pull_request:
+    paths:
+      - "desktop/**"
+      - "anki-addon/**"
+      - ".github/workflows/desktop-build.yml"
   workflow_dispatch:
 
 permissions:
@@ -24,6 +32,9 @@ permissions:
 jobs:
   windows:
     runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
     steps:
       - uses: actions/checkout@v7
 
@@ -40,7 +51,7 @@ jobs:
         run: |
           $version = (Select-Xml -Path src/Rev.App/Rev.App.csproj -XPath "//Version").Node.InnerText
           "version=$version" >> $env:GITHUB_OUTPUT
-          if ("${{ github.ref_type }}" -eq "tag" -and "${{ github.ref_name }}" -ne "v$version") {
+          if ("${{ github.ref_type }}" -eq "tag" -and "${{ github.ref_name }}" -ne "desktop-v$version") {
             throw "The tag ${{ github.ref_name }} doesn't match the version $version in Rev.App.csproj."
           }
 
@@ -63,11 +74,14 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: Rev-Windows
-          path: dist/*
+          path: desktop/dist/*
           retention-days: 30
 
   linux:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: desktop
     steps:
       - uses: actions/checkout@v7
 
@@ -82,18 +96,17 @@ jobs:
 
       - name: Check the sync on Linux (Rev's sync code, the real Rev Sync add-on, a pretend iPhone)
         run: |
-          git clone -q --depth 1 https://github.com/NevamindHaze/Rev.git rev-addon
           python3 -m venv venv
           venv/bin/pip install -q anki
           dotnet build tools/Rev.Demo -c Release -v q
-          venv/bin/python -I tools/check-sync.py rev-addon/anki-addon/rev_sync tools/Rev.Demo/bin/Release/net8.0/Rev.Demo
+          venv/bin/python -I tools/check-sync.py ../anki-addon/rev_sync tools/Rev.Demo/bin/Release/net8.0/Rev.Demo
 
       - name: Find the version
         id: version
         run: |
           version=$(grep -oP '(?<=<Version>)[^<]+' src/Rev.Linux/Rev.Linux.csproj)
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          if [ "${{ github.ref_type }}" = "tag" ] && [ "${{ github.ref_name }}" != "v$version" ]; then
+          if [ "${{ github.ref_type }}" = "tag" ] && [ "${{ github.ref_name }}" != "desktop-v$version" ]; then
             echo "The tag ${{ github.ref_name }} doesn't match the version $version in Rev.Linux.csproj."; exit 1
           fi
 
@@ -122,13 +135,13 @@ jobs:
         if: always()
         with:
           name: Rev-screens
-          path: screens/*.png
+          path: desktop/screens/*.png
           retention-days: 30
 
       - uses: actions/upload-artifact@v7
         with:
           name: Rev-Linux
-          path: dist/*
+          path: desktop/dist/*
           retention-days: 30
 
   release:
@@ -150,5 +163,6 @@ jobs:
         run: |
           ls -l downloads
           gh release create "${{ github.ref_name }}" downloads/* \
-            --title "Rev ${GITHUB_REF_NAME#v} for Windows and Linux" \
-            --notes-file RELEASE_NOTES.md
+            --title "Rev ${GITHUB_REF_NAME#desktop-v} for Windows and Linux" \
+            --notes-file desktop/RELEASE_NOTES.md \
+            --latest=false  # SideStore reads source.json from the latest release, which must stay the iPhone one

@@ -38,7 +38,7 @@ Architecture: amd64
 Maintainer: NevamindHaze <noreply@users.noreply.github.com>
 Installed-Size: $installed
 Depends: libc6, libgcc-s1, libstdc++6, zlib1g, libssl3 | libssl1.1, libfontconfig1, libx11-6, libice6, libsm6
-Homepage: https://github.com/NevamindHaze/Rev-Windows
+Homepage: https://github.com/NevamindHaze/Rev
 Description: Flashcards with spaced repetition that sync with Anki
  Rev is a calm flashcard app: decks, basic / reversed / cloze / type-in cards,
  reviews scheduled with FSRS (or SM-2), stats, Anki import and export, JSON

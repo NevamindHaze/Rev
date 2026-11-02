@@ -5,7 +5,7 @@ Linux Mint 21 and 22 (and Ubuntu, Debian and most other 64-bit Linux).
 
 ## 1. Install Rev
 
-1. From the [latest release](https://github.com/NevamindHaze/Rev-Windows/releases/latest), download
+1. From the [latest release](https://github.com/NevamindHaze/Rev/releases?q=%22for+Windows+and+Linux%22&expanded=true), download
    **rev-flashcards_<version>_amd64.deb**.
 2. Double-click it in your Downloads folder. Mint's package installer opens: click **Install package** and type
    your password.
