@@ -13,6 +13,23 @@ final class ScreenshotTests: XCTestCase {
         capture(look, theme: look == "signal" ? "signal" : nil)
     }
 
+    func testSignalDeckRowsReadOut() throws {
+        try XCTSkipUnless(look == "signal")
+        let app = launch(data: "standard", theme: "signal")
+        XCTAssertTrue(app.buttons["VPA, 12 to review, 40 cards"].waitForExistence(timeout: 20))
+        XCTAssertTrue(app.buttons["Start review"].exists)
+    }
+
+    /// The spec's compact Decks screen: no gap over 12 points between its parts.
+    func testSignalDecksGapsStayTight() throws {
+        try XCTSkipUnless(look == "signal")
+        let app = launch(data: "standard", theme: "signal")
+        let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Start review'")).firstMatch
+        XCTAssertTrue(start.waitForExistence(timeout: 20))
+        let gap = start.frame.minY - app.staticTexts["1,263"].frame.maxY
+        XCTAssertLessThanOrEqual(gap, 12.5)
+    }
+
     /// With the phone in light mode, Signal and back to Original must land on the light look.
     func testSwitchingThemeSticksAndGoesBack() throws {
         try XCTSkipUnless(look == "original-light", "Needs the phone in light mode")
@@ -71,8 +88,18 @@ final class ScreenshotTests: XCTestCase {
         _ = launch(data: "empty", theme: theme)
         shoot("\(prefix)-decks-empty")
 
-        _ = launch(data: "nothingDue", theme: theme)
+        app = launch(data: "nothingDue", theme: theme)
         shoot("\(prefix)-decks-nothing-due")
+        tapTab("Review", in: app)
+        shoot("\(prefix)-review-finished")
+
+        app = launch(data: "cloze", theme: theme)
+        tapTab("Review", in: app)
+        tap(app.buttons["Edit card"])
+        let word = app.textFields["Word to hide"]
+        tap(word)
+        word.typeText("blood")
+        shoot("\(prefix)-card-editor-cloze")
 
         for (data, name) in [("picture", "picture"), ("long", "long"), ("typeIn", "typein")] {
             app = launch(data: data, theme: theme)

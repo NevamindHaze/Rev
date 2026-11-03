@@ -39,6 +39,11 @@ enum ScreenshotMode {
             let lines = (1...60).map { "Line \($0) of a very long answer." }
             addCard(front: "What are the stages of the life cycle?", back: lines.joined(separator: "\n"),
                     to: addDeck("VPA", to: context), in: context)
+        case "cloze":
+            let card = addCard(front: "The liver filters blood.", back: "", to: addDeck("VPA", to: context), in: context)
+            card.kind = .cloze
+            card.clozeSource = "The {{c1::liver}} filters blood."
+            card.clozeNumber = 1
         case "typeIn":
             let card = addCard(front: "Name the host.", back: "Sheep", to: addDeck("VPA", to: context), in: context)
             card.kind = .typeIn
