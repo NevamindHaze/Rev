@@ -11,6 +11,12 @@ struct RevApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        #if DEBUG
+        if ScreenshotMode.dataSet != nil {
+            container = try! ScreenshotMode.makeContainer()
+            return
+        }
+        #endif
         do {
             container = try ModelContainer(for: Deck.self, Card.self, ReviewLog.self)
         } catch {

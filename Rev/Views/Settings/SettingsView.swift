@@ -10,6 +10,7 @@ struct SettingsView: View {
     @AppStorage("newCardsPerDay") private var newCardsPerDay = 20
     @AppStorage("scheduler") private var scheduler = SchedulerKind.fsrs.rawValue
     @AppStorage("desiredRetention") private var desiredRetention = 0.9
+    @AppStorage(AppTheme.storageKey) private var appTheme = AppTheme.original.rawValue
 
     // Saving a file
     @State private var exportDocument: ExportFile?
@@ -37,6 +38,14 @@ struct SettingsView: View {
         Form {
             Section("You") {
                 TextField("Your name", text: $userName)
+            }
+
+            Section("Appearance") {
+                Picker("Theme", selection: $appTheme) {
+                    ForEach(AppTheme.allCases) { theme in
+                        Text(theme.title).tag(theme.rawValue)
+                    }
+                }
             }
 
             Section {
@@ -115,7 +124,7 @@ struct SettingsView: View {
                 ProgressView()
                     .controlSize(.large)
                     .padding(30)
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20))
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.radius(20)))
             }
         }
         .fileImporter(isPresented: $isImporting,

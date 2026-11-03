@@ -31,7 +31,9 @@ targets:
       - package: ZIPFoundation
       - package: zstd
         product: libzstd
-    scheme: {}           # makes a shared "Rev" scheme so the build command can find it
+    scheme:              # makes a shared "Rev" scheme so the build command can find it
+      testTargets:
+        - RevScreenshots
     info:
       path: Supporting/Info.plist   # XcodeGen writes this file for us during the build
       properties:
@@ -66,3 +68,17 @@ targets:
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "1"   # iPhone only
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon   # the comic icon in Rev/Assets.xcassets
+
+  # Takes screenshots of the app in a simulator. Never part of the app itself.
+  RevScreenshots:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: Tests/RevScreenshots
+    dependencies:
+      - target: Rev
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"

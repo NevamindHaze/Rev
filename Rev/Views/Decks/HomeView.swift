@@ -18,39 +18,51 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                greeting
-                overview
+            if Theme.isSignal {
+                SignalHomeContent(decks: decks, allCards: allCards, reviewedToday: reviewedToday,
+                                  onRename: { deck in
+                                      renameText = deck.name
+                                      deckToRename = deck
+                                  },
+                                  onDelete: { deckToDelete = $0 },
+                                  empty: emptyState)
+                    .padding(.horizontal, Theme.padding)
+                    .padding(.vertical, 12)
+            } else {
+                VStack(alignment: .leading, spacing: 24) {
+                    greeting
+                    overview
 
-                Text("Your decks")
-                    .font(Theme.title(30))
-                    .foregroundStyle(Theme.ink)
+                    Text("Your decks")
+                        .font(Theme.title(30))
+                        .foregroundStyle(Theme.ink)
 
-                if decks.isEmpty {
-                    emptyState
-                } else {
-                    ForEach(Array(decks.enumerated()), id: \.element.id) { index, deck in
-                        NavigationLink(value: deck) {
-                            DeckTile(deck: deck, palette: Theme.deckPalette(index))
-                        }
-                        .buttonStyle(PressableButtonStyle())
-                        .contextMenu {
-                            Button {
-                                renameText = deck.name
-                                deckToRename = deck
-                            } label: {
-                                Label("Rename", systemImage: "pencil")
+                    if decks.isEmpty {
+                        emptyState
+                    } else {
+                        ForEach(Array(decks.enumerated()), id: \.element.id) { index, deck in
+                            NavigationLink(value: deck) {
+                                DeckTile(deck: deck, palette: Theme.deckPalette(index))
                             }
-                            Button(role: .destructive) {
-                                deckToDelete = deck
-                            } label: {
-                                Label("Delete", systemImage: "trash")
+                            .buttonStyle(PressableButtonStyle())
+                            .contextMenu {
+                                Button {
+                                    renameText = deck.name
+                                    deckToRename = deck
+                                } label: {
+                                    Label("Rename", systemImage: "pencil")
+                                }
+                                Button(role: .destructive) {
+                                    deckToDelete = deck
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
                             }
                         }
                     }
                 }
+                .padding(Theme.padding)
             }
-            .padding(Theme.padding)
         }
         .background(Theme.background.ignoresSafeArea())
         // Pull down to sync with Anki and refresh today's numbers.

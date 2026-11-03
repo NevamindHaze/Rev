@@ -22,7 +22,7 @@ struct PillButtonStyle: ButtonStyle {
                 .font(Theme.body(18, weight: .semibold))
                 .frame(maxWidth: .infinity, minHeight: height)
                 .foregroundStyle(foreground)
-                .background(background, in: Capsule())
+                .background(background, in: Theme.pillShape)
                 .opacity(isEnabled ? 1 : 0.4)
                 .scaleEffect(configuration.isPressed ? 0.97 : 1)
                 .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
@@ -67,7 +67,7 @@ struct StatTile: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
         .padding(.horizontal, 8)
-        .background(Theme.softFill, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background(Theme.softFill, in: RoundedRectangle(cornerRadius: Theme.radius(24), style: .continuous))
     }
 }
 

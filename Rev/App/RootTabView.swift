@@ -3,6 +3,8 @@ import SwiftUI
 /// The four tabs at the bottom of the screen.
 /// Each tab has its own NavigationStack so it remembers where you were.
 struct RootTabView: View {
+    @AppStorage(AppTheme.storageKey) private var storedTheme = AppTheme.original.rawValue
+
     var body: some View {
         TabView {
             NavigationStack { HomeView() }
@@ -18,5 +20,7 @@ struct RootTabView: View {
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
         }
         .tint(Theme.teal)
+        .id(storedTheme)   // redraws every screen in the new theme
+        .preferredColorScheme(AppTheme(stored: storedTheme) == .signal ? .dark : nil)
     }
 }

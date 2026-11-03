@@ -51,6 +51,11 @@ jobs:
           swiftc Rev/Utilities/CardText.swift Tests/CardTextCheck/main.swift -o "$RUNNER_TEMP/card-text-check"
           "$RUNNER_TEMP/card-text-check"
 
+      - name: Check the theme rules
+        run: |
+          swiftc Rev/Theme/AppTheme.swift Rev/Utilities/ReviewProgress.swift Tests/ThemeCheck/main.swift -o "$RUNNER_TEMP/theme-check"
+          "$RUNNER_TEMP/theme-check"
+
       - name: Show Xcode version
         run: xcodebuild -version
 
@@ -80,6 +85,13 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             build
+
+      - name: Check the screenshot samples aren't in the app
+        run: |
+          if strings build/Build/Products/Release-iphoneos/Rev.app/Rev | grep -q screenshotData; then
+            echo "The Release build contains the screenshot samples."
+            exit 1
+          fi
 
       - name: Package the .ipa
         run: |

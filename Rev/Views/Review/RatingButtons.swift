@@ -6,7 +6,7 @@ struct RatingButtons: View {
     let onRate: (Rating) -> Void
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: Theme.isSignal ? 4 : 10) {
             ForEach(Rating.allCases, id: \.self) { rating in
                 Button {
                     onRate(rating)
@@ -14,13 +14,17 @@ struct RatingButtons: View {
                     VStack(spacing: 4) {
                         Text(rating.title)
                             .font(Theme.body(18, weight: .bold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
                         Text(previews[rating] ?? " ")
                             .font(Theme.body(13, weight: .medium))
-                            .opacity(0.85)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .opacity(Theme.isSignal ? 1 : 0.85)   // Signal's red text needs its full strength
                     }
-                    .frame(maxWidth: .infinity, minHeight: 76)
+                    .frame(maxWidth: .infinity, minHeight: Theme.isSignal ? 56 : 76)
                     .foregroundStyle(rating.textColor)
-                    .background(rating.color, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+                    .background(rating.color, in: RoundedRectangle(cornerRadius: Theme.radius(24, signal: 8), style: .continuous))
                 }
                 .buttonStyle(PressableButtonStyle())
             }
@@ -30,7 +34,8 @@ struct RatingButtons: View {
 
 extension Rating {
     var color: Color {
-        switch self {
+        if Theme.isSignal { return self == .good ? Theme.teal : Theme.softFill }
+        return switch self {
         case .again: Theme.coral
         case .hard: Theme.mustard
         case .good: Theme.teal
@@ -39,8 +44,16 @@ extension Rating {
     }
 
     var textColor: Color {
-        switch self {
-        case .again, .good: .white
+        if Theme.isSignal {
+            return switch self {
+            case .again: Theme.coral
+            case .hard: Theme.mustard
+            case .good: Theme.onAccent
+            case .easy: .white
+            }
+        }
+        return switch self {
+        case .again, .good: Theme.onAccent
         case .hard: Theme.darkText
         case .easy: Theme.ink
         }

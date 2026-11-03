@@ -62,7 +62,7 @@ struct CardEditorView: View {
 
                     if isAdding {
                         Button(saveTitle, action: saveAndNext)
-                            .buttonStyle(PillButtonStyle(background: Theme.teal, foreground: .white, height: 64))
+                            .buttonStyle(PillButtonStyle(background: Theme.teal, foreground: Theme.onAccent, height: 64))
                             .disabled(!canSave)
                         if addedCount > 0 {
                             Text("\(addedCount.counted("card")) added so far")
@@ -148,11 +148,17 @@ struct CardEditorView: View {
                     .focused($focusedField, equals: .hide)
                     .textInputAutocapitalization(.never)
                     .padding(12)
-                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                Button("Hide c\(next)") { hide(as: next) }
+                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.radius(16), style: .continuous))
+                let hideButton = Button("Hide c\(next)") { hide(as: next) }
                     .buttonStyle(.borderedProminent)
                     .tint(Theme.coral)
                     .disabled(trimmed(wordToHide).isEmpty)
+                // Signal only: Original keeps the system's white and its disabled look.
+                if Theme.isSignal {
+                    hideButton.foregroundStyle(Theme.onAccent)
+                } else {
+                    hideButton
+                }
                 if next > 1 {
                     Button("Add to c\(next - 1)") { hide(as: next - 1) }
                         .buttonStyle(.bordered)
@@ -177,7 +183,7 @@ struct CardEditorView: View {
                 .autocorrectionDisabled()
                 .font(Theme.body(17))
                 .padding(14)
-                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.radius(18), style: .continuous))
             if !suggestedTags.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
@@ -222,7 +228,7 @@ struct CardEditorView: View {
                 .scrollContentBackground(.hidden)
                 .frame(minHeight: minHeight)
                 .padding(10)
-                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.radius(22), style: .continuous))
         }
     }
 

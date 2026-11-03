@@ -52,9 +52,9 @@ struct ReviewView: View {
 
     var body: some View {
         VStack(spacing: 18) {
-            counts
+            if Theme.isSignal { signalCounts } else { counts }
             if let card = current {
-                cardFace(card)
+                if Theme.isSignal { signalCardFace(card) } else { cardFace(card) }
                 controls(for: card)
             } else {
                 finished
@@ -171,7 +171,7 @@ struct ReviewView: View {
                 .onSubmit(reveal)
                 .font(Theme.body(19))
                 .padding(14)
-                .background(Theme.softFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background(Theme.softFill, in: RoundedRectangle(cornerRadius: Theme.radius(16), style: .continuous))
         }
     }
 
@@ -218,7 +218,7 @@ struct ReviewView: View {
                 .multilineTextAlignment(.center)
             if queue.laterToday > 0 {
                 Button("Check again", action: loadNext)
-                    .buttonStyle(PillButtonStyle(background: Theme.teal, foreground: .white))
+                    .buttonStyle(PillButtonStyle(background: Theme.teal, foreground: Theme.onAccent))
                     .padding(.top, 8)
             }
             // Done for today, or want something different? Like Anki's Custom study.
@@ -252,6 +252,54 @@ struct ReviewView: View {
             lines.append("Come back tomorrow for more.")
         }
         return lines.joined(separator: "\n")
+    }
+
+    // MARK: Signal's look
+
+    private var signalCounts: some View {
+        let (new, learning, review) = (queue.newCards.count, queue.learningCount, queue.reviewDue.count)
+        let progress = ReviewProgress.segments(reviewed: reviewedThisSession, left: new + learning + review)
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 2) {
+                ForEach(0..<progress.total, id: \.self) { index in
+                    Capsule()
+                        .fill(index < progress.filled ? Theme.teal : Theme.softFill)
+                        .frame(height: 3)
+                }
+            }
+            Text("\(new) new · \(learning) learning · \(review) review")
+                .font(Theme.body(12, weight: .medium))
+                .foregroundStyle(Theme.mutedInk)
+        }
+        .padding(.top, 8)
+    }
+
+    private func signalCardFace(_ card: Card) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text((custom?.title ?? deck?.name ?? "All decks").uppercased())
+                    .font(Theme.body(11, weight: .bold))
+                    .tracking(1)
+                    .foregroundStyle(Theme.teal)
+                    .lineLimit(1)
+                CardTextView(text: card.front, size: 27, weight: .heavy)
+
+                if card.kind == .typeIn {
+                    typeInBox(for: card)
+                }
+
+                if showAnswer {
+                    Rectangle()
+                        .fill(Theme.mutedInk.opacity(0.25))
+                        .frame(height: 1)
+                    CardTextView(text: card.back, size: 19)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(maxHeight: .infinity)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: reveal)
     }
 
     // MARK: Actions
