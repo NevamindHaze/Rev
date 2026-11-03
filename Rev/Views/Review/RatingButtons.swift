@@ -20,7 +20,7 @@ struct RatingButtons: View {
                             .font(Theme.body(13, weight: .medium))
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
-                            .opacity(0.85)
+                            .opacity(Theme.isSignal ? 1 : 0.85)   // Signal's red text needs its full strength
                     }
                     .frame(maxWidth: .infinity, minHeight: Theme.isSignal ? 56 : 76)
                     .foregroundStyle(rating.textColor)

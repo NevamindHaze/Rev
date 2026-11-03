@@ -149,10 +149,16 @@ struct CardEditorView: View {
                     .textInputAutocapitalization(.never)
                     .padding(12)
                     .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.radius(16), style: .continuous))
-                Button("Hide c\(next)") { hide(as: next) }
+                let hideButton = Button("Hide c\(next)") { hide(as: next) }
                     .buttonStyle(.borderedProminent)
                     .tint(Theme.coral)
                     .disabled(trimmed(wordToHide).isEmpty)
+                // Signal only: Original keeps the system's white and its disabled look.
+                if Theme.isSignal {
+                    hideButton.foregroundStyle(Theme.onAccent)
+                } else {
+                    hideButton
+                }
                 if next > 1 {
                     Button("Add to c\(next - 1)") { hide(as: next - 1) }
                         .buttonStyle(.bordered)

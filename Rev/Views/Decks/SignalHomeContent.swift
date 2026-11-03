@@ -32,12 +32,16 @@ struct SignalHomeContent<Empty: View>: View {
                 }
             }
 
-            ComingBackLabel(cards: allCards)
+            // Only when it has something to say: an empty one would still take up a gap.
+            if allCards.comingBackText() != nil {
+                ComingBackLabel(cards: allCards)
+            }
 
             NavigationLink {
                 ReviewView(deck: nil)
             } label: {
                 Text("Start review →")
+                    .accessibilityLabel("Start review")
             }
             .buttonStyle(PillButtonStyle(background: Theme.teal, foreground: Theme.onAccent, height: 44))
 
@@ -81,6 +85,7 @@ struct SignalHomeContent<Empty: View>: View {
             }
             .contentShape(Rectangle())
         }
+        .accessibilityLabel("\(deck.name), \(deck.cards.toReviewCount()) to review, \(deck.cards.count.counted("card"))")
         .buttonStyle(PressableButtonStyle())
         .contextMenu {
             Button {
