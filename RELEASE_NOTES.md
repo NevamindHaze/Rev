@@ -1,3 +1,3 @@
 What's new
 
-• Pictures show while you edit a card, instead of text like [img:photo.jpg]. Tap one to zoom, or tap its ✕ to take it off the card.
+• New look to try: Signal, a dark theme with big numbers and lime accents. Turn it on in Settings → Appearance. The app stays as it is until you do, and you can switch back any time.
