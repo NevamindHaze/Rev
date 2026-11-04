@@ -58,7 +58,7 @@ enum Theme {
         .system(size: size, weight: weight, design: isSignal ? .default : .rounded)
     }
 
-    // MARK: Deck colours (they take turns down the list; only Original shows them)
+    // MARK: Deck colours (they take turns down the list; Original fills tiles with them, Signal uses deckDot)
 
     struct DeckPalette {
         let background: Color
@@ -73,6 +73,12 @@ enum Theme {
             DeckPalette(background: sage, foreground: ink),
         ]
         return palettes[index % palettes.count]
+    }
+
+    /// The dot before each deck in Signal. Fixed colours, since Signal's own teal and sage are lime and near-black.
+    static func deckDot(_ index: Int) -> Color {
+        let dots: [UInt32] = [0xE47C93, 0x58AA97, 0xE8AE45, 0x3E5A4D]
+        return Color(uiColor: UIColor(hex: dots[index % dots.count]))
     }
 }
 

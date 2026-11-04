@@ -49,21 +49,25 @@ struct SignalHomeContent<Empty: View>: View {
                 empty
             } else {
                 VStack(spacing: 0) {
-                    ForEach(decks) { deck in
-                        row(for: deck)
+                    ForEach(Array(decks.enumerated()), id: \.element.id) { index, deck in
+                        row(for: deck, dot: Theme.deckDot(index))
                     }
                 }
             }
         }
     }
 
-    private func row(for deck: Deck) -> some View {
+    private func row(for deck: Deck, dot: Color) -> some View {
         NavigationLink(value: deck) {
             VStack(spacing: 0) {
                 Rectangle()
                     .fill(Theme.mutedInk.opacity(0.25))
                     .frame(height: 1)
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    Circle()
+                        .fill(dot)
+                        .frame(width: 10, height: 10)
+                        .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 1 }
                     Text(deck.name)
                         .font(Theme.body(16, weight: .semibold))
                         .foregroundStyle(Theme.ink)
