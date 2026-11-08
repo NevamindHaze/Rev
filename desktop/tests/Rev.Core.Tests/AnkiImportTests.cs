@@ -110,7 +110,7 @@ public sealed class AnkiImportTests : IDisposable
             Assert.NotNull(c.Difficulty);
             Assert.NotNull(c.LastReviewed);
             Assert.True(c.IntervalDays >= 1);
-            Assert.True(c.Due > DateTime.Now);
+            Assert.True(c.Due > c.LastReviewed);   // not DateTime.Now: the fixtures are fixed in time
             Assert.True(c.Reps >= 1);
         });
     }

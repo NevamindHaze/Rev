@@ -20,6 +20,7 @@ This module only uses the collection object, so it can be tested outside Anki.
 
 import html as htmllib
 import json
+import ntpath
 import os
 import re
 import shutil
@@ -52,7 +53,7 @@ def sync_folder(setting, windows, home=None):
     filled in; the original setting is a Windows path (iCloud Drive for Windows), which can't be the folder
     there, so a Windows-style setting (or none) means "Rev Sync" in your home folder, made if needed."""
     if windows:
-        return os.path.expandvars(os.path.expanduser(setting))
+        return ntpath.expandvars(ntpath.expanduser(setting))  # ntpath: %VARS% even when tested off Windows
     home = home or os.path.expanduser("~")
     path = setting.strip()
     if not path or "%" in path or "\\" in path:
