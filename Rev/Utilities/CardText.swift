@@ -20,6 +20,38 @@ enum CardText {
     private static let imagePattern = try? NSRegularExpression(pattern: #"^\[img:(.+)\]$"#)
     private static let listPattern = try? NSRegularExpression(pattern: #"^(•|\d{1,3}\.)\s+(.*)$"#)
 
+    /// Placeholders for Anki's <b>, </b>, <i> and </i> while its HTML becomes card text.
+    static let boldOn: Character = "\u{3}", boldOff: Character = "\u{4}"
+    static let italicOn: Character = "\u{5}", italicOff: Character = "\u{6}"
+
+    /// Turns the placeholders into ** and * markers. Bold or italic that runs over several lines (Anki allows it)
+    /// is closed at the end of each line and reopened on the next, because Rev formats one line at a time.
+    /// A line with no text gets no markers.
+    /// shortcut: bold and italic both open across a line break give "***", which the line formatter can't read;
+    /// teach it nesting if such cards turn up.
+    static func applyingFormatMarkers(_ text: String) -> String {
+        var bold = 0, italic = 0
+        return text.components(separatedBy: "\n").map { raw -> String in
+            var label = "", rest = raw
+            if let groups = match(listPattern, raw) { label = groups[1] + " "; rest = groups[2] }
+            let open = (bold > 0 ? "**" : "") + (italic > 0 ? "*" : "")
+            var body = "", plain = ""
+            for c in rest {
+                switch c {
+                case boldOn: bold += 1; body += "**"
+                case boldOff: if bold > 0 { bold -= 1; body += "**" }
+                case italicOn: italic += 1; body += "*"
+                case italicOff: if italic > 0 { italic -= 1; body += "*" }
+                default: body.append(c); plain.append(c)
+                }
+            }
+            if plain.trimmingCharacters(in: .whitespaces).isEmpty {
+                return String((label + plain).reversed().drop { $0 == " " || $0 == "\t" }.reversed())
+            }
+            return label + open + body + (italic > 0 ? "*" : "") + (bold > 0 ? "**" : "")
+        }.joined(separator: "\n")
+    }
+
     static func lines(_ text: String) -> [CardLine] {
         text.components(separatedBy: "\n").map { raw -> CardLine in
             let line = raw.trimmingCharacters(in: .whitespaces)

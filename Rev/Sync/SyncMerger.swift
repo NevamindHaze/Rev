@@ -36,8 +36,8 @@ enum SyncMerger {
 
     static func apply(_ snapshot: SyncSnapshot, context: ModelContext, state: inout SyncState) throws -> Report {
         var report = Report()
-        let refreshText = (state.contentFormat ?? 1) < 2
-        defer { state.contentFormat = 2 }
+        let refreshText = (state.contentFormat ?? 1) < 3
+        defer { state.contentFormat = 3 }
         let cards = try context.fetch(FetchDescriptor<Card>())
         link(cards, remote: snapshot.cards)
 

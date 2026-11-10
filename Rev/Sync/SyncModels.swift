@@ -71,7 +71,8 @@ struct SyncState: Codable {
     var lastExportWrittenAt: Double?
     /// Pictures already given to Anki over Wi-Fi (so they aren't sent again every time).
     var wifiSentImages: [String]?
-    /// 2 = cards from Anki keep bold/italic. Older syncs (nil) get one refresh of their text.
+    /// 2 = cards from Anki keep bold/italic; 3 = bold/italic over several lines shows right.
+    /// Older syncs get one refresh of the text of cards not edited in Rev since.
     var contentFormat: Int?
 
     private static var url: URL {

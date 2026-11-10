@@ -260,6 +260,11 @@ public sealed class AnkiImportTests : IDisposable
     [InlineData("x [sound:dog.mp3] y", "x  y")]
     [InlineData("<img src=\"my%20pic.jpg\">", "[img:my pic.jpg]")]
     [InlineData("<style>.a{}</style>text", "text")]
+    // Bold or italic over several lines is closed and reopened on each line, as Rev formats one line at a time.
+    [InlineData("<b><br>Defined as:<ul><li>Analgesia</li><li>Muscle relaxation</li></ul><br></b>",
+                "**Defined as:**\n• **Analgesia**\n• **Muscle relaxation**")]
+    [InlineData("<i>one<br>two</i> three", "*one*\n*two* three")]
+    [InlineData("5 * 3<br>next", "5 * 3\nnext")]
     public void AnkiHtmlBecomesRevText(string html, string expected) =>
         Assert.Equal(expected, AnkiText.PlainText(html));
 

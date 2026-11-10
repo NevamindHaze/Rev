@@ -156,7 +156,7 @@ final class SyncService: ObservableObject {
     }
 
     private func applyAnki(_ snapshot: SyncSnapshot, context: ModelContext, state: inout SyncState) throws -> SyncMerger.Report? {
-        let needsTextRefresh = (state.contentFormat ?? 1) < 2
+        let needsTextRefresh = (state.contentFormat ?? 1) < 3
         guard snapshot.format == 1, snapshot.writtenAt != state.lastAnkiWrittenAt || needsTextRefresh else { return nil }
         let report = try SyncMerger.apply(snapshot, context: context, state: &state)
         try context.save()

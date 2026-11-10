@@ -32,4 +32,11 @@ for new in ["", "x", "x\n", "\n", "x\n\ny\n"] {
 precondition(editText(of: "a\nb\nc\n[img:x.jpg]\nd\n[img:y.jpg]", to: "a") == "a\n[img:x.jpg]\n[img:y.jpg]")
 precondition(editText(of: "a\n[img:x.jpg]\n[img:y.jpg]", to: "") == "[img:x.jpg]\n[img:y.jpg]")
 
+// Bold or italic over several lines (as Anki writes it) is closed and reopened on each line.
+let (b, B, i, I) = (CardText.boldOn, CardText.boldOff, CardText.italicOn, CardText.italicOff)
+precondition(CardText.applyingFormatMarkers("\(b)\nDefined as:\n• Analgesia\n• Muscle relaxation\n\n\(B)")
+             == "\n**Defined as:**\n• **Analgesia**\n• **Muscle relaxation**\n\n")
+precondition(CardText.applyingFormatMarkers("\(i)one\ntwo\(I) three") == "*one*\n*two* three")
+precondition(CardText.applyingFormatMarkers("5 * 3\nnext") == "5 * 3\nnext")   // a real asterisk is left alone
+
 print("Card text checks passed")

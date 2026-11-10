@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Rev.Core.Text;
@@ -46,6 +47,42 @@ public static partial class CardText
 
     [GeneratedRegex(@"\[img:[^\]]+\]")]
     private static partial Regex InlineImagePattern();
+
+    /// <summary>Placeholders for Anki's &lt;b&gt;, &lt;/b&gt;, &lt;i&gt; and &lt;/i&gt; while its HTML becomes card text.</summary>
+    public const char BoldOn = '\u0003', BoldOff = '\u0004', ItalicOn = '\u0005', ItalicOff = '\u0006';
+
+    /// <summary>
+    /// Turns the placeholders into ** and * markers. Bold or italic that runs over several lines (Anki allows it)
+    /// is closed at the end of each line and reopened on the next, because Rev formats one line at a time.
+    /// A line with no text gets no markers.
+    /// shortcut: bold and italic both open across a line break give "***", which FormatPattern can't read;
+    /// teach FormatPattern nesting if such cards turn up.
+    /// </summary>
+    public static string ApplyFormatMarkers(string text)
+    {
+        int bold = 0, italic = 0;
+        return string.Join("\n", text.Split('\n').Select(raw =>
+        {
+            string label = "", rest = raw;
+            if (ListPattern().Match(raw) is { Success: true } item) (label, rest) = (item.Groups[1].Value + " ", item.Groups[2].Value);
+            string open = (bold > 0 ? "**" : "") + (italic > 0 ? "*" : "");
+            var body = new StringBuilder();
+            var plain = new StringBuilder();
+            foreach (char c in rest)
+            {
+                switch (c)
+                {
+                    case BoldOn: bold++; body.Append("**"); break;
+                    case BoldOff: if (bold > 0) { bold--; body.Append("**"); } break;
+                    case ItalicOn: italic++; body.Append('*'); break;
+                    case ItalicOff: if (italic > 0) { italic--; body.Append('*'); } break;
+                    default: body.Append(c); plain.Append(c); break;
+                }
+            }
+            if (string.IsNullOrWhiteSpace(plain.ToString())) return (label + plain).TrimEnd();
+            return label + open + body + (italic > 0 ? "*" : "") + (bold > 0 ? "**" : "");
+        }));
+    }
 
     public static List<CardLine> Lines(string text) =>
         text.Replace("\r\n", "\n").Split('\n').Select(raw =>
