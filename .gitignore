@@ -5,3 +5,4 @@ build/
 Payload/
 *.ipa
 .DS_Store
+__pycache__/
