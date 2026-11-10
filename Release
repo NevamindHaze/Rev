@@ -1,0 +1,17 @@
+Codename: rev
+Date: Tue, 10 Nov 2026 18:43:52 +0000
+Label: Rev
+Origin: Rev
+Suite: stable
+MD5Sum:
+ 5e26b46a69a67f41e0535f0bd900a50f              987 Packages
+ e59f0da61c4f9a9efff59b429fc801af              672 Packages.gz
+SHA1:
+ 151898e865d63a7bbf281b3ee7fdba11039c4273              987 Packages
+ 4bbff540292b4352d7c78a6d5a85fd38c679e1d5              672 Packages.gz
+SHA256:
+ 4f5b1bd74fb8932ac2a2ff7f58085117a9b37ff2af098b2266ef1ac8a936b728              987 Packages
+ 78c4080635c8c0f70de84bfead504643d9af9a7fb4b0311f4262ea5fcb9aa6b9              672 Packages.gz
+SHA512:
+ 41244033d4b1527d4e3e89df07bb3179bfae0b4d674a9afa8b51029b3f1ab0332f897a967a912fa1a757f2c3cf7a39a55c9039ba4e0494b7d2e2d35dace6094c              987 Packages
+ 01e481ef022928367132775096cf0d3f62037266fe1fb40eba369a75d3329c7c05dfd2384945bd5a6f193ca7022ecd856b03e74814f1c83bb87ceb5366a55f60              672 Packages.gz

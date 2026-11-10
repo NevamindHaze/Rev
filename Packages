@@ -1,0 +1,20 @@
+Package: rev-flashcards
+Architecture: amd64
+Version: 1.5.1
+Priority: optional
+Section: education
+Maintainer: NevamindHaze <noreply@users.noreply.github.com>
+Installed-Size: 101644
+Depends: libc6, libgcc-s1, libstdc++6, zlib1g, libssl3 | libssl1.1, libfontconfig1, libx11-6, libice6, libsm6
+Filename: ./rev-flashcards_1.5.1_amd64.deb
+Size: 34660992
+MD5sum: 90a290b4193cca1e868f3d03c9427ff4
+SHA1: 3b6561f58b14efdd4fe259acc17d133fadae7188
+SHA256: a7b07a0bb492e6aafd705902e4d2ae5f3b15bb0b9e7bb80e29f8b085c1ba4abc
+SHA512: 9ed2073246aa0d00454779439871cc125002f83358f0a9264051d52895fca48429e2433b95f10cb788fe83bc5b68b80fc22e0bffc2bdeb60e3d47d399cafe6c4
+Homepage: https://github.com/NevamindHaze/Rev
+Description: Flashcards with spaced repetition that sync with Anki
+ Rev is a calm flashcard app: decks, basic / reversed / cloze / type-in cards,
+ reviews scheduled with FSRS (or SM-2), stats, Anki import and export, JSON
+ backups, and two-way sync with Anki (and Rev on iPhone, through Anki).
+
