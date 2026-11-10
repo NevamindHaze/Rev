@@ -92,9 +92,9 @@ enum AnkiText {
             return edge + "[img:\(name)]" + edge
         }
         s = replace(#"<img[^>]*>"#, in: s) { _ in "" }
-        // Bold and italic become Rev's **bold** and *italic* markers.
-        s = replace(#"</?(b|strong)(\s[^>]*)?>"#, in: s) { _ in "**" }
-        s = replace(#"</?(i|em)(\s[^>]*)?>"#, in: s) { _ in "*" }
+        // Bold and italic become placeholders here, and Rev's **bold** and *italic* markers once the lines are known.
+        s = replace(#"<(/?)(b|strong)(\s[^>]*)?>"#, in: s) { String($0[1] == "/" ? CardText.boldOff : CardText.boldOn) }
+        s = replace(#"<(/?)(i|em)(\s[^>]*)?>"#, in: s) { String($0[1] == "/" ? CardText.italicOff : CardText.italicOn) }
         s = replace(#"\[sound:[^\]]*\]"#, in: s) { _ in "" }
         s = replace(#"<[^>]+>"#, in: s) { _ in "" }
         s = decodeEntities(s)
@@ -108,6 +108,7 @@ enum AnkiText {
         }
         s = replace(#"[ \t]+\n"#, in: s) { _ in "\n" }
         s = replace(#"\n[ \t]+"#, in: s) { _ in "\n" }
+        s = CardText.applyingFormatMarkers(s)
         s = replace(#"\n{3,}"#, in: s) { _ in "\n\n" }
         // Two bold runs side by side ("</b><b>") leave an empty pair; remove it.
         s = s.replacingOccurrences(of: "****", with: "")

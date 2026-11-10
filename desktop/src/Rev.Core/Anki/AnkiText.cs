@@ -114,9 +114,9 @@ public static class AnkiText
             return MediaStore.SafeName(decoded) is { } name ? edge + $"[img:{name}]" + edge : "";
         });
         s = Replace(s, @"<img[^>]*>", "");
-        // Bold and italic become Rev's **bold** and *italic* markers.
-        s = Replace(s, @"</?(b|strong)(\s[^>]*)?>", "**");
-        s = Replace(s, @"</?(i|em)(\s[^>]*)?>", "*");
+        // Bold and italic become placeholders here, and Rev's **bold** and *italic* markers once the lines are known.
+        s = Replace(s, @"<(/?)(b|strong)(\s[^>]*)?>", m => m.Groups[1].Value == "/" ? $"{CardText.BoldOff}" : $"{CardText.BoldOn}");
+        s = Replace(s, @"<(/?)(i|em)(\s[^>]*)?>", m => m.Groups[1].Value == "/" ? $"{CardText.ItalicOff}" : $"{CardText.ItalicOn}");
         s = Replace(s, @"\[sound:[^\]]*\]", "");
         s = Replace(s, @"<[^>]+>", "");
         s = DecodeEntities(s);
@@ -128,6 +128,7 @@ public static class AnkiText
         s = Replace(s, @"[ \n]*\x01[ \x01\n]*", m => m.Value.Contains('\n') ? "\n\n" : "\n");
         s = Replace(s, @"[ \t]+\n", "\n");
         s = Replace(s, @"\n[ \t]+", "\n");
+        s = CardText.ApplyFormatMarkers(s);
         s = Replace(s, @"\n{3,}", "\n\n");
         // Two bold runs side by side ("</b><b>") leave an empty pair; remove it.
         s = s.Replace("****", "");
